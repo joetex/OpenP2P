@@ -14,13 +14,31 @@ namespace OpenP2P
         public IPEndPoint remote;
         public IPEndPoint local;
 
-        public static NetworkSocketEventPool pool = new NetworkSocketEventPool(10, 1500);
-        public Dictionary<int, NetworkSocketEvent> activeEvents;
+        public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(10, 1500);
+        public Dictionary<int, NetworkSocketEvent> activeEvents = new Dictionary<int, NetworkSocketEvent>();
+
+        public bool isSending = false;
+        public bool isReceiving = false;
 
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
+            Setup(remoteHost, remotePort, localPort);
+        }
+
+        public NetworkSocket(string remoteHost, int remotePort)
+        {
+            Setup(remoteHost, remotePort, 0);
+        }
+
+        public NetworkSocket(int localPort)
+        {
+            Setup("127.0.0.1", 0, localPort);
+        }
+
+        public void Setup(string remoteHost, int remotePort, int localPort)
+        {
             remote = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
-            local = new IPEndPoint(IPAddress.Any, localPort);
+            local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
 
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.ExclusiveAddressUse = false;
@@ -30,21 +48,34 @@ namespace OpenP2P
 
         public void Listen()
         {
-            NetworkSocketEvent socketEvent = Reserve();
-
-            if (!socket.ReceiveFromAsync(socketEvent.args))
+            if (isReceiving)
+                return;
+            isReceiving = true;
+            NetworkSocketEvent socketEvent = ReserveSocketEvent(true);
+           
+            if (!socket.ReceiveAsync(socketEvent.args))
             {
+                Console.WriteLine("ReceiveAsync Failed");
+                //finished synchronously, process immediately
                 ProcessEvent(socketEvent);
             }
         }
 
+        public void Send(string msg)
+        {
+            byte[] data = Encoding.ASCII.GetBytes(msg);
+            Send(data);
+        }
+
         public void Send(byte[] data)
         {
-            NetworkSocketEvent socketEvent = Reserve();
-            socketEvent.SetBuffer(data);
-
-            if (!socket.SendToAsync(socketEvent.args))
+            NetworkSocketEvent socketEvent = ReserveSocketEvent(false);
+            socketEvent.SetBufferBytes(data);
+            socketEvent.args.RemoteEndPoint = remote;
+            if ( !socket.SendToAsync(socketEvent.args ))
             {
+                Console.WriteLine("SendToAsync Failed");
+                //finished synchronously, process immediately
                 ProcessEvent(socketEvent);
             }
         }
@@ -69,22 +100,24 @@ namespace OpenP2P
 
         }
 
-        public NetworkSocketEvent Reserve()
+        public NetworkSocketEvent ReserveSocketEvent(bool withBuffer)
         {
-            NetworkSocketEvent socketEvent = pool.Reserve();
+            NetworkSocketEvent socketEvent = EVENTPOOL.Reserve(withBuffer);
             socketEvent.args.AcceptSocket = socket;
             socketEvent.args.Completed += new EventHandler<SocketAsyncEventArgs>(OnSocketCompleted);
             socketEvent.args.UserToken = socketEvent;
-
+            //Console.WriteLine("Reserving Socket: " + socketEvent.id);
             activeEvents.Add(socketEvent.id, socketEvent);
 
             return socketEvent;
         }
 
-        public void Free(NetworkSocketEvent socketEvent)
+        public void FreeSocketEvent(NetworkSocketEvent socketEvent)
         {
+            //Console.WriteLine("Freeing Socket: " + socketEvent.id);
+            socketEvent.args.AcceptSocket = null;
             activeEvents.Remove(socketEvent.id);
-            pool.Free(socketEvent);
+            EVENTPOOL.Free(socketEvent);
         }
 
         void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
@@ -98,17 +131,24 @@ namespace OpenP2P
             switch (socketEvent.args.LastOperation)
             {
                 case SocketAsyncOperation.Receive:
-                    OnReceive(socketEvent);
+                case SocketAsyncOperation.ReceiveFrom:
+                    isReceiving = false;
                     Listen(); //listen again
+                    OnReceive(socketEvent);
+
+
                     break;
                 case SocketAsyncOperation.Send:
+                case SocketAsyncOperation.SendTo:
+                    isSending = false;
                     OnSend(socketEvent);
+
                     break;
                 default:
                     throw new ArgumentException("The last operation completed on the socket was not a receive or send");
             }
 
-            Free(socketEvent);
+            FreeSocketEvent(socketEvent);
         }
 
         
@@ -119,7 +159,7 @@ namespace OpenP2P
             {
                 foreach (KeyValuePair<int, NetworkSocketEvent> entry in activeEvents)
                 {
-                    Free(entry.Value);
+                    FreeSocketEvent(entry.Value);
                 }
 
                 socket.Shutdown(SocketShutdown.Both);
@@ -129,7 +169,7 @@ namespace OpenP2P
             }
             catch (Exception e)
             {
-
+                Console.WriteLine(e.ToString());
             }
         
         }

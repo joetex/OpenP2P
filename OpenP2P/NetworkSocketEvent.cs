@@ -31,7 +31,7 @@ namespace OpenP2P
             args.SetBuffer(buffer.buffer, 0, buffer.buffer.Length);
         }
         
-        public void SetBuffer(byte[] data)
+        public void SetBufferBytes(byte[] data)
         {
             buffer = null;
             args.SetBuffer(data, 0, data.Length);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenP2P
@@ -31,7 +32,8 @@ namespace OpenP2P
          */
         public void New()
         {
-            NetworkBuffer buffer = new NetworkBuffer(++bufferCount, initialBufferLength);
+            Interlocked.Increment(ref bufferCount);
+            NetworkBuffer buffer = new NetworkBuffer(bufferCount, initialBufferLength);
             available.Enqueue(buffer);
         }
 
@@ -46,6 +48,7 @@ namespace OpenP2P
             }
 
             NetworkBuffer buffer = available.Dequeue();
+            //Console.WriteLine("Reserving buffer id: " + buffer.id);
             used.Add(buffer.id, buffer);
 
             return buffer;
@@ -56,8 +59,13 @@ namespace OpenP2P
          */
         public void Free(NetworkBuffer buffer)
         {
-            used.Remove(buffer.id);
-            available.Enqueue(buffer);
+            //Console.WriteLine("Freeing buffer id: " + buffer.id);
+            //if( used.ContainsKey(buffer.id))
+            {
+                used.Remove(buffer.id);
+                available.Enqueue(buffer);
+            }
+           
         }
 
         /**
