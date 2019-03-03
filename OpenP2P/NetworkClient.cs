@@ -10,52 +10,23 @@ namespace OpenP2P
 {
     public class NetworkClient
     {
-        public Socket udpTraversal;
-        public Socket udpClient;
+        public const int SERVERID = 0;
 
-        public IPEndPoint serverEndPoint;
-        public IPEndPoint localEndPoint;
+        public Dictionary<int, NetworkSocket> sockets = new Dictionary<int, NetworkSocket>();
 
         public NetworkClient(string serverHost)
         {
-            serverEndPoint = new IPEndPoint(IPAddress.Parse(serverHost), 9000);
-            localEndPoint = new IPEndPoint(IPAddress.Any, 9001);
+            NetworkSocket toServer = new NetworkSocket(serverHost, 9000);
 
-            udpTraversal = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-            SetupClients();
-
-            
+            sockets.Add(SERVERID, toServer);
         }
 
-        public void SetupClients()
-        {
-            udpTraversal.ExclusiveAddressUse = false;
-            udpTraversal.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpTraversal.Bind(localEndPoint);
-
-            udpClient.ExclusiveAddressUse = false;
-            udpClient.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpClient.Bind(localEndPoint);
-        }
+        public NetworkSocket server { get { return sockets[SERVERID]; } }
 
         public void ConnectToServer()
         {
-
-        }
-
-        public string GetLocalIp()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-            throw new Exception("Failed to get local IP");
+            //NetworkSocketEvent se = server.PrepareSend();
+            //NetworkProtocol.TURN.Register(se);
         }
 
 

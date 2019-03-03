@@ -50,6 +50,7 @@
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkSocketEvent.cs" />
     <Compile Include="NetworkSocketEventPool.cs" />
+    <Compile Include="NetworkStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

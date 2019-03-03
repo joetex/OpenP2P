@@ -19,7 +19,7 @@ namespace OpenP2P
 
         int initialPoolCount = 0;
         int initialBufferSize = 0;
-        int eventCount = 0;
+        public int eventCount = 0;
 
         public NetworkSocketEventPool(int initPoolCount, int initBufferSize)
         {
@@ -58,36 +58,27 @@ namespace OpenP2P
                 }
 
                 socketEvent = available.Dequeue();
-                used.Add(socketEvent.id, socketEvent);
+               // used.Add(socketEvent.id, socketEvent);
             }
             return socketEvent;
 
         }
-        public NetworkSocketEvent Reserve(bool withBuffer)
+        public NetworkSocketEvent Reserve()
         {
             NetworkSocketEvent socketEvent = null;
             lock (available)
             {
-
-
                 if (available.Count == 0)
                 {
                     New();
                 }
 
                 socketEvent = available.Dequeue();
-                if (withBuffer)
-                {
-                    NetworkBuffer buffer = bufferPool.Reserve();
-                    socketEvent.SetBuffer(buffer);
-                }
-                else
-                {
-                    socketEvent.SetBuffer(null);
-                }
-                Console.WriteLine("Reserving Socket Event: " + socketEvent.id);
+                socketEvent.SetBuffer(bufferPool.Reserve());
+                
+                //Console.WriteLine("Reserving Socket Event: " + socketEvent.id);
 
-                used.Add(socketEvent.id, socketEvent);
+                //used.Add(socketEvent.id, socketEvent);
             }
             return socketEvent;
         }
@@ -101,14 +92,14 @@ namespace OpenP2P
         {
             lock (available)
             {
-                if (socketEvent.buffer != null)
-                    bufferPool.Free(socketEvent.buffer);
+                if (socketEvent.Buffer != null)
+                    bufferPool.Free(socketEvent.Buffer);
 
-                Console.WriteLine("Freeing Socket Event: " + socketEvent.id);
+                //Console.WriteLine("Freeing Socket Event: " + socketEvent.id);
 
                 //if( used.ContainsKey(socketEvent.id))
                 {
-                    used.Remove(socketEvent.id);
+                    //used.Remove(socketEvent.id);
                     available.Enqueue(socketEvent);
                 }
             }
@@ -118,12 +109,12 @@ namespace OpenP2P
         /**
          * Free a reserved NetworkBuffer from this pool by id.
          */
-        public void Free(int id)
+        /*public void Free(int id)
         {
             NetworkSocketEvent socketEvent = used[id];
             Free(socketEvent);
         }
-
+        */
         public void Dispose()
         {
             while(available.Count > 0)
