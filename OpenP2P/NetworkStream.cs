@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,16 +15,19 @@ namespace OpenP2P
      */
     public partial class NetworkStream
     {
-        public NetworkSocketEvent socketEvent = null;
-        NetworkBuffer buffer = null;
-        public NetworkBuffer Buffer { get { return buffer; } }
-        public byte[] ByteBuffer { get { return buffer.buffer; } }
+        public NetworkSocket socket = null;
+        public EndPoint remoteEndPoint = null;
+
+        public byte[] buffer;
+
+        //public NetworkBuffer Buffer { get { return buffer; } }
+        public byte[] ByteBuffer { get { return buffer; } }
         public int byteLength = 0; //total size of data 
         public int bytePos = 0; //current read position
 
-        public NetworkStream(NetworkSocketEvent se)
+        public NetworkStream(int initBufferSize)
         {
-            socketEvent = se;
+            buffer = new byte[initBufferSize];
         }
 
         public void BeginWrite()
@@ -33,13 +38,12 @@ namespace OpenP2P
 
         public void EndWrite()
         {
-            socketEvent.SetBufferLength(byteLength);
         }
 
-        public void SetBuffer(NetworkBuffer _buffer)
+        /*public void SetBuffer(NetworkBuffer _buffer)
         {
             buffer = _buffer;
-        }
+        }*/
 
         public void SetBufferLength(int length)
         {
@@ -218,6 +222,11 @@ namespace OpenP2P
                 result[i - startPos] = ByteBuffer[bytePos++];
             }
             return result;
+        }
+
+        public void Dispose()
+        {
+
         }
     }
 }

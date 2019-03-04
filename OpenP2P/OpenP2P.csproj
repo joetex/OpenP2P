@@ -45,14 +45,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NetworkBuffer.cs" />
-    <Compile Include="NetworkBufferPool.cs" />
     <Compile Include="NetworkClient.cs" />
     <Compile Include="NetworkProtocol.cs" />
     <Compile Include="NetworkSocket.cs" />
-    <Compile Include="NetworkSocketEvent.cs" />
-    <Compile Include="NetworkSocketEventPool.cs" />
     <Compile Include="NetworkStream.cs" />
+    <Compile Include="NetworkStreamPool.cs" />
+    <Compile Include="NetworkThread.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

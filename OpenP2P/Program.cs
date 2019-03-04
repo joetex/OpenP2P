@@ -20,23 +20,19 @@ namespace OpenP2P
         static Stopwatch recvSW;
         static void Main(string[] args)
         {
+            NetworkThread.StartNetworkThreads();
+
             NetworkSocket server = new NetworkSocket(9000);
-            NetworkSocket client1 = new NetworkSocket("127.0.0.1", 9000);
-            NetworkSocket client2 = new NetworkSocket("127.0.0.1", 9000);
+            server.OnReceive += OnReceiveEvent;
+            server.Listen(null);
 
             List<NetworkSocket> clients = new List<NetworkSocket>();
-
             for(int i=0; i< MAXCLIENTS; i++)
             {
                 clients.Add(new NetworkSocket("127.0.0.1", 9000, 0));
                 clients[i].OnSend += OnSendEvent;
             }
-
-            server.OnReceive += OnReceiveEvent;
-
-            server.Listen(null);
-
-
+            
             string test = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 
             sw = Stopwatch.StartNew();
@@ -66,7 +62,7 @@ namespace OpenP2P
 
             
             sw.Stop();
-            Console.WriteLine("Finished with " + NetworkSocket.EVENTPOOL.eventCount + " SocketAsyncEventArgs");
+            Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
             
             //Thread.Sleep(10000);
@@ -80,13 +76,13 @@ namespace OpenP2P
             return (float)(mantissa * exponent);
         }
 
-        static void OnSendEvent(object sender, NetworkSocketEvent se)
+        static void OnSendEvent(object sender, NetworkStream stream)
         {
             if( sendCount == 0 )
                 sendSW = Stopwatch.StartNew();
             sendCount++;
 
-            if( se.stream.byteLength != 12 )
+            if( stream.byteLength != 12 )
             {
                 Console.WriteLine("Failed to send data");
             }
@@ -101,12 +97,11 @@ namespace OpenP2P
 
         static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
 
-        static void OnReceiveEvent(object sender, NetworkSocketEvent se)
+        static void OnReceiveEvent(object sender, NetworkStream stream)
         {
             //Console.WriteLine("Received from: " + e.args.RemoteEndPoint.ToString());
             //endpoints.Add(se.args.RemoteEndPoint.ToString(), true);
-
-            NetworkStream stream = se.stream;
+            
 
             //Console.WriteLine("stream size: " + stream.byteLength + " B");
             if (receiveCount == 0)
