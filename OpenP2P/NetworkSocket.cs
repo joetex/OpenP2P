@@ -253,6 +253,9 @@ namespace OpenP2P
                 OnSend.Invoke(this, se);
            
             int result = socket.SendTo(se.stream.ByteBuffer, se.stream.byteLength, SocketFlags.None, se.args.RemoteEndPoint);
+
+            if (result != 12)
+                Console.WriteLine("Error sending bytes");
             OnSocketSend(se);
 
             /*if (!socket.SendToAsync(se.args))

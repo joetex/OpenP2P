@@ -85,6 +85,11 @@ namespace OpenP2P
             if( sendCount == 0 )
                 sendSW = Stopwatch.StartNew();
             sendCount++;
+
+            if( se.stream.byteLength != 12 )
+            {
+                Console.WriteLine("Failed to send data");
+            }
             if (sendCount >= MAXSEND * MAXCLIENTS)
             {
                 sendSW.Stop();
