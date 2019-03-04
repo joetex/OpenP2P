@@ -93,6 +93,7 @@ namespace OpenP2P
                 }
                 if (!hasItems)
                 {
+                    Console.WriteLine("Sleeping"); 
                     Thread.Sleep(1);
                     continue;
                 }
