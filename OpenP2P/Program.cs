@@ -12,7 +12,7 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 1;
+        public const int MAXSEND = 100;
         public const int MAXCLIENTS = 1000;
         static int receiveCount = 0;
         static int sendCount = 0;
@@ -48,8 +48,8 @@ namespace OpenP2P
                 {
                     NetworkStream stream = clients[j].BeginSend();
                     //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
-                    stream.Write(911);
-                    stream.Write((ushort)420);
+                    //stream.Write(911);
+                    //stream.Write((ushort)420);
                     stream.Write(1.5f);
                     stream.Write(1.875);
                     //stream.WriteTimestamp();

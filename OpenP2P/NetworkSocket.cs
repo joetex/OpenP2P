@@ -16,9 +16,12 @@ namespace OpenP2P
         public IPEndPoint local;
         public IPEndPoint anyHost;
 
-        public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(1000, 2000);
+        public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(100000, 2000);
+
         public static Thread SENDTHREAD = new Thread(SendThread);
+        public static Thread RECVTHREAD = new Thread(ListenThread);
         public static Queue<NetworkSocketEvent> SENDQUEUE = new Queue<NetworkSocketEvent>();
+        public static Queue<NetworkSocketEvent> RECVQUEUE = new Queue<NetworkSocketEvent>();
 
         //track active events to this socket, so we can cleanup at any time
         public Dictionary<int, NetworkSocketEvent> activeEvents = new Dictionary<int, NetworkSocketEvent>();
@@ -46,19 +49,54 @@ namespace OpenP2P
         static void SendThread()
         {
             NetworkSocketEvent se = null;
+            bool hasItems = false;
             while (true)
             {
+                hasItems = true;
                 lock(SENDQUEUE)
                 {
                     if (SENDQUEUE.Count == 0)
                     {
-                        Thread.Sleep(1);
-                        continue;
+                        hasItems = false;
                     }
-                    se = SENDQUEUE.Dequeue();
+                    else
+                    {
+                        se = SENDQUEUE.Dequeue();
+                    }
                 }
-
+                if( !hasItems)
+                {
+                    Thread.Sleep(1);
+                    continue;
+                }
                 se.socket.ExecuteSend(se);
+            }
+        }
+
+        static void ListenThread()
+        {
+            NetworkSocketEvent se = null;
+            bool hasItems = false;
+            while (true)
+            {
+                hasItems = true;
+                lock (RECVQUEUE)
+                {
+                    if (RECVQUEUE.Count == 0)
+                    {
+                        hasItems = false;
+                    }
+                    else
+                    {
+                        se = RECVQUEUE.Dequeue();
+                    }
+                }
+                if (!hasItems)
+                {
+                    Thread.Sleep(1);
+                    continue;
+                }
+                se.socket.ExecuteListen(se);
             }
         }
 
@@ -70,6 +108,10 @@ namespace OpenP2P
             if( !SENDTHREAD.IsAlive )
             {
                 SENDTHREAD.Start();
+            }
+            if (!RECVTHREAD.IsAlive)
+            {
+                RECVTHREAD.Start();
             }
             //stream = new NetworkStream(this);
             evtSocketCompleted = new EventHandler<SocketAsyncEventArgs>(OnSocketCompleted);
@@ -108,10 +150,10 @@ namespace OpenP2P
          */
         void OnSocketReceive(NetworkSocketEvent se)
         {
-            int byteLength = se.args.BytesTransferred;
-            if (byteLength > 0 && se.args.SocketError == SocketError.Success)
+            //int byteLength = se.args.BytesTransferred;
+            //if (byteLength > 0 && se.args.SocketError == SocketError.Success)
             {
-                se.SetBufferLength(byteLength);
+               //se.SetBufferLength(byteLength);
 
                 if (OnReceive != null) //notify any event listeners
                     OnReceive.Invoke(this, se);
@@ -138,14 +180,28 @@ namespace OpenP2P
             if( se == null )
                 se = Reserve();
             se.args.RemoteEndPoint = anyHost;
-            
+
+
+            lock (RECVQUEUE)
+            {
+                RECVQUEUE.Enqueue(se);
+            }
+            /*
             if (!socket.ReceiveFromAsync(se.args))
             {
                 Console.WriteLine("ReceiveAsync Failed");
                 OnSocketCompleted(this, se.args);
-            }
+            }*/
         }
-        
+
+        public void ExecuteListen(NetworkSocketEvent se)
+        {
+            EndPoint remoteEP = anyHost;
+            int bytesReceived = socket.ReceiveFrom(se.stream.ByteBuffer, ref remoteEP);
+            se.SetBufferLength(bytesReceived);
+            OnSocketReceive(se);
+        }
+
         /**
          * Begin Send
          * Starts the NetworkStream for writing data to byte buffer.
@@ -191,13 +247,16 @@ namespace OpenP2P
 
             if (OnSend != null) //notify any event listeners
                 OnSend.Invoke(this, se);
+           
+            int result = socket.SendTo(se.stream.ByteBuffer, se.stream.byteLength, SocketFlags.None, se.args.RemoteEndPoint);
+            OnSocketSend(se);
 
-            if (!socket.SendToAsync(se.args))
+            /*if (!socket.SendToAsync(se.args))
             {
                 Console.WriteLine("SendToAsync Failed");
                 //finished synchronously, process immediately
                 OnSocketCompleted(this, se.args);
-            }
+            }*/
         }
         
         /**
