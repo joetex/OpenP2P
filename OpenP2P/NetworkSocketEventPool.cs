@@ -10,12 +10,8 @@ namespace OpenP2P
 {
     public class NetworkSocketEventPool
     {
-        private readonly object poolLock = new object();
-
         public NetworkBufferPool bufferPool;
-
         Queue<NetworkSocketEvent> available = new Queue<NetworkSocketEvent>();
-        Dictionary<int, NetworkSocketEvent> used = new Dictionary<int, NetworkSocketEvent>();
 
         int initialPoolCount = 0;
         int initialBufferSize = 0;
@@ -39,33 +35,19 @@ namespace OpenP2P
          */
         public void New()
         {
-            Interlocked.Increment(ref eventCount);
-            NetworkSocketEvent socketEvent = new NetworkSocketEvent(eventCount);
-            available.Enqueue(socketEvent);
+            //Interlocked.Increment(ref eventCount);
+            eventCount++;
+            NetworkSocketEvent se = new NetworkSocketEvent(0);
+            se.SetBuffer(bufferPool.Reserve());
+            available.Enqueue(se);
         }
 
         /**
          * Reserve a NetworkBuffer from this pool.
          */
-        public NetworkSocketEvent Reserve(byte[] data)
-        {
-            NetworkSocketEvent socketEvent = null;
-            lock (available)
-            {
-                if (available.Count == 0)
-                {
-                    New();
-                }
-
-                socketEvent = available.Dequeue();
-               // used.Add(socketEvent.id, socketEvent);
-            }
-            return socketEvent;
-
-        }
         public NetworkSocketEvent Reserve()
         {
-            NetworkSocketEvent socketEvent = null;
+            NetworkSocketEvent se = null;
             lock (available)
             {
                 if (available.Count == 0)
@@ -73,54 +55,29 @@ namespace OpenP2P
                     New();
                 }
 
-                socketEvent = available.Dequeue();
-                socketEvent.SetBuffer(bufferPool.Reserve());
-                
-                //Console.WriteLine("Reserving Socket Event: " + socketEvent.id);
-
-                //used.Add(socketEvent.id, socketEvent);
+                se = available.Dequeue();
             }
-            return socketEvent;
+            return se;
         }
-
         
-
         /**
          * Free a reserved NetworkBuffer from this pool by NetworkBuffer object.
          */
-        public void Free(NetworkSocketEvent socketEvent)
+        public void Free(NetworkSocketEvent se)
         {
             lock (available)
             {
-                if (socketEvent.Buffer != null)
-                    bufferPool.Free(socketEvent.Buffer);
-
-                //Console.WriteLine("Freeing Socket Event: " + socketEvent.id);
-
-                //if( used.ContainsKey(socketEvent.id))
-                {
-                    //used.Remove(socketEvent.id);
-                    available.Enqueue(socketEvent);
-                }
+                available.Enqueue(se);
             }
 
         }
 
-        /**
-         * Free a reserved NetworkBuffer from this pool by id.
-         */
-        /*public void Free(int id)
-        {
-            NetworkSocketEvent socketEvent = used[id];
-            Free(socketEvent);
-        }
-        */
         public void Dispose()
         {
             while(available.Count > 0)
             {
-                NetworkSocketEvent socketEvent = available.Dequeue();
-                socketEvent.Dispose();
+                NetworkSocketEvent se = available.Dequeue();
+                se.Dispose();
             }
         }
     }

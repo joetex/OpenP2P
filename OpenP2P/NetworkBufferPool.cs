@@ -10,8 +10,6 @@ namespace OpenP2P
     public class NetworkBufferPool
     {
         Queue<NetworkBuffer> available = new Queue<NetworkBuffer>();
-        //Dictionary<int, NetworkBuffer> used = new Dictionary<int, NetworkBuffer>();
-
         private int initialPoolCount = 0;
         private int initialBufferLength = 0;
         private int bufferCount = 0;
@@ -32,8 +30,8 @@ namespace OpenP2P
          */
         public void New()
         {
-            Interlocked.Increment(ref bufferCount);
-            NetworkBuffer buffer = new NetworkBuffer(bufferCount, initialBufferLength);
+            //Interlocked.Increment(ref bufferCount);
+            NetworkBuffer buffer = new NetworkBuffer(0, initialBufferLength);
             available.Enqueue(buffer);
         }
 
@@ -48,9 +46,6 @@ namespace OpenP2P
             }
 
             NetworkBuffer buffer = available.Dequeue();
-            //Console.WriteLine("Reserving buffer id: " + buffer.id);
-            //used.Add(buffer.id, buffer);
-
             return buffer;
         }
 
@@ -59,22 +54,8 @@ namespace OpenP2P
          */
         public void Free(NetworkBuffer buffer)
         {
-            //Console.WriteLine("Freeing buffer id: " + buffer.id);
-            //if( used.ContainsKey(buffer.id))
-            {
-                //used.Remove(buffer.id);
-                available.Enqueue(buffer);
-            }
-           
+            available.Enqueue(buffer);
         }
-
-        /**
-         * Free a reserved NetworkBuffer from this pool by id.
-         */
-        /*public void Free(int id)
-        {
-            NetworkBuffer buffer = used[id];
-            Free(buffer);
-        }*/
+        
     }
 }

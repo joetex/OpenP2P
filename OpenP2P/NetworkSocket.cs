@@ -4,25 +4,25 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenP2P
 {
     public class NetworkSocket
     {
-        public NetworkStream stream;
-        public Socket rawSocket;
+        public Socket socket;
         public IPEndPoint remote;
         public IPEndPoint local;
         public IPEndPoint anyHost;
 
-        public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(10, 2000);
+        public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(1000, 2000);
+        public static Thread SENDTHREAD = new Thread(SendThread);
+        public static Queue<NetworkSocketEvent> SENDQUEUE = new Queue<NetworkSocketEvent>();
 
         //track active events to this socket, so we can cleanup at any time
         public Dictionary<int, NetworkSocketEvent> activeEvents = new Dictionary<int, NetworkSocketEvent>();
         
-        public bool isSending = false;
-        public bool isReceiving = false;
 
         public EventHandler<SocketAsyncEventArgs> evtSocketCompleted = null;
         public event EventHandler<NetworkSocketEvent> OnReceive;
@@ -42,23 +42,46 @@ namespace OpenP2P
         {
             Setup("127.0.0.1", 0, localPort);
         }
+        
+        static void SendThread()
+        {
+            NetworkSocketEvent se = null;
+            while (true)
+            {
+                lock(SENDQUEUE)
+                {
+                    if (SENDQUEUE.Count == 0)
+                    {
+                        Thread.Sleep(1);
+                        continue;
+                    }
+                    se = SENDQUEUE.Dequeue();
+                }
+
+                se.socket.ExecuteSend(se);
+            }
+        }
 
         /**
          * Setup the connection credentials and socket configuration
          */
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
-            stream = new NetworkStream(this);
+            if( !SENDTHREAD.IsAlive )
+            {
+                SENDTHREAD.Start();
+            }
+            //stream = new NetworkStream(this);
             evtSocketCompleted = new EventHandler<SocketAsyncEventArgs>(OnSocketCompleted);
 
             remote = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
             anyHost = new IPEndPoint(IPAddress.Any, 0); 
 
-            rawSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            rawSocket.ExclusiveAddressUse = false;
-            rawSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            rawSocket.Bind(local);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.ExclusiveAddressUse = false;
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.Bind(local);
         }
 
         /**
@@ -67,13 +90,13 @@ namespace OpenP2P
          */
         void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
         {
-            NetworkSocketEvent socketEvent = (NetworkSocketEvent)e.UserToken;
+            NetworkSocketEvent se = (NetworkSocketEvent)e.UserToken;
 
             // determine which type of operation just completed and call the associated handler
-            switch (socketEvent.args.LastOperation)
+            switch (se.args.LastOperation)
             {
-                case SocketAsyncOperation.ReceiveFrom: OnSocketReceive(socketEvent); break;
-                case SocketAsyncOperation.SendTo: OnSocketSend(socketEvent); break;
+                case SocketAsyncOperation.ReceiveFrom: OnSocketReceive(se); break;
+                case SocketAsyncOperation.SendTo: OnSocketSend(se); break;
                 default:
                     throw new ArgumentException("The last operation completed on the socket was not a receive or send");
             }
@@ -83,158 +106,138 @@ namespace OpenP2P
          * Event: OnSocketReceive
          * Called when data has been fully received from a remote connection.
          */
-        void OnSocketReceive(NetworkSocketEvent socketEvent)
+        void OnSocketReceive(NetworkSocketEvent se)
         {
-            isReceiving = false;
-            Listen(); //listen again
-
-            int byteLength = socketEvent.args.BytesTransferred;
-            if (byteLength > 0 && socketEvent.args.SocketError == SocketError.Success)
+            int byteLength = se.args.BytesTransferred;
+            if (byteLength > 0 && se.args.SocketError == SocketError.Success)
             {
-                socketEvent.SetBufferLength(byteLength);
-                
-                if(OnReceive != null) //notify any event listeners
-                    OnReceive.Invoke(this, socketEvent);
+                se.SetBufferLength(byteLength);
+
+                if (OnReceive != null) //notify any event listeners
+                    OnReceive.Invoke(this, se);
             }
-            Free(socketEvent);  //release socket event
+
+            Listen(se); //listen again
+            //Free(se);  //release socket event
         }
 
         /**
          * Event: OnSocketSend
          * Called after data has been sent to remote connection.
          */
-        void OnSocketSend(NetworkSocketEvent socketEvent)
+        void OnSocketSend(NetworkSocketEvent se)
         {
-            isSending = false;
-            Free(socketEvent);
+            Free(se);
         }
         
         /**
          * Listen for single incoming UDP packet.
          */
-        public void Listen()
+        public void Listen(NetworkSocketEvent se)
         {
-            //if (isReceiving)
-            //    return;
-
-            isReceiving = true;
-            NetworkSocketEvent socketEvent = Reserve();
-            socketEvent.args.RemoteEndPoint = anyHost;
+            if( se == null )
+                se = Reserve();
+            se.args.RemoteEndPoint = anyHost;
             
-            if (!rawSocket.ReceiveFromAsync(socketEvent.args))
+            if (!socket.ReceiveFromAsync(se.args))
             {
                 Console.WriteLine("ReceiveAsync Failed");
-                OnSocketCompleted(this, socketEvent.args);
+                OnSocketCompleted(this, se.args);
             }
         }
         
         /**
-         * Prepare for sending. 
-         * First, insert data into the socket event's byte buffer, which is reused from a buffer pool.
-         * Then, follow up with calling ExecuteSend. 
-         * Example:
-         *  NetworkSocketEvent se = socket.PrepareSend();
-         *  byte[] data = se.GetByteBuffer();
-         *  //... add your custom byte message to the "data" byte array 
-         *  socket.ExecuteSend(se);
-         *  
-         * This allows us to stream data directly to the pooled byte buffer and save cpu cycles.
+         * Begin Send
+         * Starts the NetworkStream for writing data to byte buffer.
          */
-        public NetworkSocketEvent PrepareSend()
+        public NetworkStream BeginSend()
         {
-            NetworkSocketEvent socketEvent = Reserve();
-            socketEvent.args.RemoteEndPoint = remote;
-            return socketEvent;
+            NetworkSocketEvent se = Reserve();
+            se.args.RemoteEndPoint = remote;
+            se.stream.BeginWrite();
+
+            return se.stream;
         }
 
         /**
-         * Execute a send using a prepared socket event.
+         * End Send
+         * Ends the NetworkStream and sends to remote destination
          */
-        public void ExecuteSend(NetworkSocketEvent socketEvent)
+        public void EndSend(NetworkStream stream)
         {
-            if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, socketEvent);
+            lock(SENDQUEUE)
+            {
+                SENDQUEUE.Enqueue(stream.socketEvent);
+            }
+            /*
+            NetworkSocketEvent se = stream.socketEvent;
+            stream.EndWrite();
 
-            if (!rawSocket.SendToAsync(socketEvent.args))
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, se);
+
+            if (!socket.SendToAsync(se.args))
             {
                 Console.WriteLine("SendToAsync Failed");
                 //finished synchronously, process immediately
-                OnSocketCompleted(this, socketEvent.args);
+                OnSocketCompleted(this, se.args);
             }
+            */
         }
 
-        /**
-         * Send raw ASCII string message
-         */
-        public void Send(string msg)
+        public void ExecuteSend(NetworkSocketEvent se)
         {
-            byte[] data = Encoding.ASCII.GetBytes(msg);
-            Send(data);
-        }
+            se.stream.EndWrite();
 
-        /**
-         * Send raw byte data.  
-         * Warning: Copies the data bytes to the socket byte buffer. 
-         * This is for customized byte data outside the intended byte streaming method with Prepare/Execute.
-         */
-        public void Send(byte[] data)
-        {
-            NetworkSocketEvent socketEvent = Reserve();
-            socketEvent.SetBufferBytes(data);
-            socketEvent.args.RemoteEndPoint = remote;
-            
-            if( OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, socketEvent);
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, se);
 
-            if (!rawSocket.SendToAsync(socketEvent.args))
+            if (!socket.SendToAsync(se.args))
             {
                 Console.WriteLine("SendToAsync Failed");
-                OnSocketCompleted(this, socketEvent.args); //finished synchronously, process immediately
+                //finished synchronously, process immediately
+                OnSocketCompleted(this, se.args);
             }
         }
-       
+        
         /**
          * Reserve a socket event from the pool.  
          * Setup the socket, completed callback and UserToken
          */
         public NetworkSocketEvent Reserve()
         {
-            
-                NetworkSocketEvent socketEvent = EVENTPOOL.Reserve();
-                socketEvent.socket = this;
-                socketEvent.args.AcceptSocket = rawSocket;
-                socketEvent.args.Completed += evtSocketCompleted;
-                socketEvent.args.UserToken = socketEvent;
-                socketEvent.InitStream();
+            NetworkSocketEvent se = EVENTPOOL.Reserve();
+            se.args.AcceptSocket = socket;
+            se.args.Completed += evtSocketCompleted;
+            se.args.UserToken = se;
+            se.socket = this;
             //lock (activeEvents)
             {
                // activeEvents.Add(socketEvent.id, socketEvent);
             }
-            return socketEvent;
-            
-            
+            return se;
         }
 
         /**
          * Free a socket event back into the pool.
          * Reset all the initial properties to null.
          */
-        public void Free(NetworkSocketEvent socketEvent)
+        public void Free(NetworkSocketEvent se)
         {
             //lock (activeEvents)
             {
                // activeEvents.Remove(socketEvent.id);
             }
-            socketEvent.socket = null;
-                socketEvent.args.AcceptSocket = null;
-                socketEvent.args.RemoteEndPoint = null;
-                socketEvent.args.UserToken = null;
-                socketEvent.args.Completed -= evtSocketCompleted;
+            
+            se.args.AcceptSocket = null;
+            se.args.RemoteEndPoint = null;
+            se.args.UserToken = null;
+            se.args.Completed -= evtSocketCompleted;
+            se.socket = null;
 
-                EVENTPOOL.Free(socketEvent);
-            
-            
+            EVENTPOOL.Free(se);
         }
+
 
         /**
          * Clean any open socket events and shutdown socket.
@@ -248,10 +251,10 @@ namespace OpenP2P
                     Free(entry.Value);
                 }
                 
-                rawSocket.Shutdown(SocketShutdown.Both);
-                rawSocket.Disconnect(false);
-                rawSocket.Close();
-                rawSocket.Dispose();
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Disconnect(false);
+                socket.Close();
+                socket.Dispose();
             }
             catch (Exception e)
             {

@@ -12,7 +12,12 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-
+        public const int MAXSEND = 1;
+        public const int MAXCLIENTS = 1000;
+        static int receiveCount = 0;
+        static int sendCount = 0;
+        static Stopwatch sendSW;
+        static Stopwatch recvSW;
         static void Main(string[] args)
         {
             NetworkSocket server = new NetworkSocket(9000);
@@ -21,79 +26,101 @@ namespace OpenP2P
 
             List<NetworkSocket> clients = new List<NetworkSocket>();
 
-            for(int i=0; i<10000; i++)
+            for(int i=0; i< MAXCLIENTS; i++)
             {
-                clients.Add(new NetworkSocket("127.0.0.1", 9000, 9000 + i + 1));
+                clients.Add(new NetworkSocket("127.0.0.1", 9000, 0));
+                clients[i].OnSend += OnSendEvent;
             }
 
             server.OnReceive += OnReceiveEvent;
-            server.OnSend += OnSendEvent;
-            server.Listen();
+
+            server.Listen(null);
 
 
-            string test = "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+            string test = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 
             sw = Stopwatch.StartNew();
 
-            for (int i = 0; i < clients.Count; i++)
-            {
-                NetworkSocket client = clients[i];
-                client.stream.BeginWrite();
+            Console.WriteLine("Send * Client = " + (MAXSEND * MAXCLIENTS));
+            
+            for (int i = 0; i < MAXSEND; i++)
+                for (int j = 0; j < MAXCLIENTS; j++)
+                {
+                    NetworkStream stream = clients[j].BeginSend();
+                    //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
+                    stream.Write(911);
+                    stream.Write((ushort)420);
+                    stream.Write(1.5f);
+                    stream.Write(1.875);
+                    //stream.WriteTimestamp();
+                    //stream.Write(test);
+                    //stream.Write(1.05f);
+                    //stream.Write((short)100);
+                    //stream.Write("Hello from Texas");
+                    clients[j].EndSend(stream);
+                }
 
-                //client1.stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
-                //client1.stream.WriteTimestamp();
-
-                client.stream.Write(i);
-                //client1.stream.Write(1.05f);
-                //client1.stream.Write((short)100);
-
-                //client1.stream.Write("Hello from Texas");
-                client.stream.EndWrite();
-                
-
-                //client1.Send("c1: " + i + " " + test);
-                //Thread.Sleep(1);
-                //client2.Send("c2: " + i + " " + test);
-                //Thread.Sleep(1);
-            }
-
-
-            //Console.WriteLine(test.Length);
-            //client.Listen();
-            //server.Send()
-
+            
             sw.Stop();
             Console.WriteLine("Finished with " + NetworkSocket.EVENTPOOL.eventCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
-
+            
             Thread.Sleep(10000);
-            //Console.ReadLine();
         }
 
-        static void OnSendEvent(object sender, NetworkSocketEvent e)
+        
+
+        static void OnSendEvent(object sender, NetworkSocketEvent se)
         {
-
+            if( sendCount == 0 )
+                sendSW = Stopwatch.StartNew();
+            sendCount++;
+            if (sendCount >= MAXSEND * MAXCLIENTS)
+            {
+                sendSW.Stop();
+                Console.WriteLine("SEND finished in " + ((float)sendSW.ElapsedMilliseconds / 1000f) + " seconds");
+            }
+                
         }
 
-        static void OnReceiveEvent(object sender, NetworkSocketEvent e)
+
+        static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
+
+        static void OnReceiveEvent(object sender, NetworkSocketEvent se)
         {
             //Console.WriteLine("Received from: " + e.args.RemoteEndPoint.ToString());
+            endpoints.Add(se.args.RemoteEndPoint.ToString(), true);
 
-            NetworkStream stream = e.stream;
-            int clientID = stream.ReadInt();
-            //if( run < 96000)
-            //    Console.WriteLine("clientID: " + clientID);
+            NetworkStream stream = se.stream;
+
+            //Console.WriteLine("stream size: " + stream.byteLength + " B");
+            if (receiveCount == 0)
+                recvSW = Stopwatch.StartNew();
+            receiveCount++;
             
+            if (receiveCount >= MAXSEND*MAXCLIENTS)
+            {
+                recvSW.Stop();
+                Console.WriteLine("RECV finished in " + ((float)recvSW.ElapsedMilliseconds / 1000f) + " seconds");
+                foreach (KeyValuePair<string, bool> entry in endpoints)
+                {
+                    //Console.WriteLine("Client: " + entry.Key);
+                    // do something with entry.Value or entry.Key
+                }
+            }
                 
-            //stream.BeginRead();
-            /*
-            Console.WriteLine("MessageType: " + stream.ReadHeader().ToString());
-            Console.WriteLine("Timestamp: " + stream.ReadTimestamp());
-            
-            Console.WriteLine("float: " + stream.ReadFloat());
-            Console.WriteLine("short: " + stream.ReadShort());
-            Console.WriteLine("String: " + stream.ReadString());*/
-            //Console.WriteLine("Received message: " + System.Text.Encoding.ASCII.GetString(e.args.Buffer, 0, e.args.BytesTransferred) + " [" + NetworkSocket.EVENTPOOL.eventCount + "]");
+           // Console.WriteLine("MessageType: " + stream.ReadHeader().ToString());
+            //Console.WriteLine("Timestamp: " + stream.ReadTimestamp());
+            //int clientID = stream.ReadUShort();
+            //Console.WriteLine("ReadInt: " + stream.ReadInt());
+            //Console.WriteLine("ReadUShort: " + stream.ReadUShort());
+            //Console.WriteLine("ReadFloat: " + stream.ReadFloat());
+            //Console.WriteLine("ReadDouble: " + stream.ReadDouble());
+            //Console.WriteLine("clientID: " + clientID);
+            //Console.WriteLine("float: " + stream.ReadFloat());
+            //Console.WriteLine("short: " + stream.ReadShort());
+            //Console.WriteLine("String: " + stream.ReadString());
+
         }
        
     }

@@ -13,26 +13,20 @@ namespace OpenP2P
      */
     public partial class NetworkStream
     {
-        public NetworkSocket socket = null;
         public NetworkSocketEvent socketEvent = null;
-        public byte[] ByteBuffer { get { return socketEvent.GetByteBuffer(); } }
-        public int byteLength = 0;
-        public int bytePos = 0;
+        NetworkBuffer buffer = null;
+        public NetworkBuffer Buffer { get { return buffer; } }
+        public byte[] ByteBuffer { get { return buffer.buffer; } }
+        public int byteLength = 0; //total size of data 
+        public int bytePos = 0; //current read position
 
-        public NetworkStream(NetworkSocket s)
-        {
-            socket = s;
-        }
-
-        public void Attach(NetworkSocketEvent se)
+        public NetworkStream(NetworkSocketEvent se)
         {
             socketEvent = se;
-            socket = se.socket;
         }
 
         public void BeginWrite()
         {
-            socketEvent = socket.PrepareSend();
             byteLength = 0;
             bytePos = 0;
         }
@@ -40,7 +34,11 @@ namespace OpenP2P
         public void EndWrite()
         {
             socketEvent.SetBufferLength(byteLength);
-            socket.ExecuteSend(socketEvent);
+        }
+
+        public void SetBuffer(NetworkBuffer _buffer)
+        {
+            buffer = _buffer;
         }
 
         public void SetBufferLength(int length)
@@ -49,24 +47,24 @@ namespace OpenP2P
             bytePos = 0;
         }
         
-        public void WriteHeader(NetworkProtocol.MessageType mt)
+        
+        public unsafe void WriteHeader(NetworkProtocol.MessageType mt)
         {
-            ByteBuffer[0] = (byte)mt;
-            byteLength += 1;
+            Write((byte)mt);
         }
 
-        public void WriteTimestamp()
+        public unsafe void WriteTimestamp()
         {
             long time = System.DateTime.Now.Ticks;
             //Console.WriteLine("WriteTimestamp: " + time);
-            Write(BitConverter.GetBytes(time));
+            Write(time);
         }
 
-        public void Write(byte val)
+        public unsafe void Write(byte val)
         {
             ByteBuffer[byteLength++] = val;
         }
-        public void Write(byte[] val)
+        public unsafe void Write(byte[] val)
         {
             //ByteBuffer[byteLength++] = (byte)val.Length;
             if (BitConverter.IsLittleEndian)
@@ -79,39 +77,56 @@ namespace OpenP2P
             }
             
         }
-        public void Write(int val)
+        
+        public unsafe void Write(int val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((int*)b) = val;
+            byteLength += 4;
         }
-        public void Write(uint val)
+        public unsafe void Write(uint val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((uint*)b) = val;
+            byteLength += 4;
         }
-        public void Write(long val)
+        public unsafe void Write(long val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((long*)b) = val;
+            byteLength += 8;
         }
-        public void Write(ulong val)
+        public unsafe void Write(ulong val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((ulong*)b) = val;
+            byteLength += 8;
         }
-        public void Write(short val)
+        public unsafe void Write(short val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((short*)b) = val;
+            byteLength += 2;
         }
-        public void Write(ushort val)
+        public unsafe void Write(ushort val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((ushort*)b) = val;
+            byteLength += 2;
         }
-        public void Write(float val)
+        public unsafe void Write(float val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((float*)b) = val;
+            byteLength += 4;
         }
-        public void Write(double val)
+        public unsafe void Write(double val)
         {
-            Write(BitConverter.GetBytes(val));
+            fixed (byte* b = &ByteBuffer[byteLength])
+                *((double*)b) = val;
+            byteLength += 8;
         }
-        public void Write(string val)
+        public unsafe void Write(string val)
         {
             Write((ushort)val.Length);
             Write(Encoding.ASCII.GetBytes(val));
