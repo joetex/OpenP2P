@@ -42,6 +42,8 @@ namespace OpenP2P
             sw = Stopwatch.StartNew();
 
             Console.WriteLine("Send * Client = " + (MAXSEND * MAXCLIENTS));
+
+            Random rnd = new Random();
             
             for (int i = 0; i < MAXSEND; i++)
                 for (int j = 0; j < MAXCLIENTS; j++)
@@ -50,8 +52,10 @@ namespace OpenP2P
                     //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
                     //stream.Write(911);
                     //stream.Write((ushort)420);
-                    stream.Write(1.5f);
-                    stream.Write(1.875);
+                    stream.Write(NextFloat(rnd));
+                    stream.Write(NextFloat(rnd));
+                    stream.Write(NextFloat(rnd));
+                    //stream.Write(1.875);
                     //stream.WriteTimestamp();
                     //stream.Write(test);
                     //stream.Write(1.05f);
@@ -68,7 +72,13 @@ namespace OpenP2P
             //Thread.Sleep(10000);
         }
 
-        
+        static float NextFloat(Random random)
+        {
+            double mantissa = (random.NextDouble() * 2.0) - 1.0;
+            // choose -149 instead of -126 to also generate subnormal floats (*)
+            double exponent = Math.Pow(2.0, random.Next(-126, 128));
+            return (float)(mantissa * exponent);
+        }
 
         static void OnSendEvent(object sender, NetworkSocketEvent se)
         {
