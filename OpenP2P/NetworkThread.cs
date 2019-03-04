@@ -11,7 +11,7 @@ namespace OpenP2P
     {
         public const int MIN_BUFFER_COUNT = 100000;
         public const int MAX_BUFFER_SIZE = 2000;
-        public static int MAX_SENDRATE_PERFRAME = 1000;
+        public static int MAX_SENDRATE_PERFRAME = 75;
 
         //public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
