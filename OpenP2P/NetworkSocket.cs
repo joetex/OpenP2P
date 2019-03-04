@@ -198,8 +198,19 @@ namespace OpenP2P
         public void ExecuteListen(NetworkSocketEvent se)
         {
             EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-            int bytesReceived = socket.ReceiveFrom(se.stream.ByteBuffer, ref remoteEP);
-            if( bytesReceived == 0 )
+            socket.ReceiveTimeout = 100;
+            int bytesReceived = 0;
+            //socket.SetSocketOption(SocketOptionLevel.Udp, SocketOptionName.ReceiveTimeout, 2)
+            try
+            {
+                bytesReceived = socket.ReceiveFrom(se.stream.ByteBuffer, ref remoteEP);
+                
+            }
+            catch(Exception e)
+            {
+
+            }
+            if (bytesReceived == 0)
             {
                 Console.WriteLine("Error Receiving bytes");
             }
