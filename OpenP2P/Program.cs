@@ -89,7 +89,7 @@ namespace OpenP2P
         static void OnReceiveEvent(object sender, NetworkSocketEvent se)
         {
             //Console.WriteLine("Received from: " + e.args.RemoteEndPoint.ToString());
-            endpoints.Add(se.args.RemoteEndPoint.ToString(), true);
+            //endpoints.Add(se.args.RemoteEndPoint.ToString(), true);
 
             NetworkStream stream = se.stream;
 
