@@ -12,8 +12,8 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 100;
-        public const int MAXCLIENTS = 1000;
+        public const int MAXSEND = 100000;
+        public const int MAXCLIENTS = 1;
         static int receiveCount = 0;
         static int sendCount = 0;
         static Stopwatch sendSW;
