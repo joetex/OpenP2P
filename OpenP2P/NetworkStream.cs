@@ -30,21 +30,13 @@ namespace OpenP2P
             buffer = new byte[initBufferSize];
         }
 
-        public void BeginWrite()
+        public void Reset()
         {
             byteLength = 0;
             bytePos = 0;
         }
 
-        public void EndWrite()
-        {
-        }
-
-        /*public void SetBuffer(NetworkBuffer _buffer)
-        {
-            buffer = _buffer;
-        }*/
-
+        
         public void SetBufferLength(int length)
         {
             byteLength = length;

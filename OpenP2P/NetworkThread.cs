@@ -13,7 +13,10 @@ namespace OpenP2P
         public const int MAX_BUFFER_SIZE = 2000;
         public static int MAX_SENDRATE_PERFRAME = 75;
 
-        //public static NetworkSocketEventPool EVENTPOOL = new NetworkSocketEventPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
+        //important to sleep more, since they are on infinite loops
+        public const int EMPTY_SLEEP_TIME = 10;
+        public const int MAXSEND_SLEEP_TIME = 1;
+        
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
 
         public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>();
@@ -45,14 +48,15 @@ namespace OpenP2P
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {
-                    Thread.Sleep(1);
+                    Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
                 }
 
                 //avoid filling up the network card's RING buffer
-                //important on virtual servers with lower buffer settings
+                //important on cloud VPS/dedicated servers with lower buffer settings
+                //google compute engine (cheapest one) gave packet loss at >75 sends/frame
                 if (queueCount % MAX_SENDRATE_PERFRAME == 0)
-                    Thread.Sleep(1);
+                    Thread.Sleep(MAXSEND_SLEEP_TIME);
 
                 stream.socket.ExecuteSend(stream);
             }
@@ -75,7 +79,7 @@ namespace OpenP2P
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {
-                    Thread.Sleep(1);
+                    Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
                 }
 

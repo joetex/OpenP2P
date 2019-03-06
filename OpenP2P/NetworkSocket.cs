@@ -74,11 +74,10 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkStream stream)
         {
-            EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             int bytesReceived = 0;
             try
             {
-                bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref remoteEP);
+                bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
             }
             catch(Exception e) {}
 
@@ -90,12 +89,21 @@ namespace OpenP2P
          * Begin Send
          * Starts the NetworkStream for writing data to byte buffer.
          */
+        public NetworkStream BeginSend(IPEndPoint endPoint)
+        {
+            NetworkStream stream = Reserve();
+            stream.remoteEndPoint = endPoint;
+            return stream;
+        }
+
+        /**
+         * Begin Send
+         * Starts the NetworkStream for writing data to byte buffer.
+         */
         public NetworkStream BeginSend()
         {
             NetworkStream stream = Reserve();
             stream.remoteEndPoint = remote;
-            stream.BeginWrite();
-
             return stream;
         }
 
@@ -159,6 +167,7 @@ namespace OpenP2P
         {
             NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
             stream.socket = this;
+            stream.SetBufferLength(0);
             return stream;
         }
 
