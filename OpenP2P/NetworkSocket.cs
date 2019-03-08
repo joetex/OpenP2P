@@ -21,6 +21,7 @@ namespace OpenP2P
         
         public event EventHandler<NetworkStream> OnReceive;
         public event EventHandler<NetworkStream> OnSend;
+        public EventHandler<SocketAsyncEventArgs> evtSocketCompleted = null;
 
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
@@ -42,14 +43,20 @@ namespace OpenP2P
          */
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
+            //evtSocketCompleted = new EventHandler<SocketAsyncEventArgs>(OnSocketCompleted);
+
             remote = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
             anyHost = new IPEndPoint(IPAddress.Any, 0); 
 
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.ExclusiveAddressUse = false;
+            //socket.NoDelay = true;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.Bind(local);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.MAX_BUFFER_SIZE * 10);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.MAX_BUFFER_SIZE * 10);
+            if ( localPort != 0 )
+                socket.Bind(local);
         }
         
         
@@ -60,8 +67,10 @@ namespace OpenP2P
         {
             if(stream == null )
                 stream = Reserve();
-            stream.remoteEndPoint = anyHost;
             
+            stream.Reset();
+            
+            //ExecuteListen(stream);
             lock (NetworkThread.RECVQUEUE)
             {
                 NetworkThread.RECVQUEUE.Enqueue(stream);
@@ -74,14 +83,22 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkStream stream)
         {
-            int bytesReceived = 0;
             try
             {
-                bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                /*if (!socket.ReceiveFromAsync(stream.args))
+                {
+                    Console.WriteLine("ReceiveAsync Failed");
+                    OnSocketCompleted(this, stream.args);
+                }*/
+                
+                int bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                stream.SetBufferLength(bytesReceived);
             }
-            catch(Exception e) {}
+            catch(Exception e) {
+                Console.WriteLine(e.ToString());
+            }
 
-            stream.SetBufferLength(bytesReceived);
+            
             OnSocketReceive(stream);
         }
 
@@ -92,7 +109,9 @@ namespace OpenP2P
         public NetworkStream BeginSend(IPEndPoint endPoint)
         {
             NetworkStream stream = Reserve();
-            stream.remoteEndPoint = endPoint;
+            stream.remoteEndPoint = remote;
+            //stream.args.RemoteEndPoint = remote;
+            stream.SetBufferLength(0);
             return stream;
         }
 
@@ -104,6 +123,8 @@ namespace OpenP2P
         {
             NetworkStream stream = Reserve();
             stream.remoteEndPoint = remote;
+            //stream.args.RemoteEndPoint = remote;
+            stream.SetBufferLength(0);
             return stream;
         }
 
@@ -113,27 +134,64 @@ namespace OpenP2P
          */
         public void EndSend(NetworkStream stream)
         {
+            stream.Complete();
+            OnSocketSend(stream);
+
+            //ExecuteSend(stream);
             lock (NetworkThread.SENDQUEUE)
             {
                 NetworkThread.SENDQUEUE.Enqueue(stream);
             }
         }
+        /*
+        public void ExecuteSend(NetworkStream stream)
+        {
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, stream);
 
+            if (!socket.SendToAsync(stream.args))
+            {
+                Console.WriteLine("SendToAsync Failed");
+                //finished synchronously, process immediately
+                OnSocketCompleted(this, stream.args);
+            }
+        }
+        */
         /**
          * Execute Send
          * Thread is attempting to send data through socket.
          */
+         
         public void ExecuteSend(NetworkStream stream)
         {
             try
             {
-                int result = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
             }
-            catch(Exception e) { }
-            
-            OnSocketSend(stream);
+            catch(Exception e) {
+                Console.WriteLine(e.ToString());
+            }
+
+            Free(stream);
         }
 
+        /**
+        * Event: OnSocketCompleted 
+        * Called when an async receive/send has completed.
+        *//*
+        void OnSocketCompleted(object sender, SocketAsyncEventArgs e)
+        {
+            NetworkStream stream = (NetworkStream)e.UserToken;
+
+            // determine which type of operation just completed and call the associated handler
+            switch (stream.args.LastOperation)
+            {
+                case SocketAsyncOperation.ReceiveFrom: OnSocketReceive(stream); break;
+                case SocketAsyncOperation.SendTo: OnSocketSend(stream); break;
+                default:
+                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+            }
+        }*/
 
         /**
          * Event: OnSocketReceive
@@ -141,9 +199,22 @@ namespace OpenP2P
          */
         void OnSocketReceive(NetworkStream stream)
         {
-            if (OnReceive != null) //notify any event listeners
-                OnReceive.Invoke(this, stream);
+            try
+            {
+                //int byteLength = stream.args.BytesTransferred;
+                //if (byteLength > 0 && stream.args.SocketError == SocketError.Success)
+                {
+                    //stream.Complete(stream.byteLength);
 
+                    if (OnReceive != null) //notify any event listeners
+                        OnReceive.Invoke(this, stream);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            
             Listen(stream); //listen again
         }
 
@@ -156,7 +227,12 @@ namespace OpenP2P
             if (OnSend != null) //notify any event listeners
                 OnSend.Invoke(this, stream);
 
-            Free(stream);
+            
+        }
+
+        public void OnCompleted(Object sender, SocketAsyncEventArgs args)
+        {
+
         }
 
         /**
@@ -167,7 +243,10 @@ namespace OpenP2P
         {
             NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
             stream.socket = this;
-            stream.SetBufferLength(0);
+            //stream.args.AcceptSocket = socket;
+            //stream.args.Completed += evtSocketCompleted;
+            //stream.args.UserToken = stream;
+
             return stream;
         }
 
@@ -182,7 +261,11 @@ namespace OpenP2P
                // activeEvents.Remove(socketEvent.id);
             }
             stream.socket = null;
-            
+            //stream.args.AcceptSocket = null;
+            //stream.args.Completed -= evtSocketCompleted;
+            //stream.args.UserToken = null;
+            //stream.args.RemoteEndPoint = null;
+
             NetworkThread.STREAMPOOL.Free(stream);
         }
 

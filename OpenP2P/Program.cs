@@ -12,12 +12,17 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 100000;
+        public const int MAXSEND = 50000;
         public const int MAXCLIENTS = 1;
-        static int receiveCount = 0;
-        static int sendCount = 0;
+        static long receiveCount = 0;
+        static long sendByteCount = 0;
+        static long sendCount = 0;
         static Stopwatch sendSW;
         static Stopwatch recvSW;
+        static byte[] testBytes;
+        static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
+        public static long receiveByteCount = 0;
+
         static void Main(string[] args)
         {
             NetworkThread.StartNetworkThreads();
@@ -25,7 +30,8 @@ namespace OpenP2P
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
             server.Listen(null);
-
+            //server.Listen(null);
+            //server.Listen(null);
             List<NetworkSocket> clients = new List<NetworkSocket>();
             for(int i=0; i< MAXCLIENTS; i++)
             {
@@ -33,59 +39,77 @@ namespace OpenP2P
                 clients[i].OnSend += OnSendEvent;
             }
             
-            string test = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+            string test = "";
+            for(int i=0; i<4900; i++)
+            {
+                test += "1234567890";
+            }
+
+            testBytes = Encoding.ASCII.GetBytes(test);
+            Console.WriteLine("testBytes Count: " + testBytes.Length);
 
             sw = Stopwatch.StartNew();
 
             Console.WriteLine("Send * Client = " + (MAXSEND * MAXCLIENTS));
 
-            Random rnd = new Random();
-            
+            //Random rnd = new Random();
+            NetworkStream[] streams = new NetworkStream[MAXSEND];
+
             for (int i = 0; i < MAXSEND; i++)
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
                     NetworkStream stream = clients[j].BeginSend();
                     //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
-                    //stream.Write(911);
+                    stream.Write(i+1);
                     //stream.Write((ushort)420);
-                    stream.Write(NextFloat(rnd));
-                    stream.Write(NextFloat(rnd));
-                    stream.Write(NextFloat(rnd));
+                    stream.Write(testBytes);
+
+                    streams[i] = stream;
+                    //stream.byteLength += 49000;
                     //stream.Write(1.875);
                     //stream.WriteTimestamp();
                     //stream.Write(test);
                     //stream.Write(1.05f);
                     //stream.Write((short)100);
                     //stream.Write("Hello from Texas");
-                    clients[j].EndSend(stream);
                 }
 
-            
+            for (int i = 0; i < MAXSEND; i++)
+                for (int j = 0; j < MAXCLIENTS; j++)
+                {
+                    //NetworkStream stream = clients[j].BeginSend();
+                    
+                    clients[j].EndSend(streams[i]);
+                }
+
+
             sw.Stop();
             Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
             
-            //Thread.Sleep(10000);
+            Thread.Sleep(3000);
+
+            Console.WriteLine("sendCount = " + sendCount);
+            Console.WriteLine("sendByteCount = " + sendByteCount);
+
+            Console.WriteLine("receiveCount = " + receiveCount);
+            Console.WriteLine("receiveByteCount = " + receiveByteCount);
+            Thread.Sleep(5000);
         }
 
-        static float NextFloat(Random random)
-        {
-            double mantissa = (random.NextDouble() * 2.0) - 1.0;
-            // choose -149 instead of -126 to also generate subnormal floats (*)
-            double exponent = Math.Pow(2.0, random.Next(-126, 128));
-            return (float)(mantissa * exponent);
-        }
 
         static void OnSendEvent(object sender, NetworkStream stream)
         {
             if( sendCount == 0 )
                 sendSW = Stopwatch.StartNew();
             sendCount++;
-
-            if( stream.byteLength != 12 )
+            if( stream.byteLength != 4 )
             {
-                Console.WriteLine("Failed to send data");
+                //Console.WriteLine("SEND Packet oversized: " + stream.byteLength);
             }
+            sendByteCount += stream.byteLength;
+            //if (stream.byteSent != testBytes.Length)
+                //Console.WriteLine("packet size: " + stream.byteLength);
             if (sendCount >= MAXSEND * MAXCLIENTS)
             {
                 sendSW.Stop();
@@ -95,7 +119,8 @@ namespace OpenP2P
         }
 
 
-        static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
+        static long receiveSum = 0;
+
 
         static void OnReceiveEvent(object sender, NetworkStream stream)
         {
@@ -107,11 +132,25 @@ namespace OpenP2P
             if (receiveCount == 0)
                 recvSW = Stopwatch.StartNew();
             receiveCount++;
-            
+            receiveByteCount += stream.byteLength;
+
+            int id = stream.ReadInt();
+            receiveSum += id;
+
+            if (stream.byteLength > 4)
+            {
+                //Console.WriteLine("RECV Packet oversized: " + stream.byteLength);
+            }
+            //if (receiveCount % 1000 == 0)
+            //    Console.WriteLine("ReceiveCount: " + receiveCount);
             if (receiveCount >= MAXSEND*MAXCLIENTS)
             {
                 recvSW.Stop();
                 Console.WriteLine("RECV finished in " + ((float)recvSW.ElapsedMilliseconds / 1000f) + " seconds");
+                Console.WriteLine("Received: " + receiveByteCount + " bytes");
+                Console.WriteLine("Received sum: " + receiveSum);
+                long expected = (long)MAXSEND * ((long)MAXSEND + (long)1) / (long)2;
+                Console.WriteLine("Expected sum: " + expected);
                 foreach (KeyValuePair<string, bool> entry in endpoints)
                 {
                     //Console.WriteLine("Client: " + entry.Key);
@@ -132,6 +171,16 @@ namespace OpenP2P
             //Console.WriteLine("String: " + stream.ReadString());
 
         }
-       
+
+
+
+        static float NextFloat(Random random)
+        {
+            double mantissa = (random.NextDouble() * 2.0) - 1.0;
+            // choose -149 instead of -126 to also generate subnormal floats (*)
+            double exponent = Math.Pow(2.0, random.Next(-126, 128));
+            return (float)(mantissa * exponent);
+        }
+
     }
 }

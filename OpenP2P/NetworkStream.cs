@@ -17,6 +17,7 @@ namespace OpenP2P
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
+        //public SocketAsyncEventArgs args = null;
 
         public byte[] buffer;
 
@@ -24,25 +25,44 @@ namespace OpenP2P
         public byte[] ByteBuffer { get { return buffer; } }
         public int byteLength = 0; //total size of data 
         public int bytePos = 0; //current read position
+        public int byteSent = 0;
 
         public NetworkStream(int initBufferSize)
         {
             buffer = new byte[initBufferSize];
+            //args = new SocketAsyncEventArgs();
+           // args.SetBuffer(buffer, 0, initBufferSize);
         }
-
-        public void Reset()
-        {
-            byteLength = 0;
-            bytePos = 0;
-        }
-
         
         public void SetBufferLength(int length)
         {
             byteLength = length;
             bytePos = 0;
+            //args.SetBuffer(buffer, 0, byteLength);
         }
-        
+
+        public void Reset()
+        {
+            remoteEndPoint = socket.anyHost;
+            //args.RemoteEndPoint = socket.anyHost;
+
+            //args.SetBuffer(buffer, 0, buffer.Length);
+            SetBufferLength(buffer.Length);
+        }
+
+
+
+        public void Complete()
+        {
+            //args.SetBuffer(buffer, 0, byteLength);
+            SetBufferLength(byteLength);
+        }
+
+        public void Complete(int bytesTransferred)
+        {
+            //args.SetBuffer(buffer, 0, bytesTransferred);
+            SetBufferLength(bytesTransferred);
+        }
         
         public unsafe void WriteHeader(NetworkProtocol.MessageType mt)
         {
@@ -67,10 +87,11 @@ namespace OpenP2P
             {
                 //Array.Reverse(val, 0, val.Length);
             }
-
-            for (int i = 0; i < val.Length; i++) {
+            Array.Copy(val, 0, ByteBuffer, byteLength, val.Length);
+            byteLength += val.Length;
+            /*for (int i = 0; i < val.Length; i++) {
                 ByteBuffer[byteLength++] = val[i];
-            }
+            }*/
             
         }
         
