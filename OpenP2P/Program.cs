@@ -72,7 +72,7 @@ namespace OpenP2P
                     stream.Write(testBytes);
 
                     streams[i] = stream;
-                    clients[j].EndSend(streams[i]);
+                    
                     //stream.byteLength += 49000;
                     //stream.Write(1.875);
                     //stream.WriteTimestamp();
@@ -88,8 +88,8 @@ namespace OpenP2P
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
                     //NetworkStream stream = clients[j].BeginSend();
-                    
-                    
+
+                    clients[j].EndSend(streams[i]);
                 }
 
 
