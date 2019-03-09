@@ -10,12 +10,12 @@ namespace OpenP2P
     class NetworkThread
     {
         public const int MIN_BUFFER_COUNT = 1000;
-        public const int MAX_BUFFER_SIZE = 1400;
-        public static int MAX_SENDRATE_PERFRAME = 10;
+        public const int MAX_BUFFER_SIZE = 100;
+        public static int MAX_SENDRATE_PERFRAME = 75;
 
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 1;
-        public const int MAXSEND_SLEEP_TIME = 25;
+        public const int MAXSEND_SLEEP_TIME = 1;
         
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
 
