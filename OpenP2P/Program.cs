@@ -44,7 +44,7 @@ namespace OpenP2P
             }
             
             string test = "";
-            for(int i=0; i<1; i++)
+            for(int i=0; i<30; i++)
             {
                 test += "1234567890";
             }
@@ -69,7 +69,7 @@ namespace OpenP2P
                     stream.Write(i);
                     //stream.Write((ushort)420);
                     
-                    //stream.Write(testBytes);
+                    stream.Write(testBytes);
 
                     streams[i] = stream;
                     
