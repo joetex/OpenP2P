@@ -47,7 +47,7 @@ namespace OpenP2P
             //args.RemoteEndPoint = socket.anyHost;
 
             //args.SetBuffer(buffer, 0, buffer.Length);
-            SetBufferLength(buffer.Length);
+            //SetBufferLength(buffer.Length);
         }
 
 
