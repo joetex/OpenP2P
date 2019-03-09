@@ -69,7 +69,7 @@ namespace OpenP2P
                     stream.Write(i);
                     //stream.Write((ushort)420);
                     
-                    stream.Write(testBytes);
+                    //stream.Write(testBytes);
 
                     streams[i] = stream;
                     
