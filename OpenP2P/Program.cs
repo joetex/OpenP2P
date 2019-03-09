@@ -72,6 +72,7 @@ namespace OpenP2P
                     stream.Write(testBytes);
 
                     streams[i] = stream;
+                    clients[j].EndSend(streams[i]);
                     //stream.byteLength += 49000;
                     //stream.Write(1.875);
                     //stream.WriteTimestamp();
@@ -88,7 +89,7 @@ namespace OpenP2P
                 {
                     //NetworkStream stream = clients[j].BeginSend();
                     
-                    clients[j].EndSend(streams[i]);
+                    
                 }
 
 
@@ -96,7 +97,7 @@ namespace OpenP2P
             Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
 
-            Thread.Sleep(10000);
+            Thread.Sleep(3000);
 
             Console.WriteLine("sendCount = " + sendCount);
             Console.WriteLine("sendByteCount = " + sendByteCount);
