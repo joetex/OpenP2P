@@ -68,31 +68,31 @@ namespace OpenP2P
         public static NetworkStream recvStream = null;
         public static void RecvThread()
         {
-            //NetworkStream stream = null;
+            NetworkStream stream = null;
             int queueCount = 0;
 
             while (true)
             {
-                /*lock (RECVQUEUE)
+                lock (RECVQUEUE)
                 {
                     queueCount = RECVQUEUE.Count;
                     if (queueCount > 0)
                         stream = RECVQUEUE.Dequeue();
-                }*/
-                /*
+                }
+                
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {
                     Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
-                }*/
-                if (recvStream == null)
-                    continue;
+                }
+               // if (recvStream == null)
+                //    continue;
                 //stream.Reset();
                 //ExecuteListen(stream); //listen again
-                recvStream.Reset();
+                stream.Reset();
 
-                recvStream.socket.ExecuteListen(recvStream);
+                stream.socket.ExecuteListen(stream);
             }
         }
     }

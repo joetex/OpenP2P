@@ -29,8 +29,8 @@ namespace OpenP2P
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
-            //server.Listen(null);
-            NetworkThread.recvStream = server.Reserve();
+            server.Listen(null);
+            //NetworkThread.recvStream = server.Reserve();
 
             //server.Listen(null);
             //server.Listen(null);

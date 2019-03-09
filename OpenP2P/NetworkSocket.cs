@@ -219,7 +219,7 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
 
-            //Listen(stream); //listen again
+            Listen(stream); //listen again
         }
 
         /**
