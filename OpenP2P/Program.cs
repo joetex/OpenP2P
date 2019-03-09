@@ -12,7 +12,7 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 50000;
+        public const int MAXSEND = 100000;
         public const int MAXCLIENTS = 1;
         static long receiveCount = 0;
         static long sendByteCount = 0;
@@ -29,7 +29,11 @@ namespace OpenP2P
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
-            server.Listen(null);
+            //server.Listen(null);
+            NetworkThread.recvStream = server.Reserve();
+
+            //server.Listen(null);
+            //server.Listen(null);
             //server.Listen(null);
             //server.Listen(null);
             List<NetworkSocket> clients = new List<NetworkSocket>();
@@ -40,7 +44,7 @@ namespace OpenP2P
             }
             
             string test = "";
-            for(int i=0; i<4900; i++)
+            for(int i=0; i<50; i++)
             {
                 test += "1234567890";
             }
@@ -54,14 +58,17 @@ namespace OpenP2P
 
             //Random rnd = new Random();
             NetworkStream[] streams = new NetworkStream[MAXSEND];
-
+            Random rnd = new Random((int)sw.ElapsedTicks);
             for (int i = 0; i < MAXSEND; i++)
+            {
+                receiveIds[i] = 0;
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
                     NetworkStream stream = clients[j].BeginSend();
                     //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
-                    stream.Write(i+1);
+                    stream.Write(i);
                     //stream.Write((ushort)420);
+                    
                     stream.Write(testBytes);
 
                     streams[i] = stream;
@@ -73,6 +80,8 @@ namespace OpenP2P
                     //stream.Write((short)100);
                     //stream.Write("Hello from Texas");
                 }
+            }
+                
 
             for (int i = 0; i < MAXSEND; i++)
                 for (int j = 0; j < MAXCLIENTS; j++)
@@ -86,15 +95,23 @@ namespace OpenP2P
             sw.Stop();
             Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
-            
-            Thread.Sleep(3000);
+
+            Thread.Sleep(10000);
 
             Console.WriteLine("sendCount = " + sendCount);
             Console.WriteLine("sendByteCount = " + sendByteCount);
 
             Console.WriteLine("receiveCount = " + receiveCount);
             Console.WriteLine("receiveByteCount = " + receiveByteCount);
-            Thread.Sleep(5000);
+
+            int missingCnt = 0;
+            for (int i = 0; i<MAXSEND; i++)
+            {
+                if (receiveIds[i] == 0)
+                    missingCnt++;
+            }
+            Console.WriteLine("Missing Packets: " + missingCnt);
+            //Thread.Sleep(5000);
         }
 
 
@@ -121,6 +138,7 @@ namespace OpenP2P
 
         static long receiveSum = 0;
 
+        public static int[] receiveIds = new int[MAXSEND];
 
         static void OnReceiveEvent(object sender, NetworkStream stream)
         {
@@ -135,6 +153,7 @@ namespace OpenP2P
             receiveByteCount += stream.byteLength;
 
             int id = stream.ReadInt();
+            receiveIds[id] = 1;
             receiveSum += id;
 
             if (stream.byteLength > 4)

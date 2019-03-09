@@ -83,6 +83,8 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkStream stream)
         {
+            
+
             try
             {
                 /*if (!socket.ReceiveFromAsync(stream.args))
@@ -135,7 +137,7 @@ namespace OpenP2P
         public void EndSend(NetworkStream stream)
         {
             stream.Complete();
-            OnSocketSend(stream);
+            
 
             //ExecuteSend(stream);
             lock (NetworkThread.SENDQUEUE)
@@ -166,11 +168,13 @@ namespace OpenP2P
         {
             try
             {
-                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.DontRoute, stream.remoteEndPoint);
             }
             catch(Exception e) {
                 Console.WriteLine(e.ToString());
             }
+
+            OnSocketSend(stream);
 
             Free(stream);
         }
@@ -214,8 +218,8 @@ namespace OpenP2P
             {
                 Console.WriteLine(e.ToString());
             }
-            
-            Listen(stream); //listen again
+
+            //Listen(stream); //listen again
         }
 
         /**

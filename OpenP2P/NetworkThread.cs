@@ -9,13 +9,13 @@ namespace OpenP2P
 {
     class NetworkThread
     {
-        public const int MIN_BUFFER_COUNT = 10000;
-        public const int MAX_BUFFER_SIZE = 50000;
-        public static int MAX_SENDRATE_PERFRAME = 50;
+        public const int MIN_BUFFER_COUNT = 100;
+        public const int MAX_BUFFER_SIZE = 2500;
+        public static int MAX_SENDRATE_PERFRAME = 1000;
 
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 1;
-        public const int MAXSEND_SLEEP_TIME = 1;
+        public const int MAXSEND_SLEEP_TIME = 0;
         
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
 
@@ -65,28 +65,34 @@ namespace OpenP2P
             }
         }
 
+        public static NetworkStream recvStream = null;
         public static void RecvThread()
         {
-            NetworkStream stream = null;
+            //NetworkStream stream = null;
             int queueCount = 0;
 
             while (true)
             {
-                lock (RECVQUEUE)
+                /*lock (RECVQUEUE)
                 {
                     queueCount = RECVQUEUE.Count;
                     if (queueCount > 0)
                         stream = RECVQUEUE.Dequeue();
-                }
-
+                }*/
+                /*
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {
                     Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
-                }
+                }*/
+                if (recvStream == null)
+                    continue;
+                //stream.Reset();
+                //ExecuteListen(stream); //listen again
+                recvStream.Reset();
 
-                stream.socket.ExecuteListen(stream);
+                recvStream.socket.ExecuteListen(recvStream);
             }
         }
     }
