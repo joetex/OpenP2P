@@ -11,7 +11,7 @@ namespace OpenP2P
     {
         public const int MIN_BUFFER_COUNT = 1000;
         public const int MAX_BUFFER_SIZE = 1000;
-        public static int MAX_SENDRATE_PERFRAME = 100;
+        public static int MAX_SENDRATE_PERFRAME = 1000;
 
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
