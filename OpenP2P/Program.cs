@@ -97,7 +97,7 @@ namespace OpenP2P
             Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
 
-            Thread.Sleep(3000);
+            Thread.Sleep(7000);
 
             Console.WriteLine("sendCount = " + sendCount);
             Console.WriteLine("sendByteCount = " + sendByteCount);
