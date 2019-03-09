@@ -44,7 +44,7 @@ namespace OpenP2P
             }
             
             string test = "";
-            for(int i=0; i<5; i++)
+            for(int i=0; i<1; i++)
             {
                 test += "1234567890";
             }

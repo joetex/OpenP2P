@@ -10,7 +10,7 @@ namespace OpenP2P
     class NetworkThread
     {
         public const int MIN_BUFFER_COUNT = 100;
-        public const int MAX_BUFFER_SIZE = 200;
+        public const int MAX_BUFFER_SIZE = 1000;
         public static int MAX_SENDRATE_PERFRAME = 25;
 
         //important to sleep more, since they are on infinite loops
