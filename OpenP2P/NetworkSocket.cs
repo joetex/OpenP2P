@@ -53,8 +53,8 @@ namespace OpenP2P
             socket.ExclusiveAddressUse = false;
             //socket.NoDelay = true;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.MAX_BUFFER_SIZE * 10);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.MAX_BUFFER_SIZE * 10);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.MAX_BUFFER_SIZE * 10000);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.MAX_BUFFER_SIZE * 10000);
             if ( localPort != 0 )
                 socket.Bind(local);
         }
