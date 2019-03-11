@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenP2P.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,25 +11,43 @@ namespace OpenP2P
 {
     public class NetworkClient
     {
-        public const int SERVERID = 0;
-
-        public Dictionary<int, NetworkSocket> sockets = new Dictionary<int, NetworkSocket>();
-
-        public NetworkClient(string serverHost)
+        public NetworkSocket socket = null;
+        
+        public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
-            NetworkSocket toServer = new NetworkSocket(serverHost, 9000);
-
-            sockets.Add(SERVERID, toServer);
+            Setup(remoteHost, remotePort, localPort);
         }
 
-        public NetworkSocket server { get { return sockets[SERVERID]; } }
-
-        public void ConnectToServer()
+        public NetworkClient(string remoteHost, int remotePort)
         {
-            //NetworkSocketEvent se = server.PrepareSend();
-            //NetworkProtocol.TURN.Register(se);
+            Setup(remoteHost, remotePort, 0);
         }
 
+        public NetworkClient(int localPort)
+        {
+            Setup("127.0.0.1", 0, localPort);
+        }
+
+        /**
+         * Setup the connection credentials and socket configuration
+         */
+        public void Setup(string remoteHost, int remotePort, int localPort)
+        {
+            socket = new NetworkSocket(remoteHost, remotePort, localPort);
+        }
+
+
+        public void ConnectToServer(string userName)
+        {
+            NetworkStream stream = socket.Request(Message.ConnectToServer);
+            stream.Write(userName);
+            stream.Send();
+        }
+
+        public void OnConnectToServer(NetworkStream stream)
+        {
+
+        }
 
     }
 }

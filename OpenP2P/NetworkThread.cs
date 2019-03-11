@@ -9,28 +9,26 @@ namespace OpenP2P
 {
     class NetworkThread
     {
-        public const int MIN_BUFFER_COUNT = 1000;
-        public const int MAX_BUFFER_SIZE = 1000;
-        public static int MAX_SENDRATE_PERFRAME = 1000;
+        public const int MIN_BUFFER_COUNT = 10000;
+        public const int MAX_BUFFER_SIZE = 4000;
+        public static int MAX_SENDRATE_PERFRAME = 5000;
 
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
-        public const int MAXSEND_SLEEP_TIME = 1;
+        public const int MAXSEND_SLEEP_TIME = 0;
         
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_BUFFER_COUNT, MAX_BUFFER_SIZE);
 
         public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_BUFFER_COUNT);
         public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_BUFFER_COUNT);
-
-
+        
         public static Thread SENDTHREAD = new Thread(NetworkThread.SendThread);
         public static Thread RECVTHREAD = new Thread(NetworkThread.RecvThread);
-        public static Thread RECVTHREAD2 = new Thread(NetworkThread.RecvThread);
+
         public static void StartNetworkThreads()
         {
             SENDTHREAD.Start();
             RECVTHREAD.Start();
-            //RECVTHREAD2.Start();
 
         }
 
@@ -61,7 +59,7 @@ namespace OpenP2P
                 if (queueCount % MAX_SENDRATE_PERFRAME == 0)
                     Thread.Sleep(MAXSEND_SLEEP_TIME);
 
-                stream.socket.ExecuteSend(stream);
+                stream.socket.SendInternal(stream);
             }
         }
 
@@ -86,12 +84,7 @@ namespace OpenP2P
                     Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
                 }
-               // if (recvStream == null)
-                //    continue;
-                //stream.Reset();
-                //ExecuteListen(stream); //listen again
-                stream.Reset();
-
+                
                 stream.socket.ExecuteListen(stream);
             }
         }

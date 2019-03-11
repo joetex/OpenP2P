@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenP2P.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,8 +13,8 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 100000;
-        public const int MAXCLIENTS = 1;
+        public const int MAXSEND = 1000;
+        public const int MAXCLIENTS = 100;
         static long receiveCount = 0;
         static long sendByteCount = 0;
         static long sendCount = 0;
@@ -26,6 +27,7 @@ namespace OpenP2P
         static void Main(string[] args)
         {
             NetworkThread.StartNetworkThreads();
+            NetworkProtocol.Start();
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
@@ -44,7 +46,7 @@ namespace OpenP2P
             }
             
             string test = "";
-            for(int i=0; i<30; i++)
+            for(int i=0; i<390; i++)
             {
                 test += "1234567890";
             }
@@ -64,7 +66,7 @@ namespace OpenP2P
                 receiveIds[i] = 0;
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
-                    NetworkStream stream = clients[j].BeginSend();
+                    NetworkStream stream = clients[j].Prepare();
                     //stream.WriteHeader(NetworkProtocol.MessageType.SendMessage);
                     stream.Write(i);
                     //stream.Write((ushort)420);
@@ -82,20 +84,20 @@ namespace OpenP2P
                     //stream.Write("Hello from Texas");
                 }
             }
-                
 
+            sw.Stop();
+            Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
+            Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
             for (int i = 0; i < MAXSEND; i++)
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
                     //NetworkStream stream = clients[j].BeginSend();
 
-                    clients[j].EndSend(streams[i]);
+                    clients[j].Send(streams[i]);
                 }
 
 
-            sw.Stop();
-            Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
-            Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
+            
 
             Thread.Sleep(7000);
 

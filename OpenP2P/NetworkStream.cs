@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenP2P.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,62 +18,80 @@ namespace OpenP2P
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
-        //public SocketAsyncEventArgs args = null;
+        
+        public bool isResponse = false;
+        public bool isLittleEndian = false;
 
         public byte[] buffer;
-
-        //public NetworkBuffer Buffer { get { return buffer; } }
+        
         public byte[] ByteBuffer { get { return buffer; } }
         public int byteLength = 0; //total size of data 
         public int bytePos = 0; //current read position
         public int byteSent = 0;
 
+        const int ResponseFlag = (1 << 8);
+        const int BigEndianFlag = (1 << 7);
+
         public NetworkStream(int initBufferSize)
         {
             buffer = new byte[initBufferSize];
-            //args = new SocketAsyncEventArgs();
-           // args.SetBuffer(buffer, 0, initBufferSize);
         }
         
         public void SetBufferLength(int length)
         {
             byteLength = length;
             bytePos = 0;
-            //args.SetBuffer(buffer, 0, byteLength);
         }
 
         public void Reset()
         {
             remoteEndPoint = socket.anyHost;
-            //args.RemoteEndPoint = socket.anyHost;
-
-            //args.SetBuffer(buffer, 0, buffer.Length);
-            //SetBufferLength(buffer.Length);
         }
-
-
-
+        
         public void Complete()
         {
-            //args.SetBuffer(buffer, 0, byteLength);
             SetBufferLength(byteLength);
         }
 
         public void Complete(int bytesTransferred)
         {
-            //args.SetBuffer(buffer, 0, bytesTransferred);
             SetBufferLength(bytesTransferred);
         }
-        
-        public unsafe void WriteHeader(NetworkProtocol.MessageType mt)
+
+        public void Request(Message msg)
         {
-            Write((byte)mt);
+            NetworkProtocol.Request(msg, this);
+        }
+
+        public void Response(Message msg)
+        {
+            NetworkProtocol.Response(msg, this);
+        }
+
+        public void Send()
+        {
+            socket.Send(this);
+        }
+
+        public unsafe void WriteHeader(Message mt, bool isResp)
+        {
+            int msgType = (int)mt;
+
+            if(isResp)
+                msgType |= ResponseFlag;
+
+            if( !BitConverter.IsLittleEndian )
+                msgType |= BigEndianFlag;
+
+            isResponse = isResp;
+            isLittleEndian = BitConverter.IsLittleEndian;
+
+            Write((byte)msgType);
         }
 
         public unsafe void WriteTimestamp()
         {
             long time = System.DateTime.Now.Ticks;
-            //Console.WriteLine("WriteTimestamp: " + time);
             Write(time);
         }
 
@@ -82,17 +101,12 @@ namespace OpenP2P
         }
         public unsafe void Write(byte[] val)
         {
-            //ByteBuffer[byteLength++] = (byte)val.Length;
             if (BitConverter.IsLittleEndian)
             {
                 //Array.Reverse(val, 0, val.Length);
             }
             Array.Copy(val, 0, ByteBuffer, byteLength, val.Length);
             byteLength += val.Length;
-            /*for (int i = 0; i < val.Length; i++) {
-                ByteBuffer[byteLength++] = val[i];
-            }*/
-            
         }
         
         public unsafe void Write(int val)
@@ -149,9 +163,9 @@ namespace OpenP2P
             Write(Encoding.ASCII.GetBytes(val));
         }
 
-        public NetworkProtocol.MessageType ReadHeader()
+        public Message ReadHeader()
         {
-            return (NetworkProtocol.MessageType)ByteBuffer[bytePos++];
+            return (Message)ByteBuffer[bytePos++];
         }
         public long ReadTimestamp()
         {
