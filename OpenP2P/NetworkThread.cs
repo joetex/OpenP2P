@@ -21,15 +21,22 @@ namespace OpenP2P
 
         public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_BUFFER_COUNT);
         public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_BUFFER_COUNT);
-        
-        public static Thread SENDTHREAD = new Thread(NetworkThread.SendThread);
-        public static Thread RECVTHREAD = new Thread(NetworkThread.RecvThread);
 
-        public static void StartNetworkThreads()
+        public static List<Thread> SENDTHREADS = new List<Thread>();
+        public static List<Thread> RECVTHREADS = new List<Thread>();
+
+        public static void StartNetworkThreads(int sendThreads, int recvThreads)
         {
-            SENDTHREAD.Start();
-            RECVTHREAD.Start();
-
+            for (int i = 0; i < sendThreads; i++)
+            {
+                SENDTHREADS.Add(new Thread(NetworkThread.SendThread));
+                SENDTHREADS[i].Start();
+            }
+            for (int i = 0; i < recvThreads; i++)
+            {
+                RECVTHREADS.Add(new Thread(NetworkThread.RecvThread));
+                RECVTHREADS[i].Start();
+            }
         }
 
         public static void SendThread()

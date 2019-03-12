@@ -47,8 +47,8 @@ namespace OpenP2P
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.ExclusiveAddressUse = false;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.MAX_BUFFER_SIZE * 10000);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.MAX_BUFFER_SIZE * 10000);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.MAX_BUFFER_SIZE * 1000);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.MAX_BUFFER_SIZE * 1000);
             if (localPort != 0)
                 socket.Bind(local);
         }

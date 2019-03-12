@@ -55,7 +55,7 @@
     <Compile Include="NetworkThread.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\MessageConnect.cs" />
+    <Compile Include="Protocol\MessageConnectToServer.cs" />
     <Compile Include="Protocol\MessageHeartbeat.cs" />
   </ItemGroup>
   <ItemGroup>

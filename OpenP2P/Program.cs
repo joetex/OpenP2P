@@ -13,8 +13,8 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 1000;
-        public const int MAXCLIENTS = 100;
+        public const int MAXSEND = 1;
+        public const int MAXCLIENTS = 1000;
         static long receiveCount = 0;
         static long sendByteCount = 0;
         static long sendCount = 0;
@@ -26,12 +26,15 @@ namespace OpenP2P
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads();
+            NetworkThread.StartNetworkThreads(4, 1);
             NetworkProtocol.Start();
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
             server.Listen(null);
+            server.Listen(null);
+            server.Listen(null);
+
             //NetworkThread.recvStream = server.Reserve();
 
             //server.Listen(null);
@@ -52,14 +55,14 @@ namespace OpenP2P
             }
 
             testBytes = Encoding.ASCII.GetBytes(test);
-            Console.WriteLine("testBytes Count: " + testBytes.Length);
+            //Console.WriteLine("testBytes Count: " + testBytes.Length);
 
             sw = Stopwatch.StartNew();
 
             Console.WriteLine("Send * Client = " + (MAXSEND * MAXCLIENTS));
 
             //Random rnd = new Random();
-            NetworkStream[] streams = new NetworkStream[MAXSEND];
+            //NetworkStream[] streams = new NetworkStream[MAXSEND];
             Random rnd = new Random((int)sw.ElapsedTicks);
             for (int i = 0; i < MAXSEND; i++)
             {
@@ -73,8 +76,8 @@ namespace OpenP2P
                     
                     stream.Write(testBytes);
 
-                    streams[i] = stream;
-                    
+                    //streams[i] = stream;
+                    clients[j].Send(stream);
                     //stream.byteLength += 49000;
                     //stream.Write(1.875);
                     //stream.WriteTimestamp();
@@ -86,14 +89,14 @@ namespace OpenP2P
             }
 
             sw.Stop();
-            Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
+            //Console.WriteLine("Finished with " + NetworkThread.STREAMPOOL.streamCount + " SocketAsyncEventArgs");
             Console.WriteLine("Finished in " + ((float)sw.ElapsedMilliseconds / 1000f) + " seconds");
             for (int i = 0; i < MAXSEND; i++)
                 for (int j = 0; j < MAXCLIENTS; j++)
                 {
                     //NetworkStream stream = clients[j].BeginSend();
 
-                    clients[j].Send(streams[i]);
+                    
                 }
 
 
@@ -122,7 +125,8 @@ namespace OpenP2P
         {
             if( sendCount == 0 )
                 sendSW = Stopwatch.StartNew();
-            sendCount++;
+            Interlocked.Increment(ref sendCount);
+            //sendCount++;
             if( stream.byteLength != 4 )
             {
                 //Console.WriteLine("SEND Packet oversized: " + stream.byteLength);
