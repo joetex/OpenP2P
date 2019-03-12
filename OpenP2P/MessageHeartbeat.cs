@@ -4,28 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenP2P.Protocol
+namespace OpenP2P
 {
-    class MessageConnectToServer : IMessage
+    class MessageHeartbeat : IMessage
     {
         public void Request(NetworkStream stream)
         {
-            stream.WriteHeader(Message.ConnectToServer, false);
+            stream.WriteHeader(Message.Heartbeat, true);
         }
-
+        
         public void Response(NetworkStream stream)
         {
-            stream.WriteHeader(Message.ConnectToServer, true);
+            stream.WriteHeader(Message.Heartbeat, false);
         }
 
         public void OnReceive(NetworkStream stream)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void Write(NetworkStream stream)
         {
-            throw new NotImplementedException();
         }
     }
 }

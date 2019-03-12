@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="NetworkClient.cs" />
     <Compile Include="NetworkPeer.cs" />
-    <Compile Include="Protocol\NetworkProtocol.cs" />
+    <Compile Include="NetworkProtocol.cs" />
     <Compile Include="NetworkServer.cs" />
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkStream.cs" />
@@ -55,11 +55,14 @@
     <Compile Include="NetworkThread.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\MessageConnectToServer.cs" />
-    <Compile Include="Protocol\MessageHeartbeat.cs" />
+    <Compile Include="MessageConnectToServer.cs" />
+    <Compile Include="MessageHeartbeat.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Protocol\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
