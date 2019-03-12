@@ -156,7 +156,9 @@ namespace OpenP2P
             //Console.WriteLine("stream size: " + stream.byteLength + " B");
             if (receiveCount == 0)
                 recvSW = Stopwatch.StartNew();
-            receiveCount++;
+
+            Interlocked.Increment(ref receiveCount);
+           // receiveCount++;
             receiveByteCount += stream.byteLength;
 
             int id = stream.ReadInt();
