@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class NetworkSocket
+    public class NetworkSocket 
     {
         public Socket socket;
         public IPEndPoint remote;
@@ -94,12 +94,7 @@ namespace OpenP2P
             Listen(stream); //listen again
         }
 
-        public NetworkStream Request(Message msg)
-        {
-            NetworkStream stream = Prepare();
-            stream.Request(msg);
-            return stream;
-        }
+        
         /**
          * Begin Send
          * Starts the NetworkStream for writing data to byte buffer.
@@ -130,6 +125,9 @@ namespace OpenP2P
          */
         public void Send(NetworkStream stream)
         {
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, stream);
+
             stream.Complete();
 
             lock (NetworkThread.SENDQUEUE)
@@ -153,8 +151,7 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
 
-            if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, stream);
+            
 
             Free(stream);
         }
@@ -206,5 +203,8 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
         }
+
+        
+        
     }
 }

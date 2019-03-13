@@ -6,26 +6,30 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MessageConnectToServer : IMessage
+    class MessageConnectToServer : INetworkMessage
     {
+        public string userName = "";
+
+
+
         public void Request(NetworkStream stream)
         {
-            stream.WriteHeader(Message.ConnectToServer, false);
+            //stream.WriteHeader(Message.ConnectToServer, false);
         }
 
         public void Response(NetworkStream stream)
         {
-            stream.WriteHeader(Message.ConnectToServer, true);
+            //stream.WriteHeader(Message.ConnectToServer, true);
         }
 
         public void OnReceive(NetworkStream stream)
         {
-            throw new NotImplementedException();
+           
         }
 
         public void Write(NetworkStream stream)
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

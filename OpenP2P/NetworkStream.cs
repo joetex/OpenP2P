@@ -58,22 +58,13 @@ namespace OpenP2P
             SetBufferLength(bytesTransferred);
         }
 
-        public void Request(Message msg)
-        {
-            NetworkProtocol.Request(msg, this);
-        }
-
-        public void Response(Message msg)
-        {
-            NetworkProtocol.Response(msg, this);
-        }
-
+       
         public void Send()
         {
             socket.Send(this);
         }
 
-        public unsafe void WriteHeader(Message mt, bool isResp)
+        public unsafe void WriteHeader(NetworkProtocol.Message mt, bool isResp)
         {
             int msgType = (int)mt;
 

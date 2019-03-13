@@ -7,31 +7,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public interface IMessage
-    {
-        void Request(NetworkStream stream);
-        void Response(NetworkStream stream);
-        void OnReceive(NetworkStream stream);
-    }
-
-    public enum Message
-    {
-        ConnectToServer,
-        DisconnectFromServer,
-
-        //interest mapping data sent to server
-        //Peers will be connected together at higher priorities based on the 
-        // "interest" mapping to a QuadTree (x, y, width, height) 
-        Heartbeat,
-
-        Raw,
-        Event,
-        RPC,
-
-        GetPeers,
-        ConnectTo
-    }
-
+    
     /// <summary>
     /// Network Protocol for header defining the type of message
     /// 
@@ -43,9 +19,32 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol
     {
-        public static Dictionary<Message, IMessage> messages = new Dictionary<Message, IMessage>();
+        public enum Message
+        {
+            ConnectToServer,
+            DisconnectFromServer,
 
-        public static void Start()
+            //interest mapping data sent to server
+            //Peers will be connected together at higher priorities based on the 
+            // "interest" mapping to a QuadTree (x, y, width, height) 
+            Heartbeat,
+
+            Raw,
+            Event,
+            RPC,
+
+            GetPeers,
+            ConnectTo
+        }
+
+        public Dictionary<Message, INetworkMessage> messages = new Dictionary<Message, INetworkMessage>();
+
+        public NetworkProtocol()
+        {
+            Start();
+        }
+
+        public void Start()
         {
             messages.Add(Message.ConnectToServer, new MessageConnectToServer());
             messages.Add(Message.DisconnectFromServer, new MessageConnectToServer());
@@ -57,16 +56,16 @@ namespace OpenP2P
             messages.Add(Message.ConnectTo, new MessageConnectToServer());
         }
 
-        public static void Request(Message mt, NetworkStream stream)
+        public void OnReceive(object sender, NetworkStream stream)
         {
-            messages[mt].Request(stream);
+            Message msg = stream.ReadHeader();
+            messages[msg].OnReceive(stream);
         }
 
-        public static void Response(Message mt, NetworkStream stream)
+        public void OnSend(object sender, NetworkStream stream)
         {
-            messages[mt].Response(stream);
+            //messages[msg].OnReceive(stream);
         }
-
-
+        
     }
 }

@@ -27,7 +27,6 @@ namespace OpenP2P
         static void Main(string[] args)
         {
             NetworkThread.StartNetworkThreads(1, 1);
-            NetworkProtocol.Start();
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;

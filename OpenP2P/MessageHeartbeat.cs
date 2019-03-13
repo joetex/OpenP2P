@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MessageHeartbeat : IMessage
+    class MessageHeartbeat : INetworkMessage
     {
         public void Request(NetworkStream stream)
         {
-            stream.WriteHeader(Message.Heartbeat, true);
+            stream.WriteHeader(NetworkProtocol.Message.Heartbeat, true);
         }
         
         public void Response(NetworkStream stream)
         {
-            stream.WriteHeader(Message.Heartbeat, false);
+            stream.WriteHeader(NetworkProtocol.Message.Heartbeat, false);
         }
 
         public void OnReceive(NetworkStream stream)

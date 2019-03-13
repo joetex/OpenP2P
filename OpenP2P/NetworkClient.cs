@@ -12,7 +12,8 @@ namespace OpenP2P
     public class NetworkClient
     {
         public NetworkSocket socket = null;
-        
+        public NetworkProtocol protocol = new NetworkProtocol();
+
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             Setup(remoteHost, remotePort, localPort);
@@ -39,9 +40,7 @@ namespace OpenP2P
 
         public void ConnectToServer(string userName)
         {
-            NetworkStream stream = socket.Request(Message.ConnectToServer);
-            stream.Write(userName);
-            stream.Send();
+            
         }
 
         public void OnConnectToServer(NetworkStream stream)

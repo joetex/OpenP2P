@@ -13,6 +13,9 @@ namespace OpenP2P
         public const int MAX_BUFFER_SIZE = 4000;
         public static int MAX_SENDRATE_PERFRAME = 5000;
 
+        public static int MAX_SEND_THREADS = 0;
+        public static int MAX_RECV_THREADS = 0;
+
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
         public const int MAXSEND_SLEEP_TIME = 0;
@@ -27,6 +30,9 @@ namespace OpenP2P
 
         public static void StartNetworkThreads(int sendThreads, int recvThreads)
         {
+            MAX_SEND_THREADS = sendThreads;
+            MAX_RECV_THREADS = recvThreads;
+
             for (int i = 0; i < sendThreads; i++)
             {
                 SENDTHREADS.Add(new Thread(NetworkThread.SendThread));
