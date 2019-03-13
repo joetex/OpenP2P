@@ -50,6 +50,7 @@
     <Compile Include="INetworkListener.cs" />
     <Compile Include="NetworkPeer.cs" />
     <Compile Include="NetworkProtocol.cs" />
+    <Compile Include="NetworkProtocolBase.cs" />
     <Compile Include="NetworkServer.cs" />
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkStream.cs" />

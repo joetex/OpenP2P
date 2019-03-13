@@ -35,6 +35,7 @@ namespace OpenP2P
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
             socket = new NetworkSocket(remoteHost, remotePort, localPort);
+            socket.OnReceive += protocol.OnReceive;
         }
 
 
