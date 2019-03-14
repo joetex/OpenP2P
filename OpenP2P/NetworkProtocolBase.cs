@@ -6,23 +6,44 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class NetworkProtocolBase
+    public class NetworkProtocolBase
     {
         public Dictionary<int, INetworkMessage> messages = new Dictionary<int, INetworkMessage>();
+
+        public bool isResponse = false;
+        public bool isLittleEndian = false;
+        
 
         public NetworkProtocolBase()
         {
         }
 
-        public void OnReceive(object sender, NetworkStream stream)
+        public virtual void WriteHeader(NetworkStream stream, byte mt, bool isResp)
+        {
+            
+        }
+
+        public virtual byte ReadHeader(NetworkStream stream)
+        {
+            return 0;
+        }
+
+        public virtual void OnReceive(NetworkStream stream)
         {
             //Message msg = stream.ReadHeader();
             //messages[msg].OnReceive(stream);
         }
 
-        public void OnSend(object sender, NetworkStream stream)
+        public virtual void OnSend(NetworkStream stream)
         {
             //messages[msg].OnReceive(stream);
         }
+
+        public virtual void OnReceiveMessage(int msg, NetworkStream stream)
+        {
+            //Message msg = stream.ReadHeader();
+            //messages[msg].OnReceiveMessage(stream);
+        }
+
     }
 }

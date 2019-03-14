@@ -8,23 +8,9 @@ namespace OpenP2P
 {
     class MessageHeartbeat : INetworkMessage
     {
-        public void Request(NetworkStream stream)
-        {
-            stream.WriteHeader(NetworkProtocol.Message.Heartbeat, true);
-        }
-        
-        public void Response(NetworkStream stream)
-        {
-            stream.WriteHeader(NetworkProtocol.Message.Heartbeat, false);
-        }
-
         public void OnReceive(NetworkStream stream)
         {
-            
-        }
-
-        public void Write(NetworkStream stream)
-        {
+            throw new NotImplementedException();
         }
     }
 }

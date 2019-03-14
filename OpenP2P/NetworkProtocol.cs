@@ -17,7 +17,7 @@ namespace OpenP2P
     ///     2nd left most bit: 0 = Little Endian, 1 = Big Endian  (iOS/Mac uses Big Endian, others use Little)
     ///     6 right bits: Message Type, up to 64 different message types
     /// </summary>
-    public class NetworkProtocol
+    public class NetworkProtocol : NetworkProtocolBase
     {
         public enum Message
         {
@@ -36,6 +36,9 @@ namespace OpenP2P
             GetPeers,
             ConnectTo
         }
+
+        const int ResponseFlag = (1 << 8);
+        const int BigEndianFlag = (1 << 7);
 
         public Dictionary<Message, INetworkMessage> messages = new Dictionary<Message, INetworkMessage>();
 
@@ -58,14 +61,40 @@ namespace OpenP2P
 
         public void OnReceive(object sender, NetworkStream stream)
         {
-            Message msg = stream.ReadHeader();
-            messages[msg].OnReceive(stream);
+            //Message msg = stream.ReadHeader();
+            //messages[msg].OnReceive(stream);
         }
 
         public void OnSend(object sender, NetworkStream stream)
         {
             //messages[msg].OnReceive(stream);
         }
-        
+
+
+        public override void WriteHeader(NetworkStream stream, byte mt, bool isResp)
+        {
+            int msgType = (int)mt;
+
+            if (isResp)
+                msgType |= ResponseFlag;
+
+            if (!BitConverter.IsLittleEndian)
+                msgType |= BigEndianFlag;
+
+            isResponse = isResp;
+            isLittleEndian = BitConverter.IsLittleEndian;
+
+            stream.Write((byte)msgType);
+        }
+
+        public override byte ReadHeader(NetworkStream stream)
+        {
+            byte msgType = stream.ReadByte();
+            Message msg = (Message)msgType;
+            messages[msg].OnReceive(stream);
+
+            return msgType;
+        }
+
     }
 }

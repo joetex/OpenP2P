@@ -19,9 +19,6 @@ namespace OpenP2P
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
         
-        public bool isResponse = false;
-        public bool isLittleEndian = false;
-
         public byte[] buffer;
         
         public byte[] ByteBuffer { get { return buffer; } }
@@ -29,8 +26,7 @@ namespace OpenP2P
         public int bytePos = 0; //current read position
         public int byteSent = 0;
 
-        const int ResponseFlag = (1 << 8);
-        const int BigEndianFlag = (1 << 7);
+        
 
         public NetworkStream(int initBufferSize)
         {
@@ -63,7 +59,7 @@ namespace OpenP2P
         {
             socket.Send(this);
         }
-
+        /*
         public unsafe void WriteHeader(NetworkProtocol.Message mt, bool isResp)
         {
             int msgType = (int)mt;
@@ -79,7 +75,7 @@ namespace OpenP2P
 
             Write((byte)msgType);
         }
-
+        */
         public unsafe void WriteTimestamp()
         {
             long time = System.DateTime.Now.Ticks;
@@ -154,10 +150,7 @@ namespace OpenP2P
             Write(Encoding.ASCII.GetBytes(val));
         }
 
-        public Message ReadHeader()
-        {
-            return (Message)ByteBuffer[bytePos++];
-        }
+       
         public long ReadTimestamp()
         {
             long time = BitConverter.ToInt64(ByteBuffer, bytePos);

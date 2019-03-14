@@ -8,8 +8,6 @@ namespace OpenP2P
 {
     public interface INetworkMessage
     {
-        void Request(NetworkStream stream);
-        void Response(NetworkStream stream);
         void OnReceive(NetworkStream stream);
     }
 }

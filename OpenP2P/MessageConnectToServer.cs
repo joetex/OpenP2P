@@ -10,26 +10,10 @@ namespace OpenP2P
     {
         public string userName = "";
 
-
-
-        public void Request(NetworkStream stream)
-        {
-            //stream.WriteHeader(Message.ConnectToServer, false);
-        }
-
-        public void Response(NetworkStream stream)
-        {
-            //stream.WriteHeader(Message.ConnectToServer, true);
-        }
-
         public void OnReceive(NetworkStream stream)
         {
-           
+            throw new NotImplementedException();
         }
-
-        public void Write(NetworkStream stream)
-        {
-            
-        }
+        
     }
 }
