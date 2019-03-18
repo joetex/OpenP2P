@@ -7,7 +7,35 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    
+    public enum Message
+    {
+        NULL,
+
+        ConnectToServer,
+        DisconnectFromServer,
+
+        //interest mapping data sent to server
+        //Peers will be connected together at higher priorities based on the 
+        // "interest" mapping to a QuadTree (x, y, width, height) 
+        Heartbeat,
+
+        Raw,
+        Event,
+        RPC,
+
+        GetPeers,
+        ConnectTo,
+        LAST
+    }
+
+    public enum ResponseType
+    {
+        ClientSend,
+        ServerSend,
+        ClientResponse,
+        ServerResponse
+    }
+
     /// <summary>
     /// Network Protocol for header defining the type of message
     /// 
@@ -19,82 +47,94 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
-        public enum Message
+        public NetworkProtocol(string remoteHost, int remotePort, int localPort)
         {
-            ConnectToServer,
-            DisconnectFromServer,
-
-            //interest mapping data sent to server
-            //Peers will be connected together at higher priorities based on the 
-            // "interest" mapping to a QuadTree (x, y, width, height) 
-            Heartbeat,
-
-            Raw,
-            Event,
-            RPC,
-
-            GetPeers,
-            ConnectTo
+            socket = new NetworkSocket(remoteHost, remotePort, localPort);
+            AttachListener(socket);
+            BindMessages();
+        }
+        
+        /// <summary>
+        /// Bind Messages to our Message Dictionary
+        /// This uses reflection to map our Enum to a Message class
+        /// </summary>
+        public void BindMessages()
+        {
+            string enumName = "";
+            NetworkMessage msg = null;
+            for (int i=0; i<(int)Message.LAST; i++)
+            {
+                enumName = Enum.GetName(typeof(Message), (Message)i);
+                try
+                {
+                    msg = (NetworkMessage)GetInstance("OpenP2P.Message" + enumName);
+                    msg.messageType = (Message)i;
+                }
+                catch(Exception e)
+                {
+                    //Console.WriteLine(e.ToString());
+                    msg = new MessageInvalid();
+                }
+                
+                messages.Add(i, msg);
+            }
         }
 
-        const int ResponseFlag = (1 << 8);
-        const int BigEndianFlag = (1 << 7);
-
-        public Dictionary<Message, INetworkMessage> messages = new Dictionary<Message, INetworkMessage>();
-
-        public NetworkProtocol()
+        public override void AttachListener(NetworkSocket _socket)
         {
-            Start();
+            socket = _socket;
+            socket.OnReceive += OnReceive;
+            socket.OnSend += OnSend;
         }
 
-        public void Start()
+        public object GetInstance(string strFullyQualifiedName)
         {
-            messages.Add(Message.ConnectToServer, new MessageConnectToServer());
-            messages.Add(Message.DisconnectFromServer, new MessageConnectToServer());
-            messages.Add(Message.Heartbeat, new MessageHeartbeat());
-            messages.Add(Message.Raw, new MessageConnectToServer());
-            messages.Add(Message.Event, new MessageConnectToServer());
-            messages.Add(Message.RPC, new MessageConnectToServer());
-            messages.Add(Message.GetPeers, new MessageConnectToServer());
-            messages.Add(Message.ConnectTo, new MessageConnectToServer());
+            Type t = Type.GetType(strFullyQualifiedName);
+            return Activator.CreateInstance(t);
         }
 
-        public void OnReceive(object sender, NetworkStream stream)
+        public override NetworkMessage GetMessage(int id)
         {
-            //Message msg = stream.ReadHeader();
+            if (!messages.ContainsKey(id))
+                return null;
+            return messages[id];
+        }
+
+        public NetworkMessage Prepare(Message _msgType)
+        {
+            NetworkMessage msg = messages[(int)_msgType];
+            return msg;
+        }
+        
+        public void Send(NetworkMessage msg)
+        {
+            NetworkStream stream = socket.Prepare();
+            stream.message = msg;
+            stream.messageType = (int)msg.messageType;
+            
+            msg.Write(stream);
+            socket.Send(stream);
+        }
+
+        public override void OnReceive(object sender, NetworkStream stream)
+        {
+            Message msg = (Message)ReadHeader(stream);
+            messages[(int)msg].OnReceive(stream);
+        }
+
+        public override void OnSend(object sender, NetworkStream stream)
+        {
             //messages[msg].OnReceive(stream);
         }
 
-        public void OnSend(object sender, NetworkStream stream)
+        public override void WriteHeader(NetworkStream stream, int mt, int _responseType)
         {
-            //messages[msg].OnReceive(stream);
+            stream.message = messages[mt];
+            NetworkMessage message = (NetworkMessage)stream.message;
+            message.WriteHeader(stream, (Message)mt, (ResponseType)_responseType);
         }
 
-
-        public override void WriteHeader(NetworkStream stream, byte mt, bool isResp)
-        {
-            int msgType = (int)mt;
-
-            if (isResp)
-                msgType |= ResponseFlag;
-
-            if (!BitConverter.IsLittleEndian)
-                msgType |= BigEndianFlag;
-
-            isResponse = isResp;
-            isLittleEndian = BitConverter.IsLittleEndian;
-
-            stream.Write((byte)msgType);
-        }
-
-        public override byte ReadHeader(NetworkStream stream)
-        {
-            byte msgType = stream.ReadByte();
-            Message msg = (Message)msgType;
-            messages[msg].OnReceive(stream);
-
-            return msgType;
-        }
+        
 
     }
 }

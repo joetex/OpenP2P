@@ -13,8 +13,8 @@ namespace OpenP2P
     class Program
     {
         static Stopwatch sw;
-        public const int MAXSEND = 1;
-        public const int MAXCLIENTS = 1000;
+        public const int MAXSEND = 100000;
+        public const int MAXCLIENTS = 1;
         static long receiveCount = 0;
         static long sendByteCount = 0;
         static long sendCount = 0;
@@ -26,7 +26,9 @@ namespace OpenP2P
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads(1, 1);
+            NetworkThread.StartNetworkThreads(1, 3);
+
+            NetworkClient netClient = new NetworkClient("127.0.0.1", 9000, 0);
 
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;

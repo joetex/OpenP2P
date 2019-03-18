@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="INetworkMessage.cs" />
+    <Compile Include="MessageInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
     <Compile Include="INetworkListener.cs" />
     <Compile Include="NetworkPeer.cs" />

@@ -6,13 +6,20 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MessageConnectToServer : INetworkMessage
+    class MessageConnectToServer : NetworkMessage
     {
+        public const int MAX_NAME_LENGTH = 32;
         public string userName = "";
+        
 
-        public void OnReceive(NetworkStream stream)
+        public override void Write(NetworkStream stream)
         {
-            throw new NotImplementedException();
+            if( userName.Length > MAX_NAME_LENGTH )
+            {
+                userName = userName.Substring(0, MAX_NAME_LENGTH);
+            }
+            
+            stream.Write(userName);
         }
         
     }

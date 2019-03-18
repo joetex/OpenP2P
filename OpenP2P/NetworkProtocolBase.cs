@@ -8,17 +8,31 @@ namespace OpenP2P
 {
     public class NetworkProtocolBase
     {
-        public Dictionary<int, INetworkMessage> messages = new Dictionary<int, INetworkMessage>();
+        public Dictionary<int, NetworkMessage> messages = new Dictionary<int, NetworkMessage>();
+        public Dictionary<int, NetworkMessage> awaitingResponse = new Dictionary<int, NetworkMessage>();
 
-        public bool isResponse = false;
-        public bool isLittleEndian = false;
+        public NetworkSocket socket = null;
+
         
 
+        public int responseType = 0;
+        public bool isLittleEndian = false;
+        
         public NetworkProtocolBase()
         {
         }
 
-        public virtual void WriteHeader(NetworkStream stream, byte mt, bool isResp)
+        public virtual void AttachListener(NetworkSocket socket)
+        {
+
+        }
+
+        public virtual NetworkMessage GetMessage(int id)
+        {
+            return null;
+        }
+
+        public virtual void WriteHeader(NetworkStream stream, int mt, int _responseType)
         {
             
         }
@@ -28,13 +42,13 @@ namespace OpenP2P
             return 0;
         }
 
-        public virtual void OnReceive(NetworkStream stream)
+        public virtual void OnReceive(object sender, NetworkStream stream)
         {
             //Message msg = stream.ReadHeader();
             //messages[msg].OnReceive(stream);
         }
 
-        public virtual void OnSend(NetworkStream stream)
+        public virtual void OnSend(object sender, NetworkStream stream)
         {
             //messages[msg].OnReceive(stream);
         }

@@ -11,8 +11,7 @@ namespace OpenP2P
 {
     public class NetworkClient
     {
-        public NetworkSocket socket = null;
-        public NetworkProtocol protocol = new NetworkProtocol();
+        public NetworkProtocol protocol = null;
 
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
@@ -34,14 +33,17 @@ namespace OpenP2P
          */
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
-            socket = new NetworkSocket(remoteHost, remotePort, localPort);
-            socket.OnReceive += protocol.OnReceive;
+            protocol = new NetworkProtocol(remoteHost, remotePort, localPort);
         }
 
 
         public void ConnectToServer(string userName)
         {
-            
+            MessageConnectToServer msg = (MessageConnectToServer)protocol.Prepare(Message.ConnectToServer);
+            msg.SetResponseType(ResponseType.ClientResponse);
+            msg.userName = userName;
+
+            protocol.Send(msg);
         }
 
         public void OnConnectToServer(NetworkStream stream)
