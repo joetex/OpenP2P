@@ -11,8 +11,9 @@ namespace OpenP2P
     {
         public const int MIN_POOL_COUNT = 10000;
         public const int BUFFER_LENGTH = 4000;
-        public const int MAX_BUFFER_PACKET_COUNT = 1000;
+        public const int MAX_BUFFER_PACKET_COUNT = 10000;
         public static int MAX_SENDRATE_PERFRAME = 5000;
+        public const int RECEIVE_TIMEOUT = 1000;
 
         public static int MAX_SEND_THREADS = 0;
         public static int MAX_RECV_THREADS = 0;
@@ -67,7 +68,7 @@ namespace OpenP2P
                     continue;
                 }
 
-                //avoid filling up the network card's RING buffer
+                //avoid filling up the OS socket buffer or network card's RING buffer
                 //important on cloud VPS/dedicated servers with lower buffer settings
                 //google compute engine (cheapest one) gave packet loss at >75 sends/frame
                 if (queueCount % MAX_SENDRATE_PERFRAME == 0)

@@ -57,27 +57,7 @@ namespace OpenP2P
         }
 
        
-        public void Send()
-        {
-            socket.Send(this);
-        }
-        /*
-        public unsafe void WriteHeader(NetworkProtocol.Message mt, bool isResp)
-        {
-            int msgType = (int)mt;
-
-            if(isResp)
-                msgType |= ResponseFlag;
-
-            if( !BitConverter.IsLittleEndian )
-                msgType |= BigEndianFlag;
-
-            isResponse = isResp;
-            isLittleEndian = BitConverter.IsLittleEndian;
-
-            Write((byte)msgType);
-        }
-        */
+        
         public unsafe void WriteTimestamp()
         {
             long time = System.DateTime.Now.Ticks;

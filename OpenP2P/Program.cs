@@ -28,16 +28,19 @@ namespace OpenP2P
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads(1, 3);
+            NetworkThread.StartNetworkThreads(2, 2);
             
             NetworkServer server = new NetworkServer(9000);
             NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9001);
-            for(int i=0; i< MAXSEND; i++)
+
+            Thread.Sleep(200);
+
+            for (int i=0; i< MAXSEND; i++)
             {
                 client.ConnectToServer("JoeOfTex");
             }
 
-            Thread.Sleep(3000);
+            Thread.Sleep(1000);
 
             Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
             Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);

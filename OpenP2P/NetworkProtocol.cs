@@ -98,7 +98,6 @@ namespace OpenP2P
         {
             NetworkStream stream = socket.Prepare(ep);
             stream.message = message;
-            stream.messageType = (int)message.messageType;
 
             WriteHeader(stream);
             switch(message.sendType)
@@ -106,8 +105,16 @@ namespace OpenP2P
                 case SendType.Request: message.WriteRequest(stream); break;
                 case SendType.Response: message.WriteResponse(stream); break;
             }
-            
+
+            AwaitReliable(ep, message.messageType);
+
             socket.Send(stream);
+        }
+
+        public void AwaitReliable(EndPoint ep, MessageType msgType)
+        {
+            if( !awaitingResponse.ContainsKey(ep.ToString()) )
+                awaitingResponse.Add(ep.ToString(), msgType);
         }
 
         public override void OnReceive(object sender, NetworkStream stream)
