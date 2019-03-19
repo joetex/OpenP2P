@@ -1,5 +1,5 @@
 # OpenP2P
-Player-to-Player networking library for thousands of players.
+Peer-to-Peer networking library for thousands of players simulatenously.
 
 # Design
 
