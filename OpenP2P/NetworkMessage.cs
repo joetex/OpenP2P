@@ -12,22 +12,45 @@ namespace OpenP2P
         public ResponseType responseType = 0;
         public Message messageType = Message.NULL;
 
-        public event EventHandler<NetworkMessage> OnReceiveMessage;
-        public event EventHandler<NetworkMessage> OnSendMessage;
+        public event EventHandler<NetworkMessage> OnRequest = null;
+        public event EventHandler<NetworkMessage> OnResponse = null;
 
-        public virtual void Write(NetworkStream stream)
+        public virtual void WriteRequest(NetworkStream stream)
         {
 
         }
 
-        public virtual void Read(NetworkStream stream) {
-            
+        public virtual void WriteResponse(NetworkStream stream)
+        {
+
         }
 
-        public virtual void OnRead(NetworkStream stream)
+        public virtual void ReadRequest(NetworkStream stream)
         {
-            OnReceiveMessage.Invoke(stream, this);
+
         }
+        public virtual void ReadResponse(NetworkStream stream)
+        {
+
+        }
+
+        public virtual void InvokeOnRead(NetworkStream stream)
+        {
+            switch (responseType)
+            {
+                case ResponseType.Request:
+                    ReadRequest(stream);
+                    if (OnRequest != null)
+                        OnRequest.Invoke(stream, this);
+                    break;
+                case ResponseType.Response:
+                    ReadResponse(stream);
+                    if (OnResponse != null)
+                        OnResponse.Invoke(stream, this);
+                    break;
+            }
+        }
+
 
         public virtual void OnReceiveFromClient(NetworkMessage msg, NetworkStream stream)
         {

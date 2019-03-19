@@ -37,6 +37,7 @@ namespace OpenP2P
 
             Thread.Sleep(3000);
 
+            Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
             Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             /*
             NetworkSocket server = new NetworkSocket(9000);

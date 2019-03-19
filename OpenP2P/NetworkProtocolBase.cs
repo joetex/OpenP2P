@@ -12,9 +12,7 @@ namespace OpenP2P
         public Dictionary<int, NetworkMessage> awaitingResponse = new Dictionary<int, NetworkMessage>();
 
         public NetworkSocket socket = null;
-
         
-
         public int responseType = 0;
         public bool isLittleEndian = false;
         
@@ -24,12 +22,14 @@ namespace OpenP2P
 
         public virtual void AttachSocketListener(NetworkSocket socket)
         {
-
         }
 
-        public virtual void AttachMessageListener(Message msgType, EventHandler<NetworkMessage> func)
+        public virtual void AttachRequestListener(Message msgType, EventHandler<NetworkMessage> func)
         {
+        }
 
+        public virtual void AttachResponseListener(Message msgType, EventHandler<NetworkMessage> func)
+        {
         }
 
         public virtual NetworkMessage GetMessage(int id)
@@ -39,7 +39,6 @@ namespace OpenP2P
 
         public virtual void WriteHeader(NetworkStream stream)
         {
-            
         }
         
         public virtual NetworkMessage ReadHeader(NetworkStream stream)
@@ -48,13 +47,10 @@ namespace OpenP2P
         }
         public virtual void OnReceive(object sender, NetworkStream stream)
         {
-            //Message msg = stream.ReadHeader();
-            //messages[msg].OnReceive(stream);
         }
 
         public virtual void OnSend(object sender, NetworkStream stream)
         {
-            //messages[msg].OnReceive(stream);
         }
         
 

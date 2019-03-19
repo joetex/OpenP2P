@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,8 +31,8 @@ namespace OpenP2P
 
     public enum ResponseType
     {
-        ClientSend,
-        ServerSend,
+        Request,
+        Response,
         ClientResponse,
         ServerResponse
     }
@@ -50,8 +51,8 @@ namespace OpenP2P
         /// <summary>
         /// Response Flags: 0 = Client Send, 1 = Server Send, 2 = Client Response, 3 = Server Response
         /// </summary>
-        const int ResponseFlags = (3 << 6); //bits 6 and 7
-        const int BigEndianFlag = (1 << 8); //bit 8
+        const int ResponseFlags = (3 << 5); //bits 6 and 7
+        const int BigEndianFlag = (1 << 7); //bit 8
 
         public NetworkProtocol(string remoteHost, int remotePort, int localPort)
         {
@@ -92,39 +93,38 @@ namespace OpenP2P
             socket.OnReceive += OnReceive;
             socket.OnSend += OnSend;
         }
-        
-        public override void AttachMessageListener(Message msgType, EventHandler<NetworkMessage> func)
+
+        public override void AttachRequestListener(Message msgType, EventHandler<NetworkMessage> func)
         {
-            GetMessage((int)msgType).OnReceiveMessage += func;
+            GetMessage((int)msgType).OnRequest += func;
+        }
+        public override void AttachResponseListener(Message msgType, EventHandler<NetworkMessage> func)
+        {
+            GetMessage((int)msgType).OnResponse += func;
         }
 
-        public NetworkMessage Begin(Message _msgType)
+        public NetworkMessage Create(Message _msgType)
         {
             NetworkMessage message = GetMessage((int)_msgType);
             return message;
         }
-
-        public T Prepare<T>(Message _msgType)
-        {
-            T message = (T)(object)GetMessage((int)_msgType);
-            return message;
-        }
-
+        
         public void Listen()
         {
             socket.Listen(null);
         }
 
-        public void ClientSend(NetworkMessage message)
+        public void SendRequest(EndPoint ep, NetworkMessage message)
         {
-            message.responseType = ResponseType.ClientSend;
-            Send(message);
+            message.responseType = ResponseType.Request;
+            Send(ep, message);
         }
-        public void ServerSend(NetworkMessage message)
+        public void SendResponse(EndPoint ep, NetworkMessage message)
         {
-            message.responseType = ResponseType.ServerSend;
-            Send(message);
+            message.responseType = ResponseType.Response;
+            Send(ep, message);
         }
+        /*
         public void ClientResponse(NetworkMessage message)
         {
             message.responseType = ResponseType.ClientResponse;
@@ -134,24 +134,29 @@ namespace OpenP2P
         {
             message.responseType = ResponseType.ServerResponse;
             Send(message);
-        }
+        }*/
 
-        public void Send(NetworkMessage message)
+        public void Send(EndPoint ep, NetworkMessage message)
         {
-            NetworkStream stream = socket.Prepare();
+            NetworkStream stream = socket.Prepare(ep);
             stream.message = message;
             stream.messageType = (int)message.messageType;
 
             WriteHeader(stream);
-            message.Write(stream);
+            switch(message.responseType)
+            {
+                case ResponseType.Request: message.WriteRequest(stream); break;
+                case ResponseType.Response: message.WriteResponse(stream); break;
+            }
+            
             socket.Send(stream);
         }
 
         public override void OnReceive(object sender, NetworkStream stream)
         {
             NetworkMessage message = ReadHeader(stream);
-            message.Read(stream);
-            message.OnRead(stream);
+            
+            message.InvokeOnRead(stream);
             
             /*
             switch(message.responseType)
@@ -174,7 +179,7 @@ namespace OpenP2P
                 msgBits = 0;
 
             //add responseType to bits 6 and 7
-            msgBits |= (int)responseType << 6;
+            msgBits |= (int)message.responseType << 5;
 
             //add little endian to bit 8
             if (!BitConverter.IsLittleEndian)
@@ -196,8 +201,8 @@ namespace OpenP2P
                 isLittleEndian = true;
 
             //grab response bits 6 and 7 as an integer between [0-3]
-            if ((msgBits & ResponseFlags) > 0)
-                responseType = (ResponseType)(((msgBits & ~BigEndianFlag) & ResponseFlags) >> 6);
+            //if ((msgBits & ResponseFlags) > 0)
+                responseType = (ResponseType)(((msgBits & ~BigEndianFlag) & ResponseFlags) >> 5);
 
             //remove response and endian bits
             msgBits = msgBits & ~(BigEndianFlag | ResponseFlags);

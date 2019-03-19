@@ -25,17 +25,24 @@ namespace OpenP2P
 
         public void AttachListeners()
         {
-            protocol.AttachMessageListener(Message.ConnectToServer, OnConnectToServer);
+            protocol.AttachRequestListener(Message.ConnectToServer, OnRequestConnectToServer);
             protocol.Listen();
         }
     
 
-        public void OnConnectToServer(object sender, NetworkMessage message)
+        public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             receiveCnt++;
+            NetworkStream stream = (NetworkStream)sender;
+         
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            //Console.WriteLine("Received message from client:");
-            //Console.WriteLine(connectMsg.userName);
+            Console.WriteLine("Received Request:");
+            Console.WriteLine(connectMsg.requestUsername);
+
+            connectMsg.responseConnected = true;
+
+            Console.WriteLine("Sending Response: True");
+            protocol.SendResponse(stream.remoteEndPoint, connectMsg);
         }
     }
 }

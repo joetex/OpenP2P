@@ -12,10 +12,12 @@ namespace OpenP2P
     public class NetworkClient
     {
         public NetworkProtocol protocol = null;
-        
+
+        public int receiveCnt = 0;
+
         public NetworkClient(string remoteHost, int remotePort)
         {
-            Setup(remoteHost, remotePort, 0);
+            Setup(remoteHost, remotePort, 9001);
         }
         
         /**
@@ -29,24 +31,27 @@ namespace OpenP2P
 
         public void AttachListeners()
         {
-            protocol.AttachMessageListener(Message.ConnectToServer, OnConnectToServer);
+            protocol.AttachResponseListener(Message.ConnectToServer, OnResponseConnectToServer);
             protocol.Listen();
         }
 
 
         public void ConnectToServer(string userName)
         {
-            MsgConnectToServer msg = (MsgConnectToServer)protocol.Begin(Message.ConnectToServer);
-            msg.userName = userName;
+            MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(Message.ConnectToServer);
+            msg.requestUsername = userName;
+            Console.WriteLine("Sending Request: ");
+            Console.WriteLine(userName);
 
-            protocol.Send(msg);
+            protocol.SendRequest(protocol.socket.remote, msg);
         }
 
-        public void OnConnectToServer(object sender, NetworkMessage message)
+        public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
+            receiveCnt++;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            Console.WriteLine("Received message from client:");
-            Console.WriteLine(connectMsg.userName);
+            Console.WriteLine("Received Response:");
+            Console.WriteLine(connectMsg.responseConnected);
         }
 
 

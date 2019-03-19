@@ -49,7 +49,7 @@ namespace OpenP2P
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
-            if (localPort != 0)
+            //if (localPort != 0)
                 socket.Bind(local);
         }
 
@@ -99,7 +99,7 @@ namespace OpenP2P
          * Begin Send
          * Starts the NetworkStream for writing data to byte buffer.
          */
-        public NetworkStream Prepare(IPEndPoint endPoint)
+        public NetworkStream Prepare(EndPoint endPoint)
         {
             NetworkStream stream = Reserve();
             stream.remoteEndPoint = endPoint;
