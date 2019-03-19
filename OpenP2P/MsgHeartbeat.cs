@@ -8,24 +8,6 @@ namespace OpenP2P
 {
     class MsgHeartbeat : NetworkMessage
     {
-        public int GetResponseType()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnReceive(NetworkStream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnSend(NetworkStream stream)
-        {
-
-        }
-
-        public void Write(NetworkStream stream)
-        {
-
-        }
+        
     }
 }

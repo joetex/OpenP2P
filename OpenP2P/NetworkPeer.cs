@@ -13,7 +13,6 @@ namespace OpenP2P
         
         public NetworkPeer()
         {
-
         }
     }
 }

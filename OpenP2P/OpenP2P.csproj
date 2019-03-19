@@ -48,10 +48,10 @@
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="MsgInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
-    <Compile Include="INetworkListener.cs" />
     <Compile Include="NetworkPeer.cs" />
     <Compile Include="NetworkProtocol.cs" />
     <Compile Include="NetworkProtocolBase.cs" />
+    <Compile Include="NetworkProtocolTypes.cs" />
     <Compile Include="NetworkServer.cs" />
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkStream.cs" />

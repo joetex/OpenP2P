@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -14,10 +15,10 @@ namespace OpenP2P
         public NetworkProtocol protocol = null;
 
         public int receiveCnt = 0;
-
-        public NetworkClient(string remoteHost, int remotePort)
+        static Stopwatch recieveTimer;
+        public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
-            Setup(remoteHost, remotePort, 9001);
+            Setup(remoteHost, remotePort, localPort);
         }
         
         /**
@@ -31,29 +32,42 @@ namespace OpenP2P
 
         public void AttachListeners()
         {
-            protocol.AttachResponseListener(Message.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
             protocol.Listen();
         }
 
 
         public void ConnectToServer(string userName)
         {
-            MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(Message.ConnectToServer);
+            MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(MessageType.ConnectToServer);
             msg.requestUsername = userName;
-            Console.WriteLine("Sending Request: ");
-            Console.WriteLine(userName);
-
+            //Console.WriteLine("Sending Request: ");
+            //Console.WriteLine(userName);
             protocol.SendRequest(protocol.socket.remote, msg);
         }
 
+        
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            receiveCnt++;
+            PerformanceTest();
+            
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            Console.WriteLine("Received Response:");
-            Console.WriteLine(connectMsg.responseConnected);
+            //Console.WriteLine("Received Response:");
+            //Console.WriteLine(connectMsg.responseConnected);
         }
 
+        public void PerformanceTest()
+        {
+            if (receiveCnt == 0)
+                recieveTimer = Stopwatch.StartNew();
 
+            receiveCnt++;
+
+            if (receiveCnt >= Program.MAXSEND)
+            {
+                recieveTimer.Stop();
+                Console.WriteLine("CLIENT Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");
+            }
+        }
     }
 }

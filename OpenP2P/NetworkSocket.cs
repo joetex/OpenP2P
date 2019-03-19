@@ -24,12 +24,10 @@ namespace OpenP2P
         {
             Setup(remoteHost, remotePort, localPort);
         }
-
         public NetworkSocket(string remoteHost, int remotePort)
         {
             Setup(remoteHost, remotePort, 0);
         }
-
         public NetworkSocket(int localPort)
         {
             Setup("127.0.0.1", 0, localPort);
@@ -52,7 +50,6 @@ namespace OpenP2P
             //if (localPort != 0)
                 socket.Bind(local);
         }
-
 
         /**
          * Request a Listen on the RecvThread
@@ -93,7 +90,6 @@ namespace OpenP2P
 
             Listen(stream); //listen again
         }
-
         
         /**
          * Begin Send
@@ -106,19 +102,7 @@ namespace OpenP2P
             stream.SetBufferLength(0);
             return stream;
         }
-
-        /**
-         * Begin Send
-         * Starts the NetworkStream for writing data to byte buffer.
-         */
-        public NetworkStream Prepare()
-        {
-            NetworkStream stream = Reserve();
-            stream.remoteEndPoint = remote;
-            stream.SetBufferLength(0);
-            return stream;
-        }
-
+        
         /**
          * End Send
          * Finish writing the stream and push to send queue for SendThread
@@ -150,17 +134,8 @@ namespace OpenP2P
             {
                 Console.WriteLine(e.ToString());
             }
-
             
-
             Free(stream);
-        }
-
-    
-        
-        public void OnCompleted(Object sender, SocketAsyncEventArgs args)
-        {
-
         }
 
         /**
@@ -185,7 +160,6 @@ namespace OpenP2P
             NetworkThread.STREAMPOOL.Free(stream);
         }
 
-
         /**
          * Clean any open socket events and shutdown socket.
          */
@@ -203,8 +177,5 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
         }
-
-        
-        
     }
 }
