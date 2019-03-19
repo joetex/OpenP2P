@@ -47,10 +47,16 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
+        /// <summary>
+        /// Response Flags: 0 = Client Send, 1 = Server Send, 2 = Client Response, 3 = Server Response
+        /// </summary>
+        const int ResponseFlags = (3 << 6); //bits 6 and 7
+        const int BigEndianFlag = (1 << 8); //bit 8
+
         public NetworkProtocol(string remoteHost, int remotePort, int localPort)
         {
             socket = new NetworkSocket(remoteHost, remotePort, localPort);
-            AttachListener(socket);
+            AttachSocketListener(socket);
             BindMessages();
         }
         
@@ -61,31 +67,151 @@ namespace OpenP2P
         public void BindMessages()
         {
             string enumName = "";
-            NetworkMessage msg = null;
+            NetworkMessage message = null;
             for (int i=0; i<(int)Message.LAST; i++)
             {
                 enumName = Enum.GetName(typeof(Message), (Message)i);
                 try
                 {
-                    msg = (NetworkMessage)GetInstance("OpenP2P.Message" + enumName);
-                    msg.messageType = (Message)i;
+                    message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
+                    message.messageType = (Message)i;
                 }
                 catch(Exception e)
                 {
                     //Console.WriteLine(e.ToString());
-                    msg = new MessageInvalid();
+                    message = new MsgInvalid();
                 }
                 
-                messages.Add(i, msg);
+                messages.Add(i, message);
             }
         }
 
-        public override void AttachListener(NetworkSocket _socket)
+        public override void AttachSocketListener(NetworkSocket _socket)
         {
             socket = _socket;
             socket.OnReceive += OnReceive;
             socket.OnSend += OnSend;
         }
+        
+        public override void AttachMessageListener(Message msgType, EventHandler<NetworkMessage> func)
+        {
+            GetMessage((int)msgType).OnReceiveMessage += func;
+        }
+
+        public NetworkMessage Begin(Message _msgType)
+        {
+            NetworkMessage message = GetMessage((int)_msgType);
+            return message;
+        }
+
+        public T Prepare<T>(Message _msgType)
+        {
+            T message = (T)(object)GetMessage((int)_msgType);
+            return message;
+        }
+
+        public void Listen()
+        {
+            socket.Listen(null);
+        }
+
+        public void ClientSend(NetworkMessage message)
+        {
+            message.responseType = ResponseType.ClientSend;
+            Send(message);
+        }
+        public void ServerSend(NetworkMessage message)
+        {
+            message.responseType = ResponseType.ServerSend;
+            Send(message);
+        }
+        public void ClientResponse(NetworkMessage message)
+        {
+            message.responseType = ResponseType.ClientResponse;
+            Send(message);
+        }
+        public void ServerResponse(NetworkMessage message)
+        {
+            message.responseType = ResponseType.ServerResponse;
+            Send(message);
+        }
+
+        public void Send(NetworkMessage message)
+        {
+            NetworkStream stream = socket.Prepare();
+            stream.message = message;
+            stream.messageType = (int)message.messageType;
+
+            WriteHeader(stream);
+            message.Write(stream);
+            socket.Send(stream);
+        }
+
+        public override void OnReceive(object sender, NetworkStream stream)
+        {
+            NetworkMessage message = ReadHeader(stream);
+            message.Read(stream);
+            message.OnRead(stream);
+            
+            /*
+            switch(message.responseType)
+            {
+                case ResponseType.ClientResponse: ; break;
+            }*/
+        }
+
+        public override void OnSend(object sender, NetworkStream stream)
+        {
+            //messages[message].OnReceive(stream);
+        }
+
+        public override void WriteHeader(NetworkStream stream)
+        {
+            NetworkMessage message = (NetworkMessage)stream.message;
+
+            int msgBits = (int)message.messageType;
+            if (msgBits < 0 || msgBits >= (int)Message.LAST)
+                msgBits = 0;
+
+            //add responseType to bits 6 and 7
+            msgBits |= (int)responseType << 6;
+
+            //add little endian to bit 8
+            if (!BitConverter.IsLittleEndian)
+                msgBits |= BigEndianFlag;
+            
+            message.isLittleEndian = BitConverter.IsLittleEndian;
+
+            stream.Write((byte)msgBits);
+        }
+
+        public override NetworkMessage ReadHeader(NetworkStream stream)
+        {
+            int msgBits = stream.ReadByte();
+
+            bool isLittleEndian = false;
+            ResponseType responseType = ResponseType.ClientResponse;
+            //check little endian flag on bit 8
+            if ((msgBits & BigEndianFlag) == 0)
+                isLittleEndian = true;
+
+            //grab response bits 6 and 7 as an integer between [0-3]
+            if ((msgBits & ResponseFlags) > 0)
+                responseType = (ResponseType)(((msgBits & ~BigEndianFlag) & ResponseFlags) >> 6);
+
+            //remove response and endian bits
+            msgBits = msgBits & ~(BigEndianFlag | ResponseFlags);
+
+            if (msgBits < 0 || msgBits >= (int)Message.LAST)
+                return GetMessage(0);
+
+            NetworkMessage message = GetMessage(msgBits);
+            message.isLittleEndian = isLittleEndian;
+            message.responseType = responseType;
+
+            return message;
+        }
+
 
         public object GetInstance(string strFullyQualifiedName)
         {
@@ -96,45 +222,8 @@ namespace OpenP2P
         public override NetworkMessage GetMessage(int id)
         {
             if (!messages.ContainsKey(id))
-                return null;
+                return messages[0];
             return messages[id];
         }
-
-        public NetworkMessage Prepare(Message _msgType)
-        {
-            NetworkMessage msg = messages[(int)_msgType];
-            return msg;
-        }
-        
-        public void Send(NetworkMessage msg)
-        {
-            NetworkStream stream = socket.Prepare();
-            stream.message = msg;
-            stream.messageType = (int)msg.messageType;
-            
-            msg.Write(stream);
-            socket.Send(stream);
-        }
-
-        public override void OnReceive(object sender, NetworkStream stream)
-        {
-            Message msg = (Message)ReadHeader(stream);
-            messages[(int)msg].OnReceive(stream);
-        }
-
-        public override void OnSend(object sender, NetworkStream stream)
-        {
-            //messages[msg].OnReceive(stream);
-        }
-
-        public override void WriteHeader(NetworkStream stream, int mt, int _responseType)
-        {
-            stream.message = messages[mt];
-            NetworkMessage message = (NetworkMessage)stream.message;
-            message.WriteHeader(stream, (Message)mt, (ResponseType)_responseType);
-        }
-
-        
-
     }
 }

@@ -12,44 +12,43 @@ namespace OpenP2P
     public class NetworkClient
     {
         public NetworkProtocol protocol = null;
-
-        public NetworkClient(string remoteHost, int remotePort, int localPort)
-        {
-            Setup(remoteHost, remotePort, localPort);
-        }
-
+        
         public NetworkClient(string remoteHost, int remotePort)
         {
             Setup(remoteHost, remotePort, 0);
         }
-
-        public NetworkClient(int localPort)
-        {
-            Setup("127.0.0.1", 0, localPort);
-        }
-
+        
         /**
          * Setup the connection credentials and socket configuration
          */
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
             protocol = new NetworkProtocol(remoteHost, remotePort, localPort);
+            AttachListeners();
+        }
+
+        public void AttachListeners()
+        {
+            protocol.AttachMessageListener(Message.ConnectToServer, OnConnectToServer);
+            protocol.Listen();
         }
 
 
         public void ConnectToServer(string userName)
         {
-            MessageConnectToServer msg = (MessageConnectToServer)protocol.Prepare(Message.ConnectToServer);
-            msg.SetResponseType(ResponseType.ClientResponse);
+            MsgConnectToServer msg = (MsgConnectToServer)protocol.Begin(Message.ConnectToServer);
             msg.userName = userName;
 
             protocol.Send(msg);
         }
 
-        public void OnConnectToServer(NetworkStream stream)
+        public void OnConnectToServer(object sender, NetworkMessage message)
         {
-
+            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
+            Console.WriteLine("Received message from client:");
+            Console.WriteLine(connectMsg.userName);
         }
+
 
     }
 }

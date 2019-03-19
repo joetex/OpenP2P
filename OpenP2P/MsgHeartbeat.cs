@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MessageInvalid : NetworkMessage
+    class MsgHeartbeat : NetworkMessage
     {
-        public NetworkProtocol.Message id = NetworkProtocol.Message.NULL;
-
         public int GetResponseType()
         {
             throw new NotImplementedException();
@@ -17,7 +15,7 @@ namespace OpenP2P
 
         public void OnReceive(NetworkStream stream)
         {
-            
+            throw new NotImplementedException();
         }
 
         public void OnSend(NetworkStream stream)
@@ -27,7 +25,7 @@ namespace OpenP2P
 
         public void Write(NetworkStream stream)
         {
-            throw new NotImplementedException();
+
         }
     }
 }

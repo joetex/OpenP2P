@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MessageConnectToServer : NetworkMessage
+    class MsgConnectToServer : NetworkMessage
     {
         public const int MAX_NAME_LENGTH = 32;
         public string userName = "";
-        
+        public bool connected = false;
 
         public override void Write(NetworkStream stream)
         {
@@ -20,6 +20,12 @@ namespace OpenP2P
             }
             
             stream.Write(userName);
+        }
+
+        public override void Read(NetworkStream stream)
+        {
+            userName = stream.ReadString();
+            base.Read(stream);
         }
         
     }

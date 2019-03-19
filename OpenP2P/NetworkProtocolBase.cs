@@ -22,7 +22,12 @@ namespace OpenP2P
         {
         }
 
-        public virtual void AttachListener(NetworkSocket socket)
+        public virtual void AttachSocketListener(NetworkSocket socket)
+        {
+
+        }
+
+        public virtual void AttachMessageListener(Message msgType, EventHandler<NetworkMessage> func)
         {
 
         }
@@ -32,16 +37,15 @@ namespace OpenP2P
             return null;
         }
 
-        public virtual void WriteHeader(NetworkStream stream, int mt, int _responseType)
+        public virtual void WriteHeader(NetworkStream stream)
         {
             
         }
-
-        public virtual byte ReadHeader(NetworkStream stream)
+        
+        public virtual NetworkMessage ReadHeader(NetworkStream stream)
         {
-            return 0;
+            return null;
         }
-
         public virtual void OnReceive(object sender, NetworkStream stream)
         {
             //Message msg = stream.ReadHeader();
@@ -52,12 +56,7 @@ namespace OpenP2P
         {
             //messages[msg].OnReceive(stream);
         }
-
-        public virtual void OnReceiveMessage(int msg, NetworkStream stream)
-        {
-            //Message msg = stream.ReadHeader();
-            //messages[msg].OnReceiveMessage(stream);
-        }
+        
 
     }
 }

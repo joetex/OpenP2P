@@ -45,8 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="INetworkMessage.cs" />
-    <Compile Include="MessageInvalid.cs" />
+    <Compile Include="NetworkMessage.cs" />
+    <Compile Include="MsgInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
     <Compile Include="INetworkListener.cs" />
     <Compile Include="NetworkPeer.cs" />
@@ -59,8 +59,8 @@
     <Compile Include="NetworkThread.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MessageConnectToServer.cs" />
-    <Compile Include="MessageHeartbeat.cs" />
+    <Compile Include="MsgConnectToServer.cs" />
+    <Compile Include="MsgHeartbeat.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

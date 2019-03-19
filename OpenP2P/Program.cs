@@ -28,8 +28,17 @@ namespace OpenP2P
         {
             NetworkThread.StartNetworkThreads(1, 3);
 
-            NetworkClient netClient = new NetworkClient("127.0.0.1", 9000, 0);
+            NetworkServer server = new NetworkServer(9000);
+            NetworkClient client = new NetworkClient("127.0.0.1", 9000);
+            for(int i=0; i<1000; i++)
+            {
+                client.ConnectToServer("JoeOfTex");
+            }
 
+            Thread.Sleep(3000);
+
+            Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+            /*
             NetworkSocket server = new NetworkSocket(9000);
             server.OnReceive += OnReceiveEvent;
             server.Listen(null);
@@ -119,6 +128,7 @@ namespace OpenP2P
             }
             Console.WriteLine("Missing Packets: " + missingCnt);
             //Thread.Sleep(5000);
+            */
         }
 
 

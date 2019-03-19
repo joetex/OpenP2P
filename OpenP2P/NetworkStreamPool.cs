@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ namespace OpenP2P
     public class NetworkStreamPool
     {
         Queue<NetworkStream> available = new Queue<NetworkStream>();
-
+        ///ConcurrentBag<NetworkStream> available = new ConcurrentBag<NetworkStream>();
         int initialPoolCount = 0;
         int initialBufferSize = 0;
         public int streamCount = 0;
@@ -32,6 +33,7 @@ namespace OpenP2P
         {
             streamCount++;
             NetworkStream stream = new NetworkStream(initialBufferSize);
+            //available.Add(stream);
             available.Enqueue(stream);
         }
 
@@ -41,11 +43,13 @@ namespace OpenP2P
         public NetworkStream Reserve()
         {
             NetworkStream stream = null;
+            //while (stream == null)
             lock (available)
             {
                 if (available.Count == 0)
                     New();
 
+               // available.TryTake(out stream);
                 stream = available.Dequeue();
             }
             return stream;
@@ -58,6 +62,7 @@ namespace OpenP2P
         {
             lock (available)
             {
+                //available.Add(stream);
                 available.Enqueue(stream);
             }
 
@@ -68,6 +73,8 @@ namespace OpenP2P
             while (available.Count > 0)
             {
                 NetworkStream stream = available.Dequeue();
+                //NetworkStream stream = null;
+                //available.TryTake(out stream);
                 stream.Dispose();
             }
         }
