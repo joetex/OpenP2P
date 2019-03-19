@@ -62,9 +62,9 @@ namespace OpenP2P
 
             stream.Reset();
 
-            lock (NetworkThread.RECVQUEUE)
+            //lock (NetworkThread.RECVQUEUE)
             {
-                NetworkThread.RECVQUEUE.Enqueue(stream);
+                NetworkThread.RECVQUEUE.Add(stream);
             }
         }
 
@@ -115,9 +115,9 @@ namespace OpenP2P
 
             stream.Complete();
 
-            lock (NetworkThread.SENDQUEUE)
+            //lock (NetworkThread.SENDQUEUE)
             {
-                NetworkThread.SENDQUEUE.Enqueue(stream);
+                NetworkThread.SENDQUEUE.Add(stream);
             }
         }
 

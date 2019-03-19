@@ -24,11 +24,11 @@ namespace OpenP2P
         static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
         public static long receiveByteCount = 0;
 
-        public const int MAXSEND = 5000;
+        public const int MAXSEND = 3000;
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads(2, 2);
+            NetworkThread.StartNetworkThreads(1, 2);
             
             NetworkServer server = new NetworkServer(9000);
             NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9001);
