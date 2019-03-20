@@ -18,8 +18,8 @@ namespace OpenP2P
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
-        public object message = null;
-        public int messageType = 0;
+        public NetworkMessage message = null;
+        public long sentTime = 0;
 
         public byte[] buffer;
         

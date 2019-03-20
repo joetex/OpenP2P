@@ -62,9 +62,9 @@ namespace OpenP2P
 
             stream.Reset();
 
-            //lock (NetworkThread.RECVQUEUE)
+            lock (NetworkThread.RECVQUEUE)
             {
-                NetworkThread.RECVQUEUE.Add(stream);
+                NetworkThread.RECVQUEUE.Enqueue(stream);
             }
         }
 
@@ -115,9 +115,9 @@ namespace OpenP2P
 
             stream.Complete();
 
-            //lock (NetworkThread.SENDQUEUE)
+            lock (NetworkThread.SENDQUEUE)
             {
-                NetworkThread.SENDQUEUE.Add(stream);
+                NetworkThread.SENDQUEUE.Enqueue(stream);
             }
         }
 
@@ -127,6 +127,12 @@ namespace OpenP2P
          */
         public void SendInternal(NetworkStream stream)
         {
+            if (stream.sentTime < NetworkTime.Milliseconds() - NetworkThread.MAX_WAIT_TIME )
+            {
+                Send(stream);
+                return;
+            }
+
             try
             {
                 stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.DontRoute, stream.remoteEndPoint);
@@ -136,7 +142,16 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
             
-            Free(stream);
+            if( stream.message.isReliable )
+            {
+                stream.sentTime = NetworkTime.Milliseconds();
+                Send(stream);
+            }
+            else
+            {
+                Free(stream);
+            }
+            
         }
 
         /**
@@ -156,7 +171,10 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            stream.socket = null;
+            //stream.socket = null;
+            //stream.message = null;
+            //stream.messageType = (int)MessageType.NULL;
+            
 
             NetworkThread.STREAMPOOL.Free(stream);
         }

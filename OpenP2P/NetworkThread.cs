@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,7 @@ namespace OpenP2P
     {
         public const int MIN_POOL_COUNT = 10000;
         public const int BUFFER_LENGTH = 4000;
-        public const int MAX_BUFFER_PACKET_COUNT = 1000;
+        public const int MAX_BUFFER_PACKET_COUNT = 10000;
         public static int MAX_SENDRATE_PERFRAME = 5000;
         public const int RECEIVE_TIMEOUT = 1000;
 
@@ -22,13 +21,14 @@ namespace OpenP2P
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
         public const int MAXSEND_SLEEP_TIME = 0;
-        
+
+        public const long MAX_WAIT_TIME = 1000;
+
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_POOL_COUNT, BUFFER_LENGTH);
 
-        //public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
-        //public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
-        public static ConcurrentBag<NetworkStream> SENDQUEUE = new ConcurrentBag<NetworkStream>();
-        public static ConcurrentBag<NetworkStream> RECVQUEUE = new ConcurrentBag<NetworkStream>();
+        public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+
         public static List<Thread> SENDTHREADS = new List<Thread>();
         public static List<Thread> RECVTHREADS = new List<Thread>();
 
@@ -56,21 +56,21 @@ namespace OpenP2P
 
             while (true)
             {
-                //lock (SENDQUEUE)
+                lock (SENDQUEUE)
                 {
-                    stream = null;
                     queueCount = SENDQUEUE.Count;
                     if (queueCount > 0)
-                        SENDQUEUE.TryTake(out stream);
-                        //stream = SENDQUEUE.Dequeue();
+                        stream = SENDQUEUE.Dequeue();
                 }
 
                 //sleep if empty, to avoid 100% cpu
-                if (queueCount == 0 || stream == null)
+                if (queueCount == 0)
                 {
                     Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
                 }
+
+                
 
                 //avoid filling up the OS socket buffer or network card's RING buffer
                 //important on cloud VPS/dedicated servers with lower buffer settings
@@ -90,15 +90,13 @@ namespace OpenP2P
 
             while (true)
             {
-                //lock (RECVQUEUE)
+                lock (RECVQUEUE)
                 {
-                    stream = null;
                     queueCount = RECVQUEUE.Count;
                     if (queueCount > 0)
-                        RECVQUEUE.TryTake(out stream);
-                        //stream = RECVQUEUE.Dequeue();
+                        stream = RECVQUEUE.Dequeue();
                 }
-                
+
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {

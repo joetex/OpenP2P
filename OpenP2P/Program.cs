@@ -28,7 +28,7 @@ namespace OpenP2P
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads(1, 2);
+            NetworkThread.StartNetworkThreads(2, 2);
             
             NetworkServer server = new NetworkServer(9000);
             NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9001);

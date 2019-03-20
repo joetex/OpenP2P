@@ -9,6 +9,8 @@ namespace OpenP2P
     public class NetworkProtocolBase
     {
         public Dictionary<int, NetworkMessage> messages = new Dictionary<int, NetworkMessage>();
+        public Dictionary<int, uint> messageSequences = new Dictionary<int, uint>();
+
         public Dictionary<string, MessageType> awaitingResponse = new Dictionary<string, MessageType>();
 
         public NetworkSocket socket = null;

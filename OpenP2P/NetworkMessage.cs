@@ -12,6 +12,7 @@ namespace OpenP2P
         public bool isLittleEndian = true;
         public SendType sendType = 0;
         public MessageType messageType = MessageType.NULL;
+        public uint sequence = 0;
 
         public event EventHandler<NetworkMessage> OnRequest = null;
         public event EventHandler<NetworkMessage> OnResponse = null;

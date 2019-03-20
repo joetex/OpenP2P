@@ -18,7 +18,7 @@ namespace OpenP2P
             {
                 requestUsername = requestUsername.Substring(0, MAX_NAME_LENGTH);
             }
-
+            
             stream.Write(requestUsername);
         }
 
