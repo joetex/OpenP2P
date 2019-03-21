@@ -30,7 +30,7 @@ namespace OpenP2P
         }
         public NetworkSocket(int localPort)
         {
-            Setup("127.0.0.1", 0, localPort);
+            Setup("::FFFF:127.0.0.1", 0, localPort);
         }
 
         /**
@@ -38,6 +38,7 @@ namespace OpenP2P
          */
         public void Setup(string remoteHost, int remotePort, int localPort)
         {
+
             remote = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
             anyHost = new IPEndPoint(IPAddress.Any, 0);
@@ -46,6 +47,7 @@ namespace OpenP2P
             socket.DualMode = true;
             socket.ExclusiveAddressUse = false;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkThread.RECEIVE_TIMEOUT);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace OpenP2P
 
         public void Setup(int localPort)
         {
-            protocol = new NetworkProtocol("127.0.0.1", 0, localPort);
+            protocol = new NetworkProtocol("::FFFF:127.0.0.1", 0, localPort);
             AttachListeners();
         }
 
@@ -58,6 +59,12 @@ namespace OpenP2P
             connectMsg.responseConnected = true;
 
             //Console.WriteLine("Sending Response: True");
+            if( stream.remoteEndPoint.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 )
+            {
+                //stream.remoteEndPoint = new IPEndPoint(IPAddress.Parse(stream.remoteEndPoint.))
+            }
+            IPEndPoint ip = (IPEndPoint)stream.remoteEndPoint;
+            ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
             protocol.SendResponse(stream.remoteEndPoint, connectMsg);
         }
     }

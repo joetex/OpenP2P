@@ -11,7 +11,7 @@ namespace OpenP2P
     {
         public const int MIN_POOL_COUNT = 10000;
         public const int BUFFER_LENGTH = 4000;
-        public const int MAX_BUFFER_PACKET_COUNT = 10000;
+        public const int MAX_BUFFER_PACKET_COUNT = 1000;
         public static int MAX_SENDRATE_PERFRAME = 5000;
         public const int RECEIVE_TIMEOUT = 1000;
 

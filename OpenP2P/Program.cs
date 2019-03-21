@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        static Stopwatch sw;
+        /*static Stopwatch sw;
         
         public const int MAXCLIENTS = 1;
         static long receiveCount = 0;
@@ -23,7 +23,7 @@ namespace OpenP2P
         static byte[] testBytes;
         static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
         public static long receiveByteCount = 0;
-
+        */
         public const int MAXSEND = 3000;
 
         static void Main(string[] args)
@@ -31,7 +31,7 @@ namespace OpenP2P
             NetworkThread.StartNetworkThreads(1, 2);
             
             NetworkServer server = new NetworkServer(9000);
-            NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9001);
+            NetworkClient client = new NetworkClient("::FFFF:127.0.0.1", 9000, 9001);
 
             Thread.Sleep(200);
 
@@ -137,7 +137,7 @@ namespace OpenP2P
             */
         }
 
-
+        /*
         static void OnSendEvent(object sender, NetworkStream stream)
         {
             if( sendCount == 0 )
@@ -226,6 +226,6 @@ namespace OpenP2P
             double exponent = Math.Pow(2.0, random.Next(-126, 128));
             return (float)(mantissa * exponent);
         }
-
+        */
     }
 }
