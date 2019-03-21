@@ -44,7 +44,7 @@ namespace OpenP2P
                 try
                 {
                     message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
-                    message.messageType = (MessageType)i;
+                    message.header.messageType = (MessageType)i;
                 }
                 catch(Exception e)
                 {
@@ -85,12 +85,12 @@ namespace OpenP2P
 
         public void SendRequest(EndPoint ep, NetworkMessage message)
         {
-            message.sendType = SendType.Request;
+            message.header.sendType = SendType.Request;
             Send(ep, message);
         }
         public void SendResponse(EndPoint ep, NetworkMessage message)
         {
-            message.sendType = SendType.Response;
+            message.header.sendType = SendType.Response;
             Send(ep, message);
         }
        
@@ -100,7 +100,7 @@ namespace OpenP2P
             stream.message = message;
             
             WriteHeader(stream);
-            switch(message.sendType)
+            switch(message.header.sendType)
             {
                 case SendType.Request: message.WriteRequest(stream); break;
                 case SendType.Response: message.WriteResponse(stream); break;
@@ -131,21 +131,21 @@ namespace OpenP2P
         {
             NetworkMessage message = (NetworkMessage)stream.message;
 
-            int msgBits = (int)message.messageType;
+            int msgBits = (int)message.header.messageType;
             if (msgBits < 0 || msgBits >= (int)MessageType.LAST)
                 msgBits = 0;
 
             //add sendType to bit 6 
-            msgBits |= (int)message.sendType << 5;
+            msgBits |= (int)message.header.sendType << 5;
 
             //add reliable to bit 7
-            msgBits |= message.isReliable ? ReliableFlag : 0;
+            msgBits |= message.header.isReliable ? ReliableFlag : 0;
             
             //add little endian to bit 8
             if (!BitConverter.IsLittleEndian)
                 msgBits |= BigEndianFlag;
             
-            message.isLittleEndian = BitConverter.IsLittleEndian;
+            message.header.isLittleEndian = BitConverter.IsLittleEndian;
 
             stream.Write((byte)msgBits);
         }
@@ -165,8 +165,8 @@ namespace OpenP2P
                 return GetMessage((int)MessageType.NULL);
 
             NetworkMessage message = GetMessage(bits);
-            message.isLittleEndian = isLittleEndian;
-            message.sendType = sendType;
+            message.header.isLittleEndian = isLittleEndian;
+            message.header.sendType = sendType;
 
             return message;
         }

@@ -70,8 +70,6 @@ namespace OpenP2P
                     continue;
                 }
 
-                
-
                 //avoid filling up the OS socket buffer or network card's RING buffer
                 //important on cloud VPS/dedicated servers with lower buffer settings
                 //google compute engine (cheapest one) gave packet loss at >75 sends/frame

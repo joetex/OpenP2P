@@ -8,11 +8,16 @@ namespace OpenP2P
 {
     public class NetworkMessage
     {
-        public bool isReliable = false;
-        public bool isLittleEndian = true;
-        public SendType sendType = 0;
-        public MessageType messageType = MessageType.NULL;
-        public uint sequence = 0;
+        public class Header
+        {
+            public bool isReliable = false;
+            public bool isLittleEndian = true;
+            public SendType sendType = 0;
+            public MessageType messageType = MessageType.NULL;
+            public uint sequence = 0;
+        }
+
+        public Header header = new Header();
 
         public event EventHandler<NetworkMessage> OnRequest = null;
         public event EventHandler<NetworkMessage> OnResponse = null;
@@ -24,7 +29,7 @@ namespace OpenP2P
 
         public virtual void InvokeOnRead(NetworkStream stream)
         {
-            switch (sendType)
+            switch (header.sendType)
             {
                 case SendType.Request:
                     ReadRequest(stream);

@@ -42,7 +42,8 @@ namespace OpenP2P
             local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
             anyHost = new IPEndPoint(IPAddress.Any, 0);
 
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+            socket.DualMode = true;
             socket.ExclusiveAddressUse = false;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
@@ -127,27 +128,27 @@ namespace OpenP2P
          */
         public void SendInternal(NetworkStream stream)
         {
-            if (stream.sentTime < NetworkTime.Milliseconds() - NetworkThread.MAX_WAIT_TIME )
+            /*if (stream.sentTime < NetworkTime.Milliseconds() - NetworkThread.MAX_WAIT_TIME )
             {
                 Send(stream);
                 return;
-            }
+            }*/
 
             try
             {
-                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.DontRoute, stream.remoteEndPoint);
+                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
             
-            if( stream.message.isReliable )
+            /*if( stream.message.header.isReliable )
             {
                 stream.sentTime = NetworkTime.Milliseconds();
                 Send(stream);
             }
-            else
+            else*/
             {
                 Free(stream);
             }
