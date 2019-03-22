@@ -53,19 +53,19 @@ namespace OpenP2P
             NetworkStream stream = (NetworkStream)sender;
          
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            //Console.WriteLine("Received Request:");
-            //Console.WriteLine(connectMsg.requestUsername);
+            Console.WriteLine("Received Request:");
+            Console.WriteLine(connectMsg.requestUsername);
+
+            ushort id = protocol.ident.ServerGeneratePeerId(stream.remoteEndPoint);
+            protocol.ident.RegisterPeer(id, stream.remoteEndPoint);
 
             connectMsg.responseConnected = true;
-
-            //Console.WriteLine("Sending Response: True");
-            if( stream.remoteEndPoint.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 )
-            {
-                //stream.remoteEndPoint = new IPEndPoint(IPAddress.Parse(stream.remoteEndPoint.))
-            }
+            connectMsg.responsePeerId = id;
+            Console.WriteLine("Generated PeerId: " + id);
+            
             IPEndPoint ip = (IPEndPoint)stream.remoteEndPoint;
             ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
-            protocol.SendResponse(stream.remoteEndPoint, connectMsg);
+            protocol.SendResponse(ip, connectMsg);
         }
     }
 }

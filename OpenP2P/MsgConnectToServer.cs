@@ -10,7 +10,9 @@ namespace OpenP2P
     {
         public const int MAX_NAME_LENGTH = 32;
         public string requestUsername = "";
+
         public bool responseConnected = false;
+        public ushort responsePeerId = 0;
 
         public override void WriteRequest(NetworkStream stream)
         {
@@ -25,6 +27,7 @@ namespace OpenP2P
         public override void WriteResponse(NetworkStream stream)
         {
             stream.Write((byte)1);
+            stream.Write(responsePeerId);
         }
 
         public override void ReadRequest(NetworkStream stream)
@@ -35,6 +38,7 @@ namespace OpenP2P
         public override void ReadResponse(NetworkStream stream)
         {
             responseConnected = stream.ReadByte() != 0;
+            responsePeerId = stream.ReadUShort();
         }
     }
 }

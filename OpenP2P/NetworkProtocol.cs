@@ -23,13 +23,25 @@ namespace OpenP2P
         const int ReliableFlag = (1 << 6);  //bit 7
         const int SendTypeFlag = (1 << 5); //bit 6
 
+        public event EventHandler<NetworkMessage> OnWriteHeader = null;
+        public event EventHandler<NetworkMessage> OnReadHeader = null;
+
         public NetworkProtocol(string remoteHost, int remotePort, int localPort)
         {
             socket = new NetworkSocket(remoteHost, remotePort, localPort);
             AttachSocketListener(socket);
             BindMessages();
+
+            AttachIdent();
         }
         
+        public void AttachIdent()
+        {
+            ident = new NetworkIdentity();
+
+            OnReadHeader += ident.OnReadHeader;
+            OnWriteHeader += ident.OnWriteHeader;
+        }
         /// <summary>
         /// Bind Messages to our Message Dictionary
         /// This uses reflection to map our Enum to a Message class
@@ -129,7 +141,7 @@ namespace OpenP2P
 
         public override void WriteHeader(NetworkStream stream)
         {
-            NetworkMessage message = (NetworkMessage)stream.message;
+            NetworkMessage message = stream.message;
 
             int msgBits = (int)message.header.messageType;
             if (msgBits < 0 || msgBits >= (int)MessageType.LAST)
@@ -148,6 +160,8 @@ namespace OpenP2P
             message.header.isLittleEndian = BitConverter.IsLittleEndian;
 
             stream.Write((byte)msgBits);
+
+            OnWriteHeader.Invoke(stream, message);
         }
 
         public override NetworkMessage ReadHeader(NetworkStream stream)
@@ -167,6 +181,8 @@ namespace OpenP2P
             NetworkMessage message = GetMessage(bits);
             message.header.isLittleEndian = isLittleEndian;
             message.header.sendType = sendType;
+
+            OnReadHeader.Invoke(stream, message);
 
             return message;
         }

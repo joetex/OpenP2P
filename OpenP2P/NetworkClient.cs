@@ -53,8 +53,11 @@ namespace OpenP2P
             PerformanceTest();
             
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            //Console.WriteLine("Received Response:");
-            //Console.WriteLine(connectMsg.responseConnected);
+            Console.WriteLine("Received Response:");
+            Console.WriteLine(connectMsg.responseConnected);
+            Console.WriteLine(connectMsg.responsePeerId);
+
+            protocol.localIdentity = protocol.ident.RegisterPeer(connectMsg.responsePeerId, protocol.socket.local);
         }
 
         public void PerformanceTest()

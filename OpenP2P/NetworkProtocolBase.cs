@@ -14,10 +14,14 @@ namespace OpenP2P
         public Dictionary<string, MessageType> awaitingResponse = new Dictionary<string, MessageType>();
 
         public NetworkSocket socket = null;
-        
+        public NetworkIdentity ident = null;
+        public NetworkIdentity.PeerIdentity localIdentity = new NetworkIdentity.PeerIdentity();
         public int responseType = 0;
         public bool isLittleEndian = false;
-        
+
+        public event EventHandler<NetworkMessage> OnWriteHeader = null;
+        public event EventHandler<NetworkMessage> OnReadHeader = null;
+
         public NetworkProtocolBase() { }
 
         public virtual void AttachSocketListener(NetworkSocket socket) { }
