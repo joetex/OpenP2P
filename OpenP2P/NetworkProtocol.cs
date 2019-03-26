@@ -157,18 +157,12 @@ namespace OpenP2P
 
             if (message.header.sendType == SendType.Response)
             {
-                ulong key = 0;
-                key |= (ulong)((ulong)message.header.messageType) << 31;
-                key |= (ulong)((ulong)message.header.id) << 15;
-                key |= (ulong)((ulong)message.header.sequence);
-                stream.ackkey = key;
-
                 //Console.WriteLine("Acknowledging: " + key);
                 lock (NetworkThread.ACKNOWLEDGED)
                 {
                     if (NetworkThread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         Console.WriteLine("ALready exists:" + stream.ackkey);
-                    NetworkThread.ACKNOWLEDGED.Add(key, stream);
+                    NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
             }
 
