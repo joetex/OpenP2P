@@ -19,7 +19,7 @@ namespace OpenP2P
         public int MAX_RECV_THREADS = 0;
         public int MAX_RELIABLE_THREADS = 0;
         //important to sleep more, since they are on infinite loops
-        public const int EMPTY_SLEEP_TIME = 10;
+        public const int EMPTY_SLEEP_TIME = 1;
         public const int MAXSEND_SLEEP_TIME = 0;
 
         public const int MIN_RELIABLE_SLEEP_TIME = 1;
@@ -103,6 +103,7 @@ namespace OpenP2P
 
             while (true)
             {
+                /*
                 lock (RECVQUEUE)
                 {
                     queueCount = RECVQUEUE.Count;
@@ -116,8 +117,13 @@ namespace OpenP2P
                     Thread.Sleep(EMPTY_SLEEP_TIME);
                     continue;
                 }
-                
-                stream.socket.ExecuteListen(stream);
+                */
+                if (recvStream == null)
+                    continue;
+
+                //recvStream.Reset();
+
+                recvStream.socket.ExecuteListen(recvStream);
             }
         }
 

@@ -35,7 +35,7 @@ namespace OpenP2P
             //Console.WriteLine("Received Heartbeat from ("+ message.peer.id +") :");
             //Console.WriteLine(heartbeat.timestamp);
         }
-
+        
         public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
@@ -46,8 +46,8 @@ namespace OpenP2P
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
             connectMsg.responseConnected = true;
             connectMsg.responsePeerId = peer.id;
-
-            //protocol.SendResponse(stream, connectMsg);
+            
+            protocol.SendResponse(stream, connectMsg);
         }
 
 

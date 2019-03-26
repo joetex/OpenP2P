@@ -79,6 +79,7 @@ namespace OpenP2P
                 try
                 {
                     message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
+                    messagesContainer.AddService(message.GetType(), message);
                     message.messageType = (MessageType)i;
                 }
                 catch(Exception e)
@@ -112,7 +113,12 @@ namespace OpenP2P
             NetworkMessage message = GetMessage((int)_msgType);
             return message;
         }
-        
+
+        public T Create<T>()
+        {
+            return (T)messagesContainer.GetService(typeof(T));
+        }
+
         public void Listen()
         {
             socket.Listen(null);

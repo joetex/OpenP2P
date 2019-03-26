@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,8 @@ namespace OpenP2P
 {
     public class NetworkProtocolBase
     {
+        public ServiceContainer messagesContainer = new ServiceContainer();
+
         public Dictionary<int, NetworkMessage> messages = new Dictionary<int, NetworkMessage>();
         public Dictionary<uint, uint> messageSequences = new Dictionary<uint, uint>();
 

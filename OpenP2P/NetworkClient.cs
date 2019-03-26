@@ -25,31 +25,25 @@ namespace OpenP2P
         
         public void ConnectToServer(string userName)
         {
-            MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(MessageType.ConnectToServer);
+            PerformanceTest();
+            MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
-            //Console.WriteLine("Sending Request: ");
-            //Console.WriteLine(userName);
+
             protocol.SendReliableRequest(protocol.socket.remote, msg);
         }
 
         public void SendHeartbeat()
         {
-            MsgHeartbeat msg = (MsgHeartbeat)protocol.Create(MessageType.Heartbeat);
+            MsgHeartbeat msg = protocol.Create<MsgHeartbeat>();
             msg.timestamp = NetworkTime.Milliseconds();
             protocol.SendReliableRequest(protocol.socket.remote, msg);
         }
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            PerformanceTest();
+            
             
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            //Console.WriteLine("Received Response:");
-            //Console.WriteLine(connectMsg.responseConnected);
-            //Console.WriteLine(connectMsg.responsePeerId);
-
-            //SendHeartbeat();
-            //protocol.ident.RegisterLocal(connectMsg.responsePeerId, protocol.socket.local);
         }
 
         public void PerformanceTest()
