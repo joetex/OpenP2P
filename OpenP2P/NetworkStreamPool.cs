@@ -52,6 +52,11 @@ namespace OpenP2P
                 available.TryTake(out stream);
                 //stream = available.Dequeue();
             }
+
+            stream.retryCount = 0;
+            stream.sentTime = 0;
+            stream.acknowledged = false;
+
             return stream;
         }
 

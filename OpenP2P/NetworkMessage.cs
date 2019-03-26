@@ -14,9 +14,11 @@ namespace OpenP2P
             public bool isLittleEndian = true;
             public SendType sendType = 0;
             public MessageType messageType = MessageType.NULL;
-            public uint sequence = 0;
+            public ushort sequence = 0;
+            public ushort id = 0;
         }
 
+        public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
         public Header header = new Header();
 
         public event EventHandler<NetworkMessage> OnRequest = null;

@@ -113,9 +113,6 @@ namespace OpenP2P
          */
         public void Send(NetworkStream stream)
         {
-            if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, stream);
-
             stream.Complete();
 
             lock (NetworkThread.SENDQUEUE)
@@ -130,12 +127,6 @@ namespace OpenP2P
          */
         public void SendInternal(NetworkStream stream)
         {
-            /*if (stream.sentTime < NetworkTime.Milliseconds() - NetworkThread.MAX_WAIT_TIME )
-            {
-                Send(stream);
-                return;
-            }*/
-
             try
             {
                 stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
@@ -144,17 +135,9 @@ namespace OpenP2P
             {
                 Console.WriteLine(e.ToString());
             }
-            
-            /*if( stream.message.header.isReliable )
-            {
-                stream.sentTime = NetworkTime.Milliseconds();
-                Send(stream);
-            }
-            else*/
-            {
-                Free(stream);
-            }
-            
+
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, stream);
         }
 
         /**
@@ -165,6 +148,7 @@ namespace OpenP2P
         {
             NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
             stream.socket = this;
+            
             return stream;
         }
 
@@ -174,11 +158,6 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            //stream.socket = null;
-            //stream.message = null;
-            //stream.messageType = (int)MessageType.NULL;
-            
-
             NetworkThread.STREAMPOOL.Free(stream);
         }
 

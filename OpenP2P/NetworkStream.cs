@@ -19,7 +19,11 @@ namespace OpenP2P
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
         public NetworkMessage message = null;
+        public ulong ackkey = 0;
         public long sentTime = 0;
+        public int retryCount = 0;
+        public bool acknowledged = false;
+
 
         public byte[] buffer;
         

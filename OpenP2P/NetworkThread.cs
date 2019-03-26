@@ -17,10 +17,14 @@ namespace OpenP2P
 
         public static int MAX_SEND_THREADS = 0;
         public static int MAX_RECV_THREADS = 0;
-
+        public static int MAX_RELIABLE_THREADS = 0;
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
         public const int MAXSEND_SLEEP_TIME = 0;
+
+        public const int MIN_RELIABLE_SLEEP_TIME = 1;
+        public const long RETRY_TIME = 1000;
+        public const long RETRY_COUNT = 10;
 
         public const long MAX_WAIT_TIME = 1000;
 
@@ -28,14 +32,18 @@ namespace OpenP2P
 
         public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
         public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public static Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public static Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
 
         public static List<Thread> SENDTHREADS = new List<Thread>();
         public static List<Thread> RECVTHREADS = new List<Thread>();
+        public static List<Thread> RELIABLETHREADS = new List<Thread>();
 
-        public static void StartNetworkThreads(int sendThreads, int recvThreads)
+        public static void StartNetworkThreads(int sendThreads, int recvThreads, int reliableThreads)
         {
             MAX_SEND_THREADS = sendThreads;
             MAX_RECV_THREADS = recvThreads;
+            MAX_RELIABLE_THREADS = reliableThreads;
 
             for (int i = 0; i < sendThreads; i++)
             {
@@ -46,6 +54,12 @@ namespace OpenP2P
             {
                 RECVTHREADS.Add(new Thread(NetworkThread.RecvThread));
                 RECVTHREADS[i].Start();
+            }
+
+            for (int i = 0; i < reliableThreads; i++)
+            {
+                RELIABLETHREADS.Add(new Thread(NetworkThread.ReliableThread));
+                RELIABLETHREADS[i].Start();
             }
         }
 
@@ -76,6 +90,7 @@ namespace OpenP2P
                 if (queueCount % MAX_SENDRATE_PERFRAME == 0)
                     Thread.Sleep(MAXSEND_SLEEP_TIME);
 
+                
                 stream.socket.SendInternal(stream);
             }
         }
@@ -103,6 +118,84 @@ namespace OpenP2P
                 }
                 
                 stream.socket.ExecuteListen(stream);
+            }
+        }
+
+        
+
+        public static void ReliableThread()
+        {
+
+            NetworkStream stream = null;
+            int queueCount = 0;
+            Queue<NetworkStream> tempQueue = new Queue<NetworkStream>(MIN_POOL_COUNT);
+            long curtime = 0;
+            long difftime = 0;
+
+            while (true)
+            {
+                lock (RELIABLEQUEUE)
+                {
+                    queueCount = RELIABLEQUEUE.Count;
+                    if (queueCount > 0)
+                        stream = RELIABLEQUEUE.Dequeue();
+                }
+
+                //sleep if empty, to avoid 100% cpu
+                if (queueCount == 0)
+                {
+                    Thread.Sleep(EMPTY_SLEEP_TIME);
+                    continue;
+                }
+                
+                
+
+                bool hasKey = false;
+                lock (ACKNOWLEDGED)
+                {
+                    hasKey = ACKNOWLEDGED.ContainsKey(stream.ackkey);
+                    
+                    if (hasKey)
+                    {
+                        //Console.WriteLine("Acknowledged: " + stream.ackkey);
+                        ACKNOWLEDGED.Remove(stream.ackkey);
+                    }
+                }
+
+                if( hasKey)
+                {
+                    stream.socket.Free(stream);
+                    continue;
+                }
+
+                curtime = NetworkTime.Milliseconds();
+                difftime = curtime - stream.sentTime;
+                if (difftime > RETRY_TIME)
+                {
+                    
+                    Console.WriteLine("Reliable message retry #" + stream.ackkey);
+
+                    if ( stream.acknowledged || stream.retryCount >= NetworkThread.RETRY_COUNT)
+                    {
+                        Console.WriteLine("Retry count reached: " + stream.retryCount);
+                        stream.socket.Free(stream);
+                    }
+                    else
+                    {
+                        stream.socket.Send(stream);
+                    }
+                }
+                else
+                {
+                    lock (RELIABLEQUEUE)
+                    {
+                        RELIABLEQUEUE.Enqueue(stream);
+                    }
+                }
+                    
+
+
+                Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
             }
         }
     }

@@ -18,25 +18,11 @@ namespace OpenP2P
         static Stopwatch recieveTimer;
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
-            Setup(remoteHost, remotePort, localPort);
-        }
-        
-        /**
-         * Setup the connection credentials and socket configuration
-         */
-        public void Setup(string remoteHost, int remotePort, int localPort)
-        {
             protocol = new NetworkProtocol(remoteHost, remotePort, localPort);
-            AttachListeners();
-        }
-
-        public void AttachListeners()
-        {
             protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
             protocol.Listen();
         }
-
-
+        
         public void ConnectToServer(string userName)
         {
             MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(MessageType.ConnectToServer);
@@ -44,20 +30,27 @@ namespace OpenP2P
             msg.requestUsername = userName;
             //Console.WriteLine("Sending Request: ");
             //Console.WriteLine(userName);
-            protocol.SendRequest(protocol.socket.remote, msg);
+            protocol.SendReliableRequest(protocol.socket.remote, msg);
         }
 
+        public void SendHeartbeat()
+        {
+            MsgHeartbeat msg = (MsgHeartbeat)protocol.Create(MessageType.Heartbeat);
+            msg.timestamp = NetworkTime.Milliseconds();
+            protocol.SendReliableRequest(protocol.socket.remote, msg);
+        }
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
             
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            Console.WriteLine("Received Response:");
-            Console.WriteLine(connectMsg.responseConnected);
-            Console.WriteLine(connectMsg.responsePeerId);
+            //Console.WriteLine("Received Response:");
+            //Console.WriteLine(connectMsg.responseConnected);
+            //Console.WriteLine(connectMsg.responsePeerId);
 
-            protocol.localIdentity = protocol.ident.RegisterPeer(connectMsg.responsePeerId, protocol.socket.local);
+            //SendHeartbeat();
+            //protocol.ident.RegisterLocal(connectMsg.responsePeerId, protocol.socket.local);
         }
 
         public void PerformanceTest()
@@ -67,7 +60,7 @@ namespace OpenP2P
 
             receiveCnt++;
 
-            if (receiveCnt >= Program.MAXSEND)
+            if (receiveCnt == Program.MAXSEND)
             {
                 recieveTimer.Stop();
                 Console.WriteLine("CLIENT Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");

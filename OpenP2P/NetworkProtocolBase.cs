@@ -19,8 +19,7 @@ namespace OpenP2P
         public int responseType = 0;
         public bool isLittleEndian = false;
 
-        public event EventHandler<NetworkMessage> OnWriteHeader = null;
-        public event EventHandler<NetworkMessage> OnReadHeader = null;
+        
 
         public NetworkProtocolBase() { }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using static OpenP2P.NetworkIdentity;
 
 namespace OpenP2P
 {
@@ -17,33 +18,22 @@ namespace OpenP2P
 
         public NetworkServer(int localPort)
         {
-            Setup(localPort);
-        }
-
-        public void Setup(int localPort)
-        {
             protocol = new NetworkProtocol("::FFFF:127.0.0.1", 0, localPort);
-            AttachListeners();
-        }
-
-        public void AttachListeners()
-        {
+            protocol.RegisterAsServer();
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
+            protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
             protocol.Listen();
+            
+            
         }
-    
-        public void PerformanceTest()
+
+        public void OnRequestHeartbeat(object sender, NetworkMessage message)
         {
-            if (receiveCnt == 0)
-                recieveTimer = Stopwatch.StartNew();
+            
 
-            receiveCnt++;
-
-            if (receiveCnt >= Program.MAXSEND)
-            {
-                recieveTimer.Stop();
-                Console.WriteLine("SERVER Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");
-            }
+            MsgHeartbeat heartbeat = (MsgHeartbeat)message;
+            //Console.WriteLine("Received Heartbeat from ("+ message.peer.id +") :");
+            //Console.WriteLine(heartbeat.timestamp);
         }
 
         public void OnRequestConnectToServer(object sender, NetworkMessage message)
@@ -51,21 +41,29 @@ namespace OpenP2P
             PerformanceTest();
 
             NetworkStream stream = (NetworkStream)sender;
-         
+
+            PeerIdentity peer = protocol.ident.RegisterPeer(stream.remoteEndPoint);
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            Console.WriteLine("Received Request:");
-            Console.WriteLine(connectMsg.requestUsername);
-
-            ushort id = protocol.ident.ServerGeneratePeerId(stream.remoteEndPoint);
-            protocol.ident.RegisterPeer(id, stream.remoteEndPoint);
-
             connectMsg.responseConnected = true;
-            connectMsg.responsePeerId = id;
-            Console.WriteLine("Generated PeerId: " + id);
-            
-            IPEndPoint ip = (IPEndPoint)stream.remoteEndPoint;
-            ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
-            protocol.SendResponse(ip, connectMsg);
+            connectMsg.responsePeerId = peer.id;
+            connectMsg.peer = peer;
+
+            protocol.SendResponse(stream.remoteEndPoint, connectMsg);
+        }
+
+
+        public void PerformanceTest()
+        {
+            if (receiveCnt == 0)
+                recieveTimer = Stopwatch.StartNew();
+
+            receiveCnt++;
+
+            if (receiveCnt == Program.MAXSEND)
+            {
+                recieveTimer.Stop();
+                Console.WriteLine("SERVER Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");
+            }
         }
     }
 }
