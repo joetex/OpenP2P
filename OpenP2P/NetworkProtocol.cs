@@ -79,7 +79,7 @@ namespace OpenP2P
                 try
                 {
                     message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
-                    message.header.messageType = (MessageType)i;
+                    message.messageType = (MessageType)i;
                 }
                 catch(Exception e)
                 {
@@ -120,41 +120,49 @@ namespace OpenP2P
 
         public void SendReliableRequest(EndPoint ep, NetworkMessage message)
         {
-            message.header.isReliable = true;
-            message.header.sendType = SendType.Request;
-            message.header.sequence = ident.local.messageSequence[(int)message.header.messageType]++;
-            message.header.id = ident.local.id;
-            Send(ep, message);
+            IPEndPoint ip = GetIPv6(ep);
+            NetworkStream stream = socket.Prepare(ip);
+
+            stream.header.messageType = message.messageType;
+            stream.header.isReliable = true;
+            stream.header.sendType = SendType.Request;
+            stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
+            stream.header.id = ident.local.id;
+
+            Send(stream, message);
         }
        
 
         public void SendRequest(EndPoint ep, NetworkMessage message)
         {
-            message.header.isReliable = false;
-            message.header.sendType = SendType.Request;
-            message.header.sequence = ident.local.messageSequence[(int)message.header.messageType]++;
-            message.header.id = ident.local.id;
-            Send(ep, message);
-        }
-
-        public void SendResponse(EndPoint ep, NetworkMessage message)
-        {
-            message.header.isReliable = true;
-            message.header.sendType = SendType.Response;
-            message.header.sequence = ident.local.messageSequence[(int)message.header.messageType]++;
-            message.header.id = ident.local.id;
-            Send(ep, message);
-        }
-       
-        public void Send(EndPoint ep, NetworkMessage message)
-        {
             IPEndPoint ip = GetIPv6(ep);
             NetworkStream stream = socket.Prepare(ip);
 
-            stream.CopyHeader(message);
-            
+            stream.header.messageType = message.messageType;
+            stream.header.isReliable = false;
+            stream.header.sendType = SendType.Request;
+            stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
+            stream.header.id = ident.local.id;
+            Send(stream, message);
+        }
+
+        public void SendResponse(NetworkStream requestStream, NetworkMessage message)
+        {
+            IPEndPoint ip = GetIPv6(requestStream.remoteEndPoint);
+            NetworkStream responseStream = socket.Prepare(ip);
+
+            responseStream.header.messageType = requestStream.header.messageType;
+            responseStream.header.isReliable = requestStream.header.isReliable;
+            responseStream.header.sendType = SendType.Response;
+            responseStream.header.sequence = requestStream.header.sequence;
+            responseStream.header.id = requestStream.header.id;
+            Send(responseStream, message);
+        }
+       
+        public void Send(NetworkStream stream, NetworkMessage message)
+        {
             WriteHeader(stream);
-            switch(message.header.sendType)
+            switch(stream.header.sendType)
             {
                 case SendType.Request: message.WriteRequest(stream); break;
                 case SendType.Response: message.WriteResponse(stream); break;
@@ -168,15 +176,17 @@ namespace OpenP2P
         {
             NetworkMessage message = ReadHeader(stream);
 
-            if (message.header.sendType == SendType.Response)
+            if (stream.header.sendType == SendType.Response)
             {
-                Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
+                //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
                 lock (threads.ACKNOWLEDGED)
                 {
                     if (threads.ACKNOWLEDGED.ContainsKey(stream.ackkey))
-                        Console.WriteLine("ALready exists:" + stream.ackkey);
+                        Console.WriteLine("Already exists:" + stream.ackkey);
                     threads.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
+
+                stream.acknowledged = true;
             }
 
             message.InvokeOnRead(stream);
@@ -184,21 +194,7 @@ namespace OpenP2P
 
         public override void OnSend(object sender, NetworkStream stream)
         {
-            if (stream.header.sendType == SendType.Request && stream.header.isReliable)
-            {
-                lock (threads.RELIABLEQUEUE)
-                {
-                    Console.WriteLine("Adding Reliable: " + stream.ackkey);
-                    stream.sentTime = NetworkTime.Milliseconds();
-                    stream.retryCount++;
-
-                    threads.RELIABLEQUEUE.Enqueue(stream);
-                }
-            }
-            else
-            {
-                socket.Free(stream);
-            }
+            
         }
 
         public override void WriteHeader(NetworkStream stream)
@@ -223,9 +219,7 @@ namespace OpenP2P
 
             stream.Write((byte)msgBits);
 
-            OnWriteHeader.Invoke(stream, stream);
-
-            //stream.CopyHeader(message);
+            OnWriteHeader.Invoke(this, stream);
         }
 
         public override NetworkMessage ReadHeader(NetworkStream stream)
@@ -243,15 +237,14 @@ namespace OpenP2P
                 return GetMessage((int)MessageType.NULL);
 
             NetworkMessage message = GetMessage(bits);
-            stream.CopyHeader(message);
+
             stream.header.isReliable = isReliable;
             stream.header.isLittleEndian = isLittleEndian;
             stream.header.sendType = sendType;
+            stream.header.messageType = message.messageType;
 
-            OnReadHeader.Invoke(stream, stream);
-
-           
-
+            OnReadHeader.Invoke(this, stream);
+            
             return message;
         }
 

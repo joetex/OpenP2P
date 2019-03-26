@@ -41,14 +41,13 @@ namespace OpenP2P
             PerformanceTest();
 
             NetworkStream stream = (NetworkStream)sender;
-
             PeerIdentity peer = protocol.ident.RegisterPeer(stream.remoteEndPoint);
+
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
             connectMsg.responseConnected = true;
             connectMsg.responsePeerId = peer.id;
-            connectMsg.peer = peer;
 
-            protocol.SendResponse(stream.remoteEndPoint, connectMsg);
+            //protocol.SendResponse(stream, connectMsg);
         }
 
 

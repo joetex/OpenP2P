@@ -19,7 +19,7 @@ namespace OpenP2P
         }
 
         public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
-        public Header header = new Header();
+        public MessageType messageType = MessageType.NULL;
 
         public event EventHandler<NetworkMessage> OnRequest = null;
         public event EventHandler<NetworkMessage> OnResponse = null;
@@ -31,7 +31,7 @@ namespace OpenP2P
 
         public virtual void InvokeOnRead(NetworkStream stream)
         {
-            switch (header.sendType)
+            switch (stream.header.sendType)
             {
                 case SendType.Request:
                     ReadRequest(stream);

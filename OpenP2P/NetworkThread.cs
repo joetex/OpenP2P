@@ -22,9 +22,9 @@ namespace OpenP2P
         public const int EMPTY_SLEEP_TIME = 10;
         public const int MAXSEND_SLEEP_TIME = 0;
 
-        public const int MIN_RELIABLE_SLEEP_TIME = 100;
-        public const long RETRY_TIME = 1000;
-        public const long RETRY_COUNT = 10;
+        public const int MIN_RELIABLE_SLEEP_TIME = 1;
+        public const long RETRY_TIME = 700;
+        public const long RETRY_COUNT = 15;
 
         public const long MAX_WAIT_TIME = 1000;
 
@@ -157,7 +157,7 @@ namespace OpenP2P
                     
                     if (hasKey)
                     {
-                        Console.WriteLine("Acknowledged: " + stream.ackkey);
+                        //Console.WriteLine("Acknowledged: " + stream.ackkey);
                         ACKNOWLEDGED.Remove(stream.ackkey);
                     }
                 }
@@ -189,7 +189,7 @@ namespace OpenP2P
                 {
                     lock (RELIABLEQUEUE)
                     {
-                        Console.WriteLine("Waiting: " + stream.ackkey);
+                        //Console.WriteLine("Waiting: " + stream.ackkey);
                         RELIABLEQUEUE.Enqueue(stream);
                     }
                 }

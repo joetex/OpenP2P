@@ -143,6 +143,22 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
 
+            if (stream.header.sendType == SendType.Request && stream.header.isReliable)
+            {
+                lock (threads.RELIABLEQUEUE)
+                {
+                    //Console.WriteLine("Adding Reliable: " + stream.ackkey);
+                    stream.sentTime = NetworkTime.Milliseconds();
+                    stream.retryCount++;
+
+                    threads.RELIABLEQUEUE.Enqueue(stream);
+                }
+            }
+            else
+            {
+                Free(stream);
+            }
+
             if (OnSend != null) //notify any event listeners
                 OnSend.Invoke(this, stream);
         }

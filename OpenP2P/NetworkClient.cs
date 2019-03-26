@@ -26,7 +26,6 @@ namespace OpenP2P
         public void ConnectToServer(string userName)
         {
             MsgConnectToServer msg = (MsgConnectToServer)protocol.Create(MessageType.ConnectToServer);
-            msg.header.isReliable = true;
             msg.requestUsername = userName;
             //Console.WriteLine("Sending Request: ");
             //Console.WriteLine(userName);
