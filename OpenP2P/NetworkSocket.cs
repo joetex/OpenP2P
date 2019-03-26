@@ -70,13 +70,12 @@ namespace OpenP2P
             if (stream == null)
                 stream = Reserve();
 
-            
-            threads.recvStream = stream;
+            stream.Reset();
 
-            /*lock (threads.RECVQUEUE)
+            lock (threads.RECVQUEUE)
             {
                 threads.RECVQUEUE.Enqueue(stream);
-            }*/
+            }
         }
 
         /**
@@ -100,7 +99,7 @@ namespace OpenP2P
                 //Console.WriteLine(e.ToString());
             }
 
-            //Listen(stream); //listen again
+            Listen(stream); //listen again
         }
         
         /**
