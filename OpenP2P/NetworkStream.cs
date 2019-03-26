@@ -18,7 +18,8 @@ namespace OpenP2P
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
-        public NetworkMessage message = null;
+
+        public NetworkMessage.Header header = new NetworkMessage.Header();
         public ulong ackkey = 0;
         public long sentTime = 0;
         public int retryCount = 0;
@@ -38,7 +39,17 @@ namespace OpenP2P
         {
             buffer = new byte[initBufferSize];
         }
-        
+
+        public void CopyHeader(NetworkMessage message)
+        {
+            header.id = message.header.id;
+            header.messageType = message.header.messageType;
+            header.isLittleEndian = message.header.isLittleEndian;
+            header.isReliable = message.header.isReliable;
+            header.sendType = message.header.sendType;
+            header.sequence = message.header.sequence;
+        }
+
         public void SetBufferLength(int length)
         {
             byteLength = length;

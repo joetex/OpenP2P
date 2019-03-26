@@ -19,11 +19,11 @@ namespace OpenP2P
         public int responseType = 0;
         public bool isLittleEndian = false;
 
-        
+        public NetworkThread threads = null;
 
         public NetworkProtocolBase() { }
 
-        public virtual void AttachSocketListener(NetworkSocket socket) { }
+        public virtual void AttachSocketListener(NetworkSocket _socket) { }
         public virtual void AttachRequestListener(MessageType msgType, EventHandler<NetworkMessage> func) { }
         public virtual void AttachResponseListener(MessageType msgType, EventHandler<NetworkMessage> func) { }
 

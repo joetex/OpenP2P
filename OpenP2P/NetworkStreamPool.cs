@@ -65,7 +65,7 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            stream.message.header.isReliable = false;
+            stream.header.isReliable = false;
 
             //lock (available)
             {

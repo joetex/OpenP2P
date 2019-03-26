@@ -7,39 +7,39 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class NetworkThread
+    public class NetworkThread
     {
         public const int MIN_POOL_COUNT = 10000;
         public const int BUFFER_LENGTH = 4000;
         public const int MAX_BUFFER_PACKET_COUNT = 1000;
-        public static int MAX_SENDRATE_PERFRAME = 5000;
+        public int MAX_SENDRATE_PERFRAME = 5000;
         public const int RECEIVE_TIMEOUT = 1000;
 
-        public static int MAX_SEND_THREADS = 0;
-        public static int MAX_RECV_THREADS = 0;
-        public static int MAX_RELIABLE_THREADS = 0;
+        public int MAX_SEND_THREADS = 0;
+        public int MAX_RECV_THREADS = 0;
+        public int MAX_RELIABLE_THREADS = 0;
         //important to sleep more, since they are on infinite loops
         public const int EMPTY_SLEEP_TIME = 10;
         public const int MAXSEND_SLEEP_TIME = 0;
 
-        public const int MIN_RELIABLE_SLEEP_TIME = 1;
+        public const int MIN_RELIABLE_SLEEP_TIME = 100;
         public const long RETRY_TIME = 1000;
         public const long RETRY_COUNT = 10;
 
         public const long MAX_WAIT_TIME = 1000;
 
-        public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_POOL_COUNT, BUFFER_LENGTH);
+        public NetworkStreamPool STREAMPOOL = new NetworkStreamPool(MIN_POOL_COUNT, BUFFER_LENGTH);
 
-        public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
-        public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
-        public static Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
-        public static Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
+        public Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(MIN_POOL_COUNT);
+        public Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
 
-        public static List<Thread> SENDTHREADS = new List<Thread>();
-        public static List<Thread> RECVTHREADS = new List<Thread>();
-        public static List<Thread> RELIABLETHREADS = new List<Thread>();
+        public List<Thread> SENDTHREADS = new List<Thread>();
+        public List<Thread> RECVTHREADS = new List<Thread>();
+        public List<Thread> RELIABLETHREADS = new List<Thread>();
 
-        public static void StartNetworkThreads(int sendThreads, int recvThreads, int reliableThreads)
+        public void StartNetworkThreads(int sendThreads, int recvThreads, int reliableThreads)
         {
             MAX_SEND_THREADS = sendThreads;
             MAX_RECV_THREADS = recvThreads;
@@ -47,23 +47,23 @@ namespace OpenP2P
 
             for (int i = 0; i < sendThreads; i++)
             {
-                SENDTHREADS.Add(new Thread(NetworkThread.SendThread));
+                SENDTHREADS.Add(new Thread(SendThread));
                 SENDTHREADS[i].Start();
             }
             for (int i = 0; i < recvThreads; i++)
             {
-                RECVTHREADS.Add(new Thread(NetworkThread.RecvThread));
+                RECVTHREADS.Add(new Thread(RecvThread));
                 RECVTHREADS[i].Start();
             }
 
             for (int i = 0; i < reliableThreads; i++)
             {
-                RELIABLETHREADS.Add(new Thread(NetworkThread.ReliableThread));
+                RELIABLETHREADS.Add(new Thread(ReliableThread));
                 RELIABLETHREADS[i].Start();
             }
         }
 
-        public static void SendThread()
+        public void SendThread()
         {
             NetworkStream stream = null;
             int queueCount = 0;
@@ -95,8 +95,8 @@ namespace OpenP2P
             }
         }
 
-        public static NetworkStream recvStream = null;
-        public static void RecvThread()
+        public NetworkStream recvStream = null;
+        public void RecvThread()
         {
             NetworkStream stream = null;
             int queueCount = 0;
@@ -123,7 +123,7 @@ namespace OpenP2P
 
         
 
-        public static void ReliableThread()
+        public void ReliableThread()
         {
 
             NetworkStream stream = null;
@@ -157,7 +157,7 @@ namespace OpenP2P
                     
                     if (hasKey)
                     {
-                        //Console.WriteLine("Acknowledged: " + stream.ackkey);
+                        Console.WriteLine("Acknowledged: " + stream.ackkey);
                         ACKNOWLEDGED.Remove(stream.ackkey);
                     }
                 }
@@ -189,6 +189,7 @@ namespace OpenP2P
                 {
                     lock (RELIABLEQUEUE)
                     {
+                        Console.WriteLine("Waiting: " + stream.ackkey);
                         RELIABLEQUEUE.Enqueue(stream);
                     }
                 }

@@ -24,11 +24,11 @@ namespace OpenP2P
         static Dictionary<string, bool> endpoints = new Dictionary<string, bool>();
         public static long receiveByteCount = 0;
         */
-        public const int MAXSEND = 1000;
+        public const int MAXSEND = 1;
 
         static void Main(string[] args)
         {
-            NetworkThread.StartNetworkThreads(1, 2, 1);
+
             
             NetworkServer server = new NetworkServer(9000);
             NetworkClient client = new NetworkClient("::FFFF:127.0.0.1", 9000, 9002);
@@ -42,8 +42,8 @@ namespace OpenP2P
 
             Thread.Sleep(5000);
 
-            Console.WriteLine("Reliable Count: " + NetworkThread.RELIABLEQUEUE.Count);
-            Console.WriteLine("Ack Count: " + NetworkThread.ACKNOWLEDGED.Count);
+            Console.WriteLine("Reliable Count: " + client.protocol.threads.RELIABLEQUEUE.Count);
+            Console.WriteLine("Ack Count: " + client.protocol.threads.ACKNOWLEDGED.Count);
             Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
             Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             /*

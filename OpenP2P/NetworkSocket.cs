@@ -17,6 +17,8 @@ namespace OpenP2P
         public IPEndPoint local;
         public IPEndPoint anyHost;
 
+        public NetworkThread threads = null;
+
         public event EventHandler<NetworkStream> OnReceive;
         public event EventHandler<NetworkStream> OnSend;
 
@@ -31,6 +33,11 @@ namespace OpenP2P
         public NetworkSocket(int localPort)
         {
             Setup("::FFFF:127.0.0.1", 0, localPort);
+        }
+
+        public void AttachThreads(NetworkThread t)
+        {
+            threads = t;
         }
 
         /**
@@ -65,9 +72,9 @@ namespace OpenP2P
 
             stream.Reset();
 
-            lock (NetworkThread.RECVQUEUE)
+            lock (threads.RECVQUEUE)
             {
-                NetworkThread.RECVQUEUE.Enqueue(stream);
+                threads.RECVQUEUE.Enqueue(stream);
             }
         }
 
@@ -115,9 +122,9 @@ namespace OpenP2P
         {
             stream.Complete();
 
-            lock (NetworkThread.SENDQUEUE)
+            lock (threads.SENDQUEUE)
             {
-                NetworkThread.SENDQUEUE.Enqueue(stream);
+               threads.SENDQUEUE.Enqueue(stream);
             }
         }
 
@@ -146,7 +153,7 @@ namespace OpenP2P
          */
         public NetworkStream Reserve()
         {
-            NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
+            NetworkStream stream = threads.STREAMPOOL.Reserve();
             stream.socket = this;
             
             return stream;
@@ -158,7 +165,7 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            NetworkThread.STREAMPOOL.Free(stream);
+            threads.STREAMPOOL.Free(stream);
         }
 
         /**

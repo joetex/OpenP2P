@@ -47,22 +47,22 @@ namespace OpenP2P
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnConnectToServerResponse);
         }
 
-        public void OnWriteHeader(object sender, NetworkMessage message)
+        public void OnWriteHeader(object sender, NetworkStream stream)
         {
-            NetworkStream stream = (NetworkStream)sender;
-            stream.Write(message.header.id);
-            stream.Write(message.header.sequence);
+            //NetworkStream stream = (NetworkStream)sender;
+            stream.Write(stream.header.id);
+            stream.Write(stream.header.sequence);
             
-            stream.ackkey = GenerateAckKey(message);
+            stream.ackkey = GenerateAckKey(stream.header);
         }
     
-        public void OnReadHeader(object sender, NetworkMessage message)
+        public void OnReadHeader(object sender, NetworkStream stream)
         {
-            NetworkStream stream = (NetworkStream)sender;
-            message.header.id = stream.ReadUShort();
-            message.header.sequence = stream.ReadUShort();
+            //NetworkStream stream = (NetworkStream)sender;
+            stream.header.id = stream.ReadUShort();
+            stream.header.sequence = stream.ReadUShort();
 
-            stream.ackkey = GenerateAckKey(message);
+            stream.ackkey = GenerateAckKey(stream.header);
         }
 
         //Server receives request from client
@@ -162,12 +162,12 @@ namespace OpenP2P
             return true;
         }
 
-        public ulong GenerateAckKey(NetworkMessage message)
+        public ulong GenerateAckKey(NetworkMessage.Header header)
         {
             ulong key = 0;
-            key |= (ulong)((ulong)message.header.messageType) << 31;
-            key |= (ulong)((ulong)message.header.id) << 15;
-            key |= (ulong)((ulong)message.header.sequence);
+            key |= (ulong)((ulong)header.messageType) << 31;
+            key |= (ulong)((ulong)header.id) << 15;
+            key |= (ulong)((ulong)header.sequence);
             return key;
         }
     }
