@@ -127,7 +127,7 @@ namespace OpenP2P
         public void SendReliableRequest(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
-            NetworkStream stream = socket.Prepare(ip);
+            NetworkStream stream = socket.Prepare(ep);
 
             stream.header.messageType = message.messageType;
             stream.header.isReliable = true;
@@ -142,7 +142,7 @@ namespace OpenP2P
         public void SendRequest(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
-            NetworkStream stream = socket.Prepare(ip);
+            NetworkStream stream = socket.Prepare(ep);
 
             stream.header.messageType = message.messageType;
             stream.header.isReliable = false;
@@ -155,7 +155,7 @@ namespace OpenP2P
         public void SendResponse(NetworkStream requestStream, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(requestStream.remoteEndPoint);
-            NetworkStream responseStream = socket.Prepare(ip);
+            NetworkStream responseStream = socket.Prepare(requestStream.remoteEndPoint);
 
             responseStream.header.messageType = requestStream.header.messageType;
             responseStream.header.isReliable = requestStream.header.isReliable;
