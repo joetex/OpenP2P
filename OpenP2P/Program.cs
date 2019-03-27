@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 10000;
+        public const int MAXSEND = 1000;
 
         static void Main(string[] args)
         {
@@ -25,7 +25,7 @@ namespace OpenP2P
             }
             
 
-            Thread.Sleep(3000);
+            Thread.Sleep(500);
 
             Console.WriteLine("Reliable Count: " + client.protocol.threads.RELIABLEQUEUE.Count);
             Console.WriteLine("Ack Count: " + client.protocol.threads.ACKNOWLEDGED.Count);

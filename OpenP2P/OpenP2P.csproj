@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkConfig.cs" />
     <Compile Include="NetworkIdentity.cs" />
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="MsgInvalid.cs" />
