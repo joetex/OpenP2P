@@ -11,7 +11,7 @@ namespace OpenP2P
     {
         public const int MIN_POOL_COUNT = 100;
         public const int BUFFER_LENGTH = 1400;
-        public const int MAX_BUFFER_PACKET_COUNT = 1000;
+        public const int MAX_BUFFER_PACKET_COUNT = 10000;
         public int MAX_SENDRATE_PERFRAME = 5000;
         public const int RECEIVE_TIMEOUT = 1000;
 
@@ -19,7 +19,7 @@ namespace OpenP2P
         public int MAX_RECV_THREADS = 0;
         public int MAX_RELIABLE_THREADS = 0;
         //important to sleep more, since they are on infinite loops
-        public const int EMPTY_SLEEP_TIME = 10;
+        public const int EMPTY_SLEEP_TIME = 1;
         public const int MAXSEND_SLEEP_TIME = 0;
 
         public const int MIN_RELIABLE_SLEEP_TIME = 1;
