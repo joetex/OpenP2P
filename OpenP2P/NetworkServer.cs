@@ -23,8 +23,6 @@ namespace OpenP2P
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
             protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
             protocol.Listen();
-            
-            
         }
 
         public void OnRequestHeartbeat(object sender, NetworkMessage message)

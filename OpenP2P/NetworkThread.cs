@@ -9,8 +9,8 @@ namespace OpenP2P
 {
     public class NetworkThread
     {
-        public const int MIN_POOL_COUNT = 10000;
-        public const int BUFFER_LENGTH = 4000;
+        public const int MIN_POOL_COUNT = 100;
+        public const int BUFFER_LENGTH = 1400;
         public const int MAX_BUFFER_PACKET_COUNT = 1000;
         public int MAX_SENDRATE_PERFRAME = 5000;
         public const int RECEIVE_TIMEOUT = 1000;
@@ -58,8 +58,8 @@ namespace OpenP2P
 
             for (int i = 0; i < reliableThreads; i++)
             {
-                RELIABLETHREADS.Add(new Thread(ReliableThread));
-                RELIABLETHREADS[i].Start();
+               // RELIABLETHREADS.Add(new Thread(ReliableThread));
+                //RELIABLETHREADS[i].Start();
             }
         }
 
@@ -70,6 +70,8 @@ namespace OpenP2P
 
             while (true)
             {
+                ReliableThread();
+
                 lock (SENDQUEUE)
                 {
                     queueCount = SENDQUEUE.Count;
@@ -132,7 +134,7 @@ namespace OpenP2P
             long curtime = 0;
             long difftime = 0;
 
-            while (true)
+            //while (true)
             {
                 lock (RELIABLEQUEUE)
                 {
@@ -144,8 +146,8 @@ namespace OpenP2P
                 //sleep if empty, to avoid 100% cpu
                 if (queueCount == 0)
                 {
-                    Thread.Sleep(EMPTY_SLEEP_TIME);
-                    continue;
+                    //Thread.Sleep(EMPTY_SLEEP_TIME);
+                    return;
                 }
                 
                 
@@ -165,7 +167,7 @@ namespace OpenP2P
                 if( hasKey)
                 {
                     stream.socket.Free(stream);
-                    continue;
+                    return;
                 }
 
                 curtime = NetworkTime.Milliseconds();
@@ -196,7 +198,7 @@ namespace OpenP2P
                     
 
 
-                Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
+                //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
             }
         }
     }
