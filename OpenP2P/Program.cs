@@ -18,7 +18,7 @@ namespace OpenP2P
         {
             NetworkServer server = new NetworkServer(9000);
             List<NetworkClient> clients = new List<NetworkClient>();
-            NetworkClient client = new NetworkClient("::FFFF:127.0.0.1", 9000, 9002);
+            NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9002);
             for (int i=0; i< MAXSEND; i++)
             {
                 client.ConnectToServer("JoeOfTex");

@@ -50,11 +50,11 @@ namespace OpenP2P
             local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
             anyHost = new IPEndPoint(IPAddress.Any, 0);
 
-            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-            socket.DualMode = true;
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            //socket.DualMode = true;
             socket.ExclusiveAddressUse = false;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            //socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkThread.BUFFER_LENGTH * NetworkThread.MAX_BUFFER_PACKET_COUNT);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkThread.RECEIVE_TIMEOUT);
