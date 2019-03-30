@@ -12,13 +12,16 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 1000;
+        public const int MAXSEND = 3000;
 
         static void Main(string[] args)
         {
             NetworkServer server = new NetworkServer(9000);
             List<NetworkClient> clients = new List<NetworkClient>();
             NetworkClient client = new NetworkClient("127.0.0.1", 9000, 9002);
+
+            //Thread.Sleep(1000);
+
             for (int i=0; i< MAXSEND; i++)
             {
                 client.ConnectToServer("JoeOfTex");
