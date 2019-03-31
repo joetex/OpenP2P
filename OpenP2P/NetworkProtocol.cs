@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -26,23 +27,45 @@ namespace OpenP2P
         public event EventHandler<NetworkStream> OnWriteHeader = null;
         public event EventHandler<NetworkStream> OnReadHeader = null;
 
-        public NetworkProtocol(string remoteHost, int remotePort, int localPort)
+        public Stopwatch profiler = new Stopwatch();
+
+        public NetworkProtocol(int localPort)
         {
-            socket = new NetworkSocket(remoteHost, remotePort, localPort);
+
+            profiler.Start();
+            socket = new NetworkSocket(localPort);
+            profiler.Stop();
+            //Console.WriteLine("new Socket took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
+
+            profiler.Reset();
+            profiler.Start();
             AttachSocketListener(socket);
+            profiler.Stop();
+            //Console.WriteLine("AttachSocketListener took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
+
+            profiler.Reset();
+            profiler.Start();
             BuildMessages();
+            profiler.Stop();
+            //Console.WriteLine("BuildMessages took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
 
+            profiler.Reset();
+            profiler.Start();
             AttachNetworkIdentity();
-
+            profiler.Stop();
+            //Console.WriteLine("AttachNetworkIdentity took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
+            
             AttachThreads();
         }
 
         public void AttachThreads()
         {
-            threads = new NetworkThread();
-            threads.StartNetworkThreads(1, 1, 1);
+            //threads = new NetworkThread(this);
+            //socket.AttachThreads(threads);
 
-            socket.AttachThreads(threads);
+            //threads.StartNetworkThreads();
+
+            
         }
 
         public void AttachNetworkIdentity()
@@ -53,7 +76,7 @@ namespace OpenP2P
 
         public void RegisterAsServer()
         {
-            ident.RegisterServer(socket.local);
+            ident.RegisterServer(socket.sendSocket.LocalEndPoint);
         }
         
         public IPEndPoint GetIPv6(EndPoint ep)
@@ -63,6 +86,14 @@ namespace OpenP2P
                 return ip; 
             ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
             return ip;
+        }
+
+        public IPEndPoint GetEndPoint(string ip, int port)
+        {
+            IPAddress address = null;
+            if (IPAddress.TryParse(ip, out address))
+                return new IPEndPoint(address, port);
+            return null;
         }
         
         /// <summary>
@@ -82,7 +113,7 @@ namespace OpenP2P
                     messagesContainer.AddService(message.GetType(), message);
                     message.messageType = (MessageType)i;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     //Console.WriteLine(e.ToString());
                     message = new MsgInvalid();
@@ -121,7 +152,10 @@ namespace OpenP2P
 
         public void Listen()
         {
-            socket.Listen(null);
+            NetworkStream stream = socket.Reserve();
+            
+
+            socket.Listen(stream);
         }
 
         public void SendReliableRequest(EndPoint ep, NetworkMessage message)
@@ -154,15 +188,19 @@ namespace OpenP2P
 
         public void SendResponse(NetworkStream requestStream, NetworkMessage message)
         {
-            IPEndPoint ip = GetIPv6(requestStream.remoteEndPoint);
-            NetworkStream responseStream = socket.Prepare(requestStream.remoteEndPoint);
+            //IPEndPoint ip = GetIPv6(requestStream.remoteEndPoint);
+            NetworkStream stream = socket.Prepare(requestStream.remoteEndPoint);
+            if(requestStream.remoteEndPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                stream.networkIPType = NetworkSocket.NetworkIPType.IPv4;
+            else
+                stream.networkIPType = NetworkSocket.NetworkIPType.IPv6;
 
-            responseStream.header.messageType = requestStream.header.messageType;
-            responseStream.header.isReliable = requestStream.header.isReliable;
-            responseStream.header.sendType = SendType.Response;
-            responseStream.header.sequence = requestStream.header.sequence;
-            responseStream.header.id = requestStream.header.id;
-            Send(responseStream, message);
+            stream.header.messageType = requestStream.header.messageType;
+            stream.header.isReliable = requestStream.header.isReliable;
+            stream.header.sendType = SendType.Response;
+            stream.header.sequence = requestStream.header.sequence;
+            stream.header.id = requestStream.header.id;
+            Send(stream, message);
         }
        
         public void Send(NetworkStream stream, NetworkMessage message)
@@ -185,11 +223,11 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                lock (threads.ACKNOWLEDGED)
+                lock (NetworkThread.ACKNOWLEDGED)
                 {
-                    if (threads.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                    if (NetworkThread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         Console.WriteLine("Already exists:" + stream.ackkey);
-                    threads.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
 
                 stream.acknowledged = true;
@@ -240,7 +278,7 @@ namespace OpenP2P
             bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag);
 
             if (bits < 0 || bits >= (int)MessageType.LAST)
-                return GetMessage((int)MessageType.NULL);
+                return GetMessage((int)MessageType.Invalid);
 
             NetworkMessage message = GetMessage(bits);
 
@@ -264,7 +302,7 @@ namespace OpenP2P
         public override NetworkMessage GetMessage(int id)
         {
             if (!messages.ContainsKey(id))
-                return messages[(int)MessageType.NULL];
+                return messages[(int)MessageType.Invalid];
             return messages[id];
         }
     }

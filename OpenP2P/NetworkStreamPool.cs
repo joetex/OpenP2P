@@ -53,6 +53,9 @@ namespace OpenP2P
                 stream = available.Dequeue();
             }
 
+            if (stream == null)
+                return Reserve();
+
             stream.header.isReliable = false;
             stream.header.sendType = SendType.Request;
             stream.ackkey = 0;

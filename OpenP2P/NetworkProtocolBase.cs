@@ -22,7 +22,7 @@ namespace OpenP2P
         public int responseType = 0;
         public bool isLittleEndian = false;
 
-        public NetworkThread threads = null;
+        //public NetworkThread threads = null;
 
         public NetworkProtocolBase() { }
 

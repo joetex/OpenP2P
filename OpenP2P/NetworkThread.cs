@@ -9,57 +9,56 @@ namespace OpenP2P
 {
     public class NetworkThread
     {
-        
+        public NetworkProtocol protocol = null;
 
-        public int MAX_SEND_THREADS = 0;
-        public int MAX_RECV_THREADS = 0;
-        public int MAX_RELIABLE_THREADS = 0;
-        
+        public static int MAX_SEND_THREADS = 1;
+        public static int MAX_RECV_THREADS = 1;
+        public static int MAX_RELIABLE_THREADS = 1;
 
-        public NetworkStreamPool STREAMPOOL = new NetworkStreamPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
+        public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
 
-        public Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
-        public Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
-        public Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
-        public Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
+        public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public static Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public static Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
 
-        public List<Thread> SENDTHREADS = new List<Thread>();
-        public List<Thread> RECVTHREADS = new List<Thread>();
-        public List<Thread> RELIABLETHREADS = new List<Thread>();
+        public static List<Thread> SENDTHREADS = new List<Thread>();
+        public static List<Thread> RECVTHREADS = new List<Thread>();
+        public static List<Thread> RELIABLETHREADS = new List<Thread>();
 
-        public void StartNetworkThreads(int sendThreads, int recvThreads, int reliableThreads)
+        //public static NetworkThread(NetworkProtocol p)
+        //{
+        //    protocol = p;
+        //}
+
+        public static void StartNetworkThreads()
         {
-            MAX_SEND_THREADS = sendThreads;
-            MAX_RECV_THREADS = recvThreads;
-            MAX_RELIABLE_THREADS = reliableThreads;
 
-            for (int i = 0; i < sendThreads; i++)
+            for (int i = 0; i < MAX_SEND_THREADS; i++)
             {
                 SENDTHREADS.Add(new Thread(SendThread));
                 SENDTHREADS[i].Start();
             }
-            for (int i = 0; i < recvThreads; i++)
+            for (int i = 0; i < MAX_RECV_THREADS; i++)
             {
                 RECVTHREADS.Add(new Thread(RecvThread));
                 RECVTHREADS[i].Start();
             }
 
-            for (int i = 0; i < reliableThreads; i++)
+            for (int i = 0; i < MAX_RELIABLE_THREADS; i++)
             {
                // RELIABLETHREADS.Add(new Thread(ReliableThread));
                 //RELIABLETHREADS[i].Start();
             }
         }
 
-        public void SendThread()
+        public static void SendThread()
         {
             NetworkStream stream = null;
             int queueCount = 0;
 
             while (true)
             {
-                
-
                 lock (SENDQUEUE)
                 {
                     queueCount = SENDQUEUE.Count;
@@ -86,9 +85,10 @@ namespace OpenP2P
             }
         }
 
-        public NetworkStream recvStream = null;
-        public void RecvThread()
+        public static NetworkStream recvStream = null;
+        public static void RecvThread()
         {
+            //NetworkSocket.NetworkIPType ipType = (NetworkSocket.NetworkIPType)data;
             NetworkStream stream = null;
             int queueCount = 0;
 
@@ -107,14 +107,16 @@ namespace OpenP2P
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
-                
+                //if( stream == null )
+                //    stream = protocol.socket.Reserve();
+                //stream.networkIPType = ipType;
                 stream.socket.ExecuteListen(stream);
             }
         }
 
         
 
-        public int ReliableThread()
+        public static int ReliableThread()
         {
 
             NetworkStream stream = null;

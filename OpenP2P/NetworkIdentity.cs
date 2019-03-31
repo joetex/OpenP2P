@@ -45,6 +45,8 @@ namespace OpenP2P
             protocol.OnWriteHeader += OnWriteHeader;
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnConnectToServerRequest);
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnConnectToServerResponse);
+
+            local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
         }
 
         public void OnWriteHeader(object sender, NetworkStream stream)
@@ -78,7 +80,7 @@ namespace OpenP2P
         {
             NetworkStream stream = (NetworkStream)sender;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            RegisterLocal(connectMsg.responsePeerId, stream.socket.local);
+            RegisterLocal(connectMsg.responsePeerId, stream.socket.sendSocket.LocalEndPoint);
         }
 
         public PeerIdentity RegisterLocal(ushort id, EndPoint ep)

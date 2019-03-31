@@ -18,11 +18,11 @@ namespace OpenP2P
 
         public NetworkServer(int localPort)
         {
-            protocol = new NetworkProtocol("127.0.0.1", 0, localPort);
+            protocol = new NetworkProtocol(localPort);
             protocol.RegisterAsServer();
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
             protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
-            protocol.Listen();
+            //protocol.Listen();
         }
 
         public void OnRequestHeartbeat(object sender, NetworkMessage message)

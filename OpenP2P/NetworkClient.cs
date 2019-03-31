@@ -14,35 +14,38 @@ namespace OpenP2P
     {
         public NetworkProtocol protocol = null;
 
+        public IPEndPoint serverHost = null;
+
+
         public int receiveCnt = 0;
         static Stopwatch recieveTimer;
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
-            protocol = new NetworkProtocol(remoteHost, remotePort, localPort);
+            
+            protocol = new NetworkProtocol(localPort);
+            serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
-            protocol.Listen();
+            //protocol.Listen();
         }
         
         public void ConnectToServer(string userName)
         {
-            PerformanceTest();
             MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
-
-            protocol.SendReliableRequest(protocol.socket.remote, msg);
+            protocol.SendReliableRequest(serverHost, msg);
         }
 
         public void SendHeartbeat()
         {
             MsgHeartbeat msg = protocol.Create<MsgHeartbeat>();
             msg.timestamp = NetworkTime.Milliseconds();
-            protocol.SendReliableRequest(protocol.socket.remote, msg);
+            protocol.SendReliableRequest(serverHost, msg);
         }
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            
-            
+            PerformanceTest();
+
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 

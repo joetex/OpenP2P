@@ -8,22 +8,22 @@ namespace OpenP2P
 {
     public enum MessageType
     {
-        NULL,
+        Invalid,
 
         ConnectToServer,
-        DisconnectFromServer,
+        //DisconnectFromServer,
 
         //interest mapping data sent to server
         //Peers will be connected together at higher priorities based on the 
         // "interest" mapping to a QuadTree (x, y, width, height) 
         Heartbeat,
 
-        Raw,
-        Event,
-        RPC,
+        //Raw,
+        //Event,
+        //RPC,
 
-        GetPeers,
-        ConnectTo,
+        //GetPeers,
+        //ConnectTo,
         LAST
     }
 

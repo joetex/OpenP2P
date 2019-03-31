@@ -18,6 +18,7 @@ namespace OpenP2P
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint = null;
+        public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
 
         public NetworkMessage.Header header = new NetworkMessage.Header();
         public ulong ackkey = 0;
@@ -45,7 +46,7 @@ namespace OpenP2P
 
         public void Reset()
         {
-            remoteEndPoint = socket.anyHost;
+            remoteEndPoint = socket.anyHost4;
         }
         
         public void Complete()
