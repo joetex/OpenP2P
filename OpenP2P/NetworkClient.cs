@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenP2P
@@ -17,7 +18,7 @@ namespace OpenP2P
         public IPEndPoint serverHost = null;
 
 
-        public int receiveCnt = 0;
+        public static int receiveCnt = 0;
         static Stopwatch recieveTimer;
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
@@ -30,9 +31,11 @@ namespace OpenP2P
         
         public void ConnectToServer(string userName)
         {
-            MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
+            protocol.ConnectToServer(serverHost, userName);
+            /*MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
-            protocol.SendReliableRequest(serverHost, msg);
+            protocol.SendReliableRequest(serverHost, msg);*/
+            PerformanceTest();
         }
 
         public void SendHeartbeat()
@@ -44,9 +47,9 @@ namespace OpenP2P
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            PerformanceTest();
+            
 
-            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
+            //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 
         public void PerformanceTest()
@@ -54,6 +57,7 @@ namespace OpenP2P
             if (receiveCnt == 0)
                 recieveTimer = Stopwatch.StartNew();
 
+            //Interlocked.Increment(ref receiveCnt);
             receiveCnt++;
 
             if (receiveCnt == Program.MAXSEND)

@@ -26,48 +26,15 @@ namespace OpenP2P
 
         public event EventHandler<NetworkStream> OnWriteHeader = null;
         public event EventHandler<NetworkStream> OnReadHeader = null;
-
-        public Stopwatch profiler = new Stopwatch();
-
+        
         public NetworkProtocol(int localPort)
         {
-
-            profiler.Start();
             socket = new NetworkSocket(localPort);
-            profiler.Stop();
-            //Console.WriteLine("new Socket took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
-
-            profiler.Reset();
-            profiler.Start();
             AttachSocketListener(socket);
-            profiler.Stop();
-            //Console.WriteLine("AttachSocketListener took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
-
-            profiler.Reset();
-            profiler.Start();
             BuildMessages();
-            profiler.Stop();
-            //Console.WriteLine("BuildMessages took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
-
-            profiler.Reset();
-            profiler.Start();
             AttachNetworkIdentity();
-            profiler.Stop();
-            //Console.WriteLine("AttachNetworkIdentity took: " + ((float)profiler.ElapsedMilliseconds / 1000f) + " seconds");
-            
-            AttachThreads();
         }
-
-        public void AttachThreads()
-        {
-            //threads = new NetworkThread(this);
-            //socket.AttachThreads(threads);
-
-            //threads.StartNetworkThreads();
-
-            
-        }
-
+        
         public void AttachNetworkIdentity()
         {
             ident = new NetworkIdentity();
@@ -78,83 +45,15 @@ namespace OpenP2P
         {
             ident.RegisterServer(socket.sendSocket.LocalEndPoint);
         }
-        
-        public IPEndPoint GetIPv6(EndPoint ep)
-        {
-            IPEndPoint ip = (IPEndPoint)ep;
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-                return ip; 
-            ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
-            return ip;
-        }
 
-        public IPEndPoint GetEndPoint(string ip, int port)
+        public void ConnectToServer(IPEndPoint ep, string userName)
         {
-            IPAddress address = null;
-            if (IPAddress.TryParse(ip, out address))
-                return new IPEndPoint(address, port);
-            return null;
-        }
-        
-        /// <summary>
-        /// Bind Messages to our Message Dictionary
-        /// This uses reflection to map our Enum to a Message class
-        /// </summary>
-        public void BuildMessages()
-        {
-            string enumName = "";
-            NetworkMessage message = null;
-            for (int i=0; i<(int)MessageType.LAST; i++)
-            {
-                enumName = Enum.GetName(typeof(MessageType), (MessageType)i);
-                try
-                {
-                    message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
-                    messagesContainer.AddService(message.GetType(), message);
-                    message.messageType = (MessageType)i;
-                }
-                catch (Exception e)
-                {
-                    //Console.WriteLine(e.ToString());
-                    message = new MsgInvalid();
-                }
-                
-                messages.Add(i, message);
-            }
-        }
-
-        public override void AttachSocketListener(NetworkSocket _socket)
-        {
-            socket = _socket;
-            socket.OnReceive += OnReceive;
-            socket.OnSend += OnSend;
-        }
-
-        public override void AttachRequestListener(MessageType msgType, EventHandler<NetworkMessage> func)
-        {
-            GetMessage((int)msgType).OnRequest += func;
-        }
-        public override void AttachResponseListener(MessageType msgType, EventHandler<NetworkMessage> func)
-        {
-            GetMessage((int)msgType).OnResponse += func;
-        }
-
-        public NetworkMessage Create(MessageType _msgType)
-        {
-            NetworkMessage message = GetMessage((int)_msgType);
-            return message;
-        }
-
-        public T Create<T>()
-        {
-            return (T)messagesContainer.GetService(typeof(T));
+            ident.ConnectToServer(ep, userName);
         }
 
         public void Listen()
         {
             NetworkStream stream = socket.Reserve();
-            
-
             socket.Listen(stream);
         }
 
@@ -168,10 +67,8 @@ namespace OpenP2P
             stream.header.sendType = SendType.Request;
             stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
             stream.header.id = ident.local.id;
-
             Send(stream, message);
         }
-       
 
         public void SendRequest(EndPoint ep, NetworkMessage message)
         {
@@ -188,7 +85,6 @@ namespace OpenP2P
 
         public void SendResponse(NetworkStream requestStream, NetworkMessage message)
         {
-            //IPEndPoint ip = GetIPv6(requestStream.remoteEndPoint);
             NetworkStream stream = socket.Prepare(requestStream.remoteEndPoint);
             if(requestStream.remoteEndPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 stream.networkIPType = NetworkSocket.NetworkIPType.IPv4;
@@ -219,8 +115,9 @@ namespace OpenP2P
         public override void OnReceive(object sender, NetworkStream stream)
         {
             NetworkMessage message = ReadHeader(stream);
+            message.InvokeOnRead(stream);
 
-            if (stream.header.sendType == SendType.Response)
+            if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
                 lock (NetworkThread.ACKNOWLEDGED)
@@ -229,22 +126,47 @@ namespace OpenP2P
                         Console.WriteLine("Already exists:" + stream.ackkey);
                     NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
-
                 stream.acknowledged = true;
             }
-
-            message.InvokeOnRead(stream);
+            
         }
 
         public override void OnSend(object sender, NetworkStream stream)
         {
-            
+        }
+
+        public event EventHandler<NetworkStream> OnErrorConnectToServer;
+        public event EventHandler<NetworkStream> OnErrorReliableFailed;
+
+        public override void OnError(object sender, NetworkStream stream)
+        {
+            NetworkErrorType errorType = (NetworkErrorType)sender;
+            switch (errorType)
+            {
+                case NetworkErrorType.ErrorConnectToServer:
+                    OnErrorConnectToServer.Invoke(this, stream);
+                    break;
+                case NetworkErrorType.ErrorReliableFailed:
+                    OnErrorReliableFailed.Invoke(this, stream);
+                    break;
+            }
+        }
+
+        public override void AttachErrorListener(NetworkErrorType errorType, EventHandler<NetworkStream> func)
+        {
+            switch (errorType)
+            {
+                case NetworkErrorType.ErrorConnectToServer:
+                    OnErrorConnectToServer += func;
+                    break;
+                case NetworkErrorType.ErrorReliableFailed:
+                    OnErrorReliableFailed += func;
+                    break;
+            }
         }
 
         public override void WriteHeader(NetworkStream stream)
         {
-            //NetworkMessage message = stream.message;
-
             int msgBits = (int)stream.header.messageType;
             if (msgBits < 0 || msgBits >= (int)MessageType.LAST)
                 msgBits = 0;
@@ -290,20 +212,6 @@ namespace OpenP2P
             OnReadHeader.Invoke(this, stream);
             
             return message;
-        }
-
-
-        public object GetInstance(string strFullyQualifiedName)
-        {
-            Type t = Type.GetType(strFullyQualifiedName);
-            return Activator.CreateInstance(t);
-        }
-
-        public override NetworkMessage GetMessage(int id)
-        {
-            if (!messages.ContainsKey(id))
-                return messages[(int)MessageType.Invalid];
-            return messages[id];
         }
     }
 }

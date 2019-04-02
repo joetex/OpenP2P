@@ -12,13 +12,15 @@ namespace OpenP2P
         public NetworkProtocol protocol = null;
 
         public static int MAX_SEND_THREADS = 1;
-        public static int MAX_RECV_THREADS = 1;
+        public static int MAX_RECV_THREADS = 2;
         public static int MAX_RELIABLE_THREADS = 1;
 
         public static NetworkStreamPool STREAMPOOL = new NetworkStreamPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
 
         public static Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
-        public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        //public static Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public static List<NetworkStream> RECVQUEUE = new List<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+
         public static Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
         public static Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
 
@@ -94,7 +96,7 @@ namespace OpenP2P
 
             while (true)
             {
-                lock (RECVQUEUE)
+                /*lock (RECVQUEUE)
                 {
                     queueCount = RECVQUEUE.Count;
                     if (queueCount > 0)
@@ -111,6 +113,17 @@ namespace OpenP2P
                 //    stream = protocol.socket.Reserve();
                 //stream.networkIPType = ipType;
                 stream.socket.ExecuteListen(stream);
+                */
+                
+                lock(RECVQUEUE)
+                {
+                    for (int i = 0; i < RECVQUEUE.Count; i++)
+                    {
+                        stream = RECVQUEUE[i];
+                        stream.socket.ExecuteListen(stream);
+                    }
+                }
+                
             }
         }
 
@@ -167,9 +180,17 @@ namespace OpenP2P
                     if ( stream.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
                     {
                         Console.WriteLine("Retry count reached: " + stream.retryCount);
+
+                        if( stream.header.messageType == MessageType.ConnectToServer )
+                        {
+                            stream.socket.Failed(NetworkErrorType.ErrorConnectToServer, stream);
+                        }
+                        stream.socket.Failed(NetworkErrorType.ErrorReliableFailed, stream);
+
                         stream.socket.Free(stream);
                         return queueCount;
                     }
+                    
                     
                     stream.socket.Send(stream);
                     return queueCount;

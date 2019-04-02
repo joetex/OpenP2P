@@ -36,6 +36,7 @@ namespace OpenP2P
 
         public event EventHandler<NetworkStream> OnReceive;
         public event EventHandler<NetworkStream> OnSend;
+        public event EventHandler<NetworkStream> OnError;
 
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
@@ -150,7 +151,7 @@ namespace OpenP2P
                 //if (localPort != 0)
                 socket6.Bind(anyHost6);
                 
-                Listen(Reserve());
+                //Listen(Reserve());
 
                 sendSocket = socket6;
 
@@ -159,6 +160,13 @@ namespace OpenP2P
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        public void Failed(NetworkErrorType errorType, NetworkStream stream)
+        {
+            if(OnError != null)
+                OnError.Invoke(errorType, stream);
+
         }
 
         /**
@@ -173,7 +181,7 @@ namespace OpenP2P
 
             lock (NetworkThread.RECVQUEUE)
             {
-                NetworkThread.RECVQUEUE.Enqueue(stream);
+                NetworkThread.RECVQUEUE.Add(stream);
             }
         }
 
@@ -194,7 +202,7 @@ namespace OpenP2P
                
                 if (socket.Available == 0)
                 {
-                    Listen(stream);
+                    //Listen(stream);
                     return;
                 }
                 bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
@@ -209,7 +217,7 @@ namespace OpenP2P
                 //Console.WriteLine(e.ToString());
             }
 
-            Listen(stream); //listen again
+            ///Listen(stream); //listen again
         }
         
         /**

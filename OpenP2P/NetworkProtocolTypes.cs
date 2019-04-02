@@ -33,5 +33,11 @@ namespace OpenP2P
         Response
     }
 
+    public enum NetworkErrorType
+    {
+        ErrorReliableFailed,
+        ErrorConnectToServer
+    }
+
     class NetworkProtocolTypes { } //dummy class
 }

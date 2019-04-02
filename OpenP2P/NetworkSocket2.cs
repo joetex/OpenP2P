@@ -17,6 +17,7 @@ namespace OpenP2P
         public IPEndPoint local;
         public IPEndPoint anyHost;
 
+
         //public NetworkThread threads = null;
 
         public event EventHandler<NetworkStream> OnReceive;

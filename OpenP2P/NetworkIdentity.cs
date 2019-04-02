@@ -10,6 +10,7 @@ namespace OpenP2P
         {
             public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
             public ushort id = 0;
+            public string userName = "";
             public List<ushort> messageSequence = new List<ushort>((int)MessageType.LAST);
 
             public PeerIdentity()
@@ -45,9 +46,12 @@ namespace OpenP2P
             protocol.OnWriteHeader += OnWriteHeader;
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnConnectToServerRequest);
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnConnectToServerResponse);
+            protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
-            local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
+            //local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
         }
+
+        
 
         public void OnWriteHeader(object sender, NetworkStream stream)
         {
@@ -55,7 +59,8 @@ namespace OpenP2P
             stream.Write(stream.header.id);
             stream.Write(stream.header.sequence);
             
-            stream.ackkey = GenerateAckKey(stream.header);
+            stream.ackkey = GenerateAckKey(stream);
+            //Console.WriteLine("WriteHeader AckKey: " + stream.ackkey);
         }
     
         public void OnReadHeader(object sender, NetworkStream stream)
@@ -63,8 +68,18 @@ namespace OpenP2P
             //NetworkStream stream = (NetworkStream)sender;
             stream.header.id = stream.ReadUShort();
             stream.header.sequence = stream.ReadUShort();
+            
+            stream.ackkey = GenerateAckKey(stream);
+            //Console.WriteLine("ReadHeader AckKey: " + stream.ackkey);
+        }
 
-            stream.ackkey = GenerateAckKey(stream.header);
+        public void ConnectToServer(IPEndPoint ep, string userName)
+        {
+            local.userName = userName;
+
+            MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
+            msg.requestUsername = userName;
+            protocol.SendRequest(ep, msg);
         }
 
         //Server receives request from client
@@ -73,6 +88,12 @@ namespace OpenP2P
         {
             NetworkStream stream = (NetworkStream)sender;
             PeerIdentity peer = RegisterPeer(stream.remoteEndPoint);
+            
+            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
+            connectMsg.responseConnected = true;
+            connectMsg.responsePeerId = peer.id;
+
+            protocol.SendResponse(stream, connectMsg);
         }
 
         //Client receives response from server
@@ -81,6 +102,11 @@ namespace OpenP2P
             NetworkStream stream = (NetworkStream)sender;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
             RegisterLocal(connectMsg.responsePeerId, stream.socket.sendSocket.LocalEndPoint);
+        }
+
+        public void OnErrorConnectToServer(object sender, NetworkStream stream)
+        {
+
         }
 
         public PeerIdentity RegisterLocal(ushort id, EndPoint ep)
@@ -164,12 +190,21 @@ namespace OpenP2P
             return true;
         }
 
-        public ulong GenerateAckKey(NetworkMessage.Header header)
+        public ulong GenerateAckKey(NetworkStream stream)
         {
             ulong key = 0;
-            key |= (ulong)((ulong)header.messageType) << 31;
-            key |= (ulong)((ulong)header.id) << 15;
-            key |= (ulong)((ulong)header.sequence);
+            if( stream.header.id == 0 )
+            {
+                int remoteHash = stream.remoteEndPoint.ToString().GetHashCode();
+                int localHash = stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
+                //Console.WriteLine("Remote: " + stream.remoteEndPoint.ToString() + " :: " + remoteHash);
+                //Console.WriteLine("Local: " + stream.socket.sendSocket.LocalEndPoint.ToString() + " :: " + localHash);
+                key = ((ulong)remoteHash + (ulong)localHash);
+                return key;
+            }
+            key |= (ulong)((ulong)stream.header.messageType) << 31;
+            key |= (ulong)((ulong)stream.header.id) << 15;
+            key |= (ulong)((ulong)stream.header.sequence);
             return key;
         }
     }

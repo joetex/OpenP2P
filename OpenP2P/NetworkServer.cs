@@ -37,7 +37,7 @@ namespace OpenP2P
         public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
-
+            /*
             NetworkStream stream = (NetworkStream)sender;
             PeerIdentity peer = protocol.ident.RegisterPeer(stream.remoteEndPoint);
 
@@ -45,7 +45,7 @@ namespace OpenP2P
             connectMsg.responseConnected = true;
             connectMsg.responsePeerId = peer.id;
             
-            protocol.SendResponse(stream, connectMsg);
+            protocol.SendResponse(stream, connectMsg);*/
         }
 
 
