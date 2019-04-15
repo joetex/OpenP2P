@@ -9,8 +9,8 @@ namespace OpenP2P
 {
     public class NetworkStreamPool
     {
-        Queue<NetworkStream> available = new Queue<NetworkStream>();
-        //ConcurrentBag<NetworkStream> available = new ConcurrentBag<NetworkStream>();
+        //Queue<NetworkStream> available = new Queue<NetworkStream>();
+        ConcurrentBag<NetworkStream> available = new ConcurrentBag<NetworkStream>();
         int initialPoolCount = 0;
         int initialBufferSize = 0;
         public int streamCount = 0;
@@ -34,7 +34,7 @@ namespace OpenP2P
             streamCount++;
             NetworkStream stream = new NetworkStream(initialBufferSize);
             //available.Add(stream);
-            available.Enqueue(stream);
+            available.Add(stream);
         }
 
         /**
@@ -50,7 +50,7 @@ namespace OpenP2P
                     New();
 
                 //available.TryTake(out stream);
-                stream = available.Dequeue();
+                available.TryTake(out stream);
             }
 
             if (stream == null)
@@ -76,19 +76,20 @@ namespace OpenP2P
             lock (available)
             {
                 //available.Add(stream);
-                available.Enqueue(stream);
+                available.Add(stream);
             }
 
         }
 
         public void Dispose()
         {
+            NetworkStream stream = null;
             while (available.Count > 0)
             {
-                NetworkStream stream = available.Dequeue();
+                if( available.TryTake(out stream) )
                 //NetworkStream stream = null;
                 //available.TryTake(out stream);
-                stream.Dispose();
+                    stream.Dispose();
             }
         }
     }

@@ -152,7 +152,7 @@ namespace OpenP2P
 
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
-                lock (NetworkThread.RELIABLEQUEUE)
+                //lock (NetworkThread.RELIABLEQUEUE)
                 {
                     //Console.WriteLine("Adding Reliable: " + stream.ackkey);
                     stream.sentTime = NetworkTime.Milliseconds();

@@ -35,7 +35,7 @@ namespace OpenP2P
             /*MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
             protocol.SendReliableRequest(serverHost, msg);*/
-            PerformanceTest();
+            
         }
 
         public void SendHeartbeat()
@@ -47,8 +47,8 @@ namespace OpenP2P
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            
 
+            PerformanceTest();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 

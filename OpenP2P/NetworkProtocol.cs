@@ -120,11 +120,11 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                lock (NetworkThread.ACKNOWLEDGED)
+                //lock (NetworkThread.ACKNOWLEDGED)
                 {
                     if (NetworkThread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         Console.WriteLine("Already exists:" + stream.ackkey);
-                    NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    NetworkThread.ACKNOWLEDGED.TryAdd(stream.ackkey, stream);
                 }
                 stream.acknowledged = true;
             }

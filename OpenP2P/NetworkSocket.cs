@@ -148,6 +148,7 @@ namespace OpenP2P
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
+
                 //if (localPort != 0)
                 socket6.Bind(anyHost6);
                 
@@ -240,7 +241,7 @@ namespace OpenP2P
         {
             stream.Complete();
 
-            lock (NetworkThread.SENDQUEUE)
+            //lock (NetworkThread.SENDQUEUE)
             {
                NetworkThread.SENDQUEUE.Enqueue(stream);
             }
@@ -266,7 +267,7 @@ namespace OpenP2P
 
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
-                lock (NetworkThread.RELIABLEQUEUE)
+                //lock (NetworkThread.RELIABLEQUEUE)
                 {
                     //Console.WriteLine("Adding Reliable: " + stream.ackkey);
                     stream.sentTime = NetworkTime.Milliseconds();
