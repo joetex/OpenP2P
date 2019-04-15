@@ -12,54 +12,164 @@ namespace OpenP2P
 {
     public class NetworkSocket 
     {
-        public Socket socket;
-        public IPEndPoint remote;
-        public IPEndPoint local;
-        public IPEndPoint anyHost;
+        public Socket socket4;
+        //public IPEndPoint remote4;
+        //public IPEndPoint local4;
+        public IPEndPoint anyHost4;
 
-        public NetworkThread threads = null;
+        public Socket socket6;
+        //public IPEndPoint remote6;
+        //public IPEndPoint local6;
+        public IPEndPoint anyHost6;
+
+        public Socket sendSocket = null;
+
+        public enum NetworkIPType
+        {
+            Any,
+            IPv4,
+            IPv6,
+            LAST
+        }
+
+        //public NetworkThread threads = null;
 
         public event EventHandler<NetworkStream> OnReceive;
         public event EventHandler<NetworkStream> OnSend;
+        public event EventHandler<NetworkStream> OnError;
 
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
-            Setup(remoteHost, remotePort, localPort);
+            //Setup(remoteHost, remotePort, localPort);
+            
         }
         public NetworkSocket(string remoteHost, int remotePort)
         {
-            Setup(remoteHost, remotePort, 0);
+            //Setup(remoteHost, remotePort, 0);
         }
         public NetworkSocket(int localPort)
         {
-            Setup("::FFFF:127.0.0.1", 0, localPort);
+            Setup(localPort);
         }
 
-        public void AttachThreads(NetworkThread t)
+        public void Setup(int localPort)
         {
-            threads = t;
+            if(IsSupportIpv4())
+                SetupIPv4(localPort);
+
+            if(IsSupportIpv6())
+                SetupIPv6(localPort);
+        }
+
+        public static bool supportsIpv6 = false;
+        public static bool supportsIpv4 = false;
+
+        public bool IsSupportIpv6()
+        {
+            if (supportsIpv6)
+                return supportsIpv6;
+
+            IPAddress[] AllIPs = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (IPAddress ip in AllIPs)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    supportsIpv6 = true;
+                }
+            }
+            return supportsIpv6;
+        }
+        public bool IsSupportIpv4()
+        {
+            if (supportsIpv4)
+                return supportsIpv4;
+            IPAddress[] AllIPs = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (IPAddress ip in AllIPs)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    supportsIpv4 = true;
+            }
+            return supportsIpv4;
+        }
+        //public void AttachThreads(NetworkThread t)
+        //{
+            //threads = t;
+        //}
+
+        /**
+         * Setup the connection credentials and socket configuration
+         */
+        public void SetupIPv4(int localPort)
+        {
+            //remote4 = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
+            //local4 = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
+            anyHost4 = new IPEndPoint(IPAddress.Any, localPort);
+            try
+            {
+                socket4 = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                //socket.DualMode = true;
+                socket4.ExclusiveAddressUse = false;
+                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
+                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
+                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
+                //if (localPort != 0)
+                socket4.Bind(anyHost4);
+
+                Listen(Reserve());
+
+                sendSocket = socket4;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         /**
          * Setup the connection credentials and socket configuration
          */
-        public void Setup(string remoteHost, int remotePort, int localPort)
+        public void SetupIPv6(int localPort)
         {
+            //remote6 = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
+            //local6 = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
+            ///if( local6.AddressFamily == AddressFamily.InterNetwork )
+            //    local6 = new IPEndPoint(local6.Address.MapToIPv6(), localPort);
 
-            remote = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
-            local = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
-            anyHost = new IPEndPoint(IPAddress.Any, 0);
+            anyHost6 = new IPEndPoint(IPAddress.IPv6Any, localPort);
 
-            socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-            //socket.DualMode = true;
-            socket.ExclusiveAddressUse = false;
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
-            //if (localPort != 0)
-            socket.Bind(local);
+            try
+            {
+                socket6 = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+                //socket.DualMode = true;
+                
+                socket6.ExclusiveAddressUse = false;
+                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                socket6.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, true);
+                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, NetworkConfig.SocketReceiveTimeout);
+                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
+                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
+                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
+
+                //if (localPort != 0)
+                socket6.Bind(anyHost6);
+                
+                //Listen(Reserve());
+
+                sendSocket = socket6;
+
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        public void Failed(NetworkErrorType errorType, NetworkStream stream)
+        {
+            if(OnError != null)
+                OnError.Invoke(errorType, stream);
+
         }
 
         /**
@@ -72,9 +182,9 @@ namespace OpenP2P
 
             stream.Reset();
 
-            lock (threads.RECVQUEUE)
+            lock (NetworkThread.RECVQUEUE)
             {
-                threads.RECVQUEUE.Enqueue(stream);
+                NetworkThread.RECVQUEUE.Add(stream);
             }
         }
 
@@ -84,22 +194,37 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkStream stream)
         {
-            stream.Reset();
-
+            //stream.Reset();
+            
             try
             {
-                int bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                int bytesReceived = 0;
+                Socket socket = socket4;
+                if(stream.networkIPType == NetworkIPType.IPv6)
+                    socket = socket6;
+               
+                if (socket.Available == 0)
+                {
+                    //Listen(stream);
+                    return;
+                }
+
+                NetworkConfig.ProfileBegin("RECV");
+                bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                NetworkConfig.ProfileEnd("RECV");
                 stream.SetBufferLength(bytesReceived);
 
+                NetworkConfig.ProfileBegin("ON_RECV");
                 if (OnReceive != null) //notify any event listeners
                     OnReceive.Invoke(this, stream);
+                NetworkConfig.ProfileEnd("ON_RECV");
             }
             catch (Exception e)
             {
                 //Console.WriteLine(e.ToString());
             }
 
-            Listen(stream); //listen again
+            ///Listen(stream); //listen again
         }
         
         /**
@@ -122,9 +247,11 @@ namespace OpenP2P
         {
             stream.Complete();
 
-            lock (threads.SENDQUEUE)
+            //lock (NetworkThread.SENDQUEUE)
             {
-               threads.SENDQUEUE.Enqueue(stream);
+                NetworkConfig.ProfileBegin("SENDQUEUE_INSERT");
+                NetworkThread.SENDQUEUE.Enqueue(stream);
+                NetworkConfig.ProfileEnd("SENDQUEUE_INSERT");
             }
         }
 
@@ -136,7 +263,12 @@ namespace OpenP2P
         {
             try
             {
-                stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                NetworkConfig.ProfileBegin("SEND");
+                if (stream.networkIPType == NetworkIPType.IPv4)
+                    stream.byteSent = socket4.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                else
+                    stream.byteSent = socket6.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                NetworkConfig.ProfileEnd("SEND");
             }
             catch (Exception e)
             {
@@ -145,13 +277,15 @@ namespace OpenP2P
 
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
-                lock (threads.RELIABLEQUEUE)
+                //lock (NetworkThread.RELIABLEQUEUE)
                 {
                     //Console.WriteLine("Adding Reliable: " + stream.ackkey);
                     stream.sentTime = NetworkTime.Milliseconds();
                     stream.retryCount++;
 
-                    threads.RELIABLEQUEUE.Enqueue(stream);
+                    NetworkConfig.ProfileBegin("RELIABLE_INSERT");
+                    NetworkThread.RELIABLEQUEUE.Enqueue(stream);
+                    NetworkConfig.ProfileEnd("RELIABLE_INSERT");
                 }
             }
             else
@@ -169,9 +303,11 @@ namespace OpenP2P
          */
         public NetworkStream Reserve()
         {
-            NetworkStream stream = threads.STREAMPOOL.Reserve();
+            NetworkConfig.ProfileBegin("POOL_RESERVE");
+            NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
+            NetworkConfig.ProfileEnd("POOL_RESERVE");
             stream.socket = this;
-            
+            stream.remoteEndPoint = anyHost4;
             return stream;
         }
 
@@ -181,7 +317,9 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            threads.STREAMPOOL.Free(stream);
+            NetworkConfig.ProfileBegin("POOL_FREE");
+            NetworkThread.STREAMPOOL.Free(stream);
+            NetworkConfig.ProfileEnd("POOL_FREE");
         }
 
         /**
@@ -191,10 +329,15 @@ namespace OpenP2P
         {
             try
             {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Disconnect(false);
-                socket.Close();
-                socket.Dispose();
+                socket4.Shutdown(SocketShutdown.Both);
+                socket4.Disconnect(false);
+                socket4.Close();
+                socket4.Dispose();
+
+                socket6.Shutdown(SocketShutdown.Both);
+                socket6.Disconnect(false);
+                socket6.Close();
+                socket6.Dispose();
             }
             catch (Exception e)
             {

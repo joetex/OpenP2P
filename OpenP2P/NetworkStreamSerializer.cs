@@ -116,14 +116,18 @@ namespace OpenP2P
         }
         public short ReadShort()
         {
+
             short val = BitConverter.ToInt16(ByteBuffer, bytePos);
             bytePos += 2;
+
             return val;
         }
         public ushort ReadUShort()
         {
+            NetworkConfig.ProfileBegin("ReadUShort");
             ushort val = BitConverter.ToUInt16(ByteBuffer, bytePos);
             bytePos += 2;
+            NetworkConfig.ProfileEnd("ReadUShort");
             return val;
         }
 

@@ -18,11 +18,11 @@ namespace OpenP2P
 
         public NetworkServer(int localPort)
         {
-            protocol = new NetworkProtocol("127.0.0.1", 0, localPort);
+            protocol = new NetworkProtocol(localPort);
             protocol.RegisterAsServer();
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
             protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
-            protocol.Listen();
+            //protocol.Listen();
         }
 
         public void OnRequestHeartbeat(object sender, NetworkMessage message)
@@ -37,7 +37,7 @@ namespace OpenP2P
         public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
-
+            /*
             NetworkStream stream = (NetworkStream)sender;
             PeerIdentity peer = protocol.ident.RegisterPeer(stream.remoteEndPoint);
 
@@ -45,7 +45,7 @@ namespace OpenP2P
             connectMsg.responseConnected = true;
             connectMsg.responsePeerId = peer.id;
             
-            protocol.SendResponse(stream, connectMsg);
+            protocol.SendResponse(stream, connectMsg);*/
         }
 
 
@@ -60,6 +60,7 @@ namespace OpenP2P
             {
                 recieveTimer.Stop();
                 Console.WriteLine("SERVER Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");
+                NetworkConfig.ProfileReportAll();
             }
         }
     }

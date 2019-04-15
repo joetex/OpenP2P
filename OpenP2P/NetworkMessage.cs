@@ -13,13 +13,13 @@ namespace OpenP2P
             public bool isReliable = false;
             public bool isLittleEndian = true;
             public SendType sendType = 0;
-            public MessageType messageType = MessageType.NULL;
+            public MessageType messageType = MessageType.Invalid;
             public ushort sequence = 0;
             public ushort id = 0;
         }
 
         public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
-        public MessageType messageType = MessageType.NULL;
+        public MessageType messageType = MessageType.Invalid;
 
         public event EventHandler<NetworkMessage> OnRequest = null;
         public event EventHandler<NetworkMessage> OnResponse = null;
