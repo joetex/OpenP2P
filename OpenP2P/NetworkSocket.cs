@@ -109,6 +109,7 @@ namespace OpenP2P
                 socket4 = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 //socket.DualMode = true;
                 socket4.ExclusiveAddressUse = false;
+
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
@@ -182,10 +183,11 @@ namespace OpenP2P
 
             stream.Reset();
 
-            lock (NetworkThread.RECVQUEUE)
-            {
-                NetworkThread.RECVQUEUE.Add(stream);
-            }
+            ExecuteListen(stream);
+            //lock (NetworkThread.RECVQUEUE)
+            //{
+            //    NetworkThread.RECVQUEUE.Add(stream);
+            //}
         }
 
         /**
@@ -198,26 +200,22 @@ namespace OpenP2P
             
             try
             {
-                int bytesReceived = 0;
+                
                 Socket socket = socket4;
                 if(stream.networkIPType == NetworkIPType.IPv6)
                     socket = socket6;
                
-                if (socket.Available == 0)
-                {
+                //if (socket.Available == 0)
+                //{
                     //Listen(stream);
-                    return;
-                }
+                //    return;
+                //}
 
                 NetworkConfig.ProfileBegin("RECV");
-                bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                //bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
+                socket.BeginReceiveFrom(stream.ByteBuffer, 0, stream.ByteBuffer.Length, SocketFlags.None, ref stream.remoteEndPoint, OnReceiveFromCallback, stream);
+                
                 NetworkConfig.ProfileEnd("RECV");
-                stream.SetBufferLength(bytesReceived);
-
-                NetworkConfig.ProfileBegin("ON_RECV");
-                if (OnReceive != null) //notify any event listeners
-                    OnReceive.Invoke(this, stream);
-                NetworkConfig.ProfileEnd("ON_RECV");
             }
             catch (Exception e)
             {
@@ -225,6 +223,25 @@ namespace OpenP2P
             }
 
             ///Listen(stream); //listen again
+        }
+
+        public void OnReceiveFromCallback(IAsyncResult res)
+        {
+            NetworkConfig.ProfileBegin("ON_RECV");
+
+            NetworkStream stream = (NetworkStream)res.AsyncState;
+
+            Socket socket = socket4;
+            if (stream.networkIPType == NetworkIPType.IPv6)
+                socket = socket6;
+            int bytesReceived = socket.EndReceive(res);
+            stream.SetBufferLength(bytesReceived);
+            
+            if (OnReceive != null) //notify any event listeners
+                OnReceive.Invoke(this, stream);
+            NetworkConfig.ProfileEnd("ON_RECV");
+
+            Listen(stream);
         }
         
         /**
@@ -274,7 +291,7 @@ namespace OpenP2P
             {
                 Console.WriteLine(e.ToString());
             }
-
+            
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
                 //lock (NetworkThread.RELIABLEQUEUE)

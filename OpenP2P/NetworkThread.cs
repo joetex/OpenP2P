@@ -46,10 +46,10 @@ namespace OpenP2P
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
-                Thread t = new Thread(RecvThread);
-                t.Priority = ThreadPriority.Highest;
-                RECVTHREADS.Add(t);
-                RECVTHREADS[i].Start();
+                //Thread t = new Thread(RecvThread);
+                //t.Priority = ThreadPriority.Highest;
+                //RECVTHREADS.Add(t);
+                //RECVTHREADS[i].Start();
             }
 
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
@@ -86,7 +86,7 @@ namespace OpenP2P
                         if (ReliableThread() > 0)
                             continue;
 
-                        //Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
+                        Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                         continue;
                     }
 

@@ -42,11 +42,11 @@ namespace OpenP2P
             {
                 if (!profileStart.ContainsKey(name))
                 {
-                    profileStart.Add(name, profiler.ElapsedTicks);
+                    profileStart.Add(name, profiler.ElapsedMilliseconds);
                 }
                 else
                 {
-                    profileStart[name] = profiler.ElapsedTicks;
+                    profileStart[name] = profiler.ElapsedMilliseconds;
                 }
             }
         }
@@ -55,15 +55,14 @@ namespace OpenP2P
         {
             lock (profileTimes)
             {
-                long saved = 0;
                 if (!profileTimes.ContainsKey(name))
                 {
                     profileTimes.Add(name, 0);
                 }
-                saved = profileTimes[name];
 
+                long saved = profileTimes[name];
                 long start = profileStart[name];
-                long end = profiler.ElapsedTicks;
+                long end = profiler.ElapsedMilliseconds;
                 long diff = end - start;
                 profileTimes[name] = diff + saved;
             }
@@ -71,7 +70,7 @@ namespace OpenP2P
 
         public static void ProfileReport(string name)
         {
-            double total = ((double)profileTimes[name] / 10000f) / 1000f;
+            double total = ((double)profileTimes[name]) / 1000f;
             Console.WriteLine(name + " took " + total + " seconds");
         }
 
