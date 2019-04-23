@@ -44,7 +44,7 @@ namespace OpenP2P
         {
             NetworkStream stream = null;
             //while (stream == null)
-            lock (available)
+            //lock (available)
             {
                 if (available.Count == 0)
                     New();
@@ -73,7 +73,7 @@ namespace OpenP2P
         {
             stream.header.isReliable = false;
 
-            lock (available)
+            //lock (available)
             {
                 //available.Add(stream);
                 available.Add(stream);
