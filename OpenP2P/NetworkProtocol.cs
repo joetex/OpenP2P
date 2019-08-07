@@ -125,7 +125,7 @@ namespace OpenP2P
                 {
                     if (NetworkThread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         Console.WriteLine("Already exists:" + stream.ackkey);
-                    NetworkThread.ACKNOWLEDGED.TryAdd(stream.ackkey, stream);
+                    NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
                 stream.acknowledged = true;
             }

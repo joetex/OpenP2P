@@ -68,8 +68,9 @@ namespace OpenP2P
             //NetworkStream stream = (NetworkStream)sender;
             stream.header.id = stream.ReadUShort();
             stream.header.sequence = stream.ReadUShort();
-            
+            NetworkConfig.ProfileBegin("GenerateAckKey");
             stream.ackkey = GenerateAckKey(stream);
+            NetworkConfig.ProfileEnd("GenerateAckKey");
             //Console.WriteLine("ReadHeader AckKey: " + stream.ackkey);
         }
 
@@ -190,13 +191,14 @@ namespace OpenP2P
             return true;
         }
 
+        Random random = new Random();
         public ulong GenerateAckKey(NetworkStream stream)
         {
             ulong key = 0;
             if( stream.header.id == 0 )
             {
-                int remoteHash = stream.remoteEndPoint.ToString().GetHashCode();
-                int localHash = stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
+                int remoteHash = random.Next(0, 100000);// stream.remoteEndPoint.ToString().GetHashCode();
+                int localHash = random.Next(0, 100000);//stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
                 //Console.WriteLine("Remote: " + stream.remoteEndPoint.ToString() + " :: " + remoteHash);
                 //Console.WriteLine("Local: " + stream.socket.sendSocket.LocalEndPoint.ToString() + " :: " + localHash);
                 key = ((ulong)remoteHash + (ulong)localHash);

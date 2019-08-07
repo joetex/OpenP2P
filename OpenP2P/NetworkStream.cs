@@ -17,7 +17,18 @@ namespace OpenP2P
     public partial class NetworkStream
     {
         public NetworkSocket socket = null;
-        public EndPoint remoteEndPoint = null;
+        public EndPoint remoteEndPoint;
+        public String remoteEndPointStr;
+        public EndPoint RemoteEndPoint
+        {
+            get { return remoteEndPoint; }
+            set
+            {
+                remoteEndPointStr = remoteEndPoint.ToString();
+                remoteEndPoint = value;
+            }
+        }
+
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
 
         public NetworkMessage.Header header = new NetworkMessage.Header();

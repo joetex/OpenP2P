@@ -13,16 +13,16 @@ namespace OpenP2P
         public const int MAX_RECV_THREADS = 1;
         public const int MAX_RELIABLE_THREADS = 1;
 
-        public const int BufferPoolStartCount = 1000;
+        public const int BufferPoolStartCount = 100000;
         public const int BufferMaxLength = 1000;
-        public const int SocketBufferCount = 1000;
+        public const int SocketBufferCount = 100000;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
 
         //important to sleep more, since they are on infinite loops
-        public const int ThreadWaitingSleepTime = 1;
+        public const int ThreadWaitingSleepTime = 0;
         public const int ThreadSendRateSleepTime = 0;
-        public const int ThreadReliableSleepTime = 1;
+        public const int ThreadReliableSleepTime = 0;
 
         public const long SocketReliableRetryDelay = 300;
         public const long SocketReliableRetryAttempts = 4;

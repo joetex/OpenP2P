@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 10000;
+        public const int MAXSEND = 100000;
 
         static void Main(string[] args)
         {
@@ -43,7 +43,7 @@ namespace OpenP2P
             }
 
             NetworkThread.StartNetworkThreads();
-
+            /*
             NetworkConfig.ProfileBegin("TEST_SEND_LOOP");
             int clientReceiveCnt = 0;
             for(int i=0; i<MAXSEND; i++)
@@ -52,7 +52,7 @@ namespace OpenP2P
                 test = test * test;
                 //clientReceiveCnt += clients[i].receiveCnt;
             }
-            NetworkConfig.ProfileEnd("TEST_SEND_LOOP");
+            NetworkConfig.ProfileEnd("TEST_SEND_LOOP");*/
             //Thread.Sleep(3000);
 
             //NetworkConfig.ProfileReportAll();
