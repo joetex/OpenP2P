@@ -100,6 +100,7 @@ namespace OpenP2P
 
                     stream.socket.SendInternal(stream);
                 }
+                Thread.Sleep(0);
             }
         }
 
@@ -135,6 +136,7 @@ namespace OpenP2P
                 
                 stream = stream.socket.Reserve();
                 stream.Reset();*/
+                Thread.Sleep(0);
             }
         }
 
