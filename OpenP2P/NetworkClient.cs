@@ -23,7 +23,7 @@ namespace OpenP2P
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             
-            protocol = new NetworkProtocol(localPort);
+            protocol = new NetworkProtocol(localPort, false);
             serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
             //protocol.Listen();

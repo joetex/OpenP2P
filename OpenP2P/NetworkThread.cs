@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -39,10 +40,12 @@ namespace OpenP2P
 
         public void StartNetworkThreads()
         {
-
+            
+            
             for (int i = 0; i < NetworkConfig.MAX_SEND_THREADS; i++)
             {
-                SENDTHREADS.Add(new Thread(SendThread));
+                Thread t = new Thread(SendThread);
+                SENDTHREADS.Add(t);
                 SENDTHREADS[i].Start();
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
@@ -58,6 +61,8 @@ namespace OpenP2P
                 //RELIABLETHREADS.Add(new Thread(ReliableThread));
                 //RELIABLETHREADS[i].Start();
             }
+
+            
 
             //mainThread.Start();
         }
@@ -104,6 +109,15 @@ namespace OpenP2P
             }
         }
 
+        public void UpdatePriority()
+        {
+            Process p = Process.GetCurrentProcess();
+            foreach (ProcessThread pt in p.Threads)
+            {
+                pt.IdealProcessor = 0;
+                pt.ProcessorAffinity = (IntPtr)1;
+            }
+        }
         public void BeginRecvThread(NetworkStream stream)
         {
             Thread t = new Thread(RecvThread);

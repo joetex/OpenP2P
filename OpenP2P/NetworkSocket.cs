@@ -1,12 +1,7 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OpenP2P
 {
@@ -39,7 +34,7 @@ namespace OpenP2P
         public event EventHandler<NetworkStream> OnReceive;
         public event EventHandler<NetworkStream> OnSend;
         public event EventHandler<NetworkStream> OnError;
-
+        /*
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
             //Setup(remoteHost, remotePort, localPort);
@@ -48,24 +43,24 @@ namespace OpenP2P
         public NetworkSocket(string remoteHost, int remotePort)
         {
             //Setup(remoteHost, remotePort, 0);
-        }
-        public NetworkSocket(int localPort)
+        }*/
+        public NetworkSocket(string localIP, int localPort)
         {
-            Setup(localPort);
+            Setup(localIP, localPort);
         }
 
-        public void Setup(int localPort)
+        public void Setup(string localIP, int localPort)
         {
             thread = new NetworkThread();
             thread.StartNetworkThreads();
 
             if (IsSupportIpv4())
-                SetupIPv4(localPort);
+                SetupIPv4(localIP, localPort);
 
             if (IsSupportIpv6())
-                SetupIPv6(localPort);
+                SetupIPv6(localIP, localPort);
 
-            
+            //thread.UpdatePriority();
         }
 
         public static bool supportsIpv6 = false;
@@ -82,6 +77,7 @@ namespace OpenP2P
                 if (ip.AddressFamily == AddressFamily.InterNetworkV6)
                 {
                     supportsIpv6 = true;
+                    Console.WriteLine("Found IPV6: " + ip.ToString());
                 }
             }
             return supportsIpv6;
@@ -90,27 +86,34 @@ namespace OpenP2P
         {
             if (supportsIpv4)
                 return supportsIpv4;
+            
             IPAddress[] AllIPs = Dns.GetHostAddresses(Dns.GetHostName());
             foreach (IPAddress ip in AllIPs)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
                     supportsIpv4 = true;
+                    Console.WriteLine("Found IPV4: " + ip.ToString());
+                }
             }
             return supportsIpv4;
         }
+
+        
+
         //public void AttachThreads(NetworkThread t)
         //{
-            //threads = t;
+        //threads = t;
         //}
 
         /**
          * Setup the connection credentials and socket configuration
          */
-        public void SetupIPv4(int localPort)
+        public void SetupIPv4(string localIP, int localPort)
         {
             //remote4 = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             //local4 = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
-            anyHost4 = new IPEndPoint(IPAddress.Any, localPort);
+            anyHost4 = new IPEndPoint(IPAddress.Parse(localIP), localPort);
             try
             {
                 socket4 = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -137,7 +140,7 @@ namespace OpenP2P
         /**
          * Setup the connection credentials and socket configuration
          */
-        public void SetupIPv6(int localPort)
+        public void SetupIPv6(string localIP, int localPort)
         {
             //remote6 = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             //local6 = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);

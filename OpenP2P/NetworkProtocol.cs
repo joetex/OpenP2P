@@ -27,12 +27,28 @@ namespace OpenP2P
         public event EventHandler<NetworkStream> OnWriteHeader = null;
         public event EventHandler<NetworkStream> OnReadHeader = null;
         
-        public NetworkProtocol(int localPort)
+        public NetworkProtocol(string localIP, int localPort, bool isServer)
         {
-            socket = new NetworkSocket(localPort);
+            Setup(localIP, localPort, isServer);
+        }
+        public NetworkProtocol(int localPort, bool isServer)
+        {
+            string localIP = "127.0.0.1";
+            Setup(localIP, localPort, isServer);
+        }
+
+        public void Setup(string localIP, int localPort, bool isServer)
+        {
+            Console.WriteLine("Binding Socket to: " + localIP);
+            socket = new NetworkSocket(localIP, localPort);
             AttachSocketListener(socket);
             BuildMessages();
             AttachNetworkIdentity();
+
+            if (isServer)
+            {
+                RegisterAsServer();
+            }
         }
         
         public void AttachNetworkIdentity()
@@ -49,12 +65,6 @@ namespace OpenP2P
         public void ConnectToServer(IPEndPoint ep, string userName)
         {
             ident.ConnectToServer(ep, userName);
-        }
-
-        public void Listen()
-        {
-            NetworkStream stream = socket.Reserve();
-            socket.Listen(stream);
         }
 
         public void SendReliableRequest(EndPoint ep, NetworkMessage message)

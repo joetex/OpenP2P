@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,7 +18,7 @@ namespace OpenP2P
 
         public const int BufferPoolStartCount = 1000;
         public const int BufferMaxLength = 1000;
-        public const int SocketBufferCount = 1000;
+        public const int SocketBufferCount = 100000;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
 
@@ -85,6 +88,69 @@ namespace OpenP2P
                 }
             }
 
+        }
+
+        public static string GetPublicIP()
+        {
+            var request = (HttpWebRequest)WebRequest.Create("http://ifconfig.me");
+
+            request.UserAgent = "curl"; // this will tell the server to return the information as if the request was made by the linux "curl" command
+
+            string publicIPAddress;
+
+            request.Method = "GET";
+            using (WebResponse response = request.GetResponse())
+            {
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    publicIPAddress = reader.ReadToEnd();
+                }
+            }
+
+            return publicIPAddress.Replace("\n", "");
+        }
+
+        public static String GetPublicIP2()
+        {
+            try
+            {
+                using (var ping = new Ping())
+                {
+                    PingReply pingResult = ping.Send("www.google.com");
+                    if (pingResult?.Status == IPStatus.Success)
+                    {
+                        pingResult = ping.Send(pingResult.Address, 3000, Encoding.ASCII.GetBytes("ping"), new PingOptions { Ttl = 2 });
+
+                        bool isRealIp = !IsLocalIp(pingResult.Address);
+
+                        Console.WriteLine(pingResult?.Address == null
+                            ? $"Has {(isRealIp ? string.Empty : "no ")}real IP, status: {pingResult?.Status}"
+                            : $"Has {(isRealIp ? string.Empty : "no ")}real IP, response from: {pingResult.Address}, status: {pingResult.Status}");
+
+                        Console.WriteLine($"ISP assigned REAL EXTERNAL IP to your router, response from: {pingResult?.Address}, status: {pingResult?.Status}");
+                        return pingResult.Address.ToString();
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Your router appears to be behind ISP networks, response from: {pingResult?.Address}, status: {pingResult?.Status}");
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine("Failed to resolve external ip address by ping");
+                Console.WriteLine(exc.ToString());
+            }
+            return "127.0.0.1";
+        }
+
+        public static bool IsLocalIp(IPAddress ip)
+        {
+            var ipParts = ip.ToString().Split(new[] { "." }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+
+            return (ipParts[0] == 192 && ipParts[1] == 168)
+                || (ipParts[0] == 172 && ipParts[1] >= 16 && ipParts[1] <= 31)
+                || ipParts[0] == 10;
         }
     }
 }

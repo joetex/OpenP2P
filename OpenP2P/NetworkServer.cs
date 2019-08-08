@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using static OpenP2P.NetworkIdentity;
 
 namespace OpenP2P
@@ -16,13 +12,14 @@ namespace OpenP2P
         public int receiveCnt = 0;
         static Stopwatch recieveTimer;
 
-        public NetworkServer(int localPort)
+        public NetworkServer(String localIP, int localPort)
         {
-            protocol = new NetworkProtocol(localPort);
-            protocol.RegisterAsServer();
+            protocol = new NetworkProtocol(localIP, localPort, true);
             protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
             protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
         }
+
+        
 
         public void OnRequestHeartbeat(object sender, NetworkMessage message)
         {
