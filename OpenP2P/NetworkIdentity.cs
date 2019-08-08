@@ -58,8 +58,23 @@ namespace OpenP2P
             //NetworkStream stream = (NetworkStream)sender;
             stream.Write(stream.header.id);
             stream.Write(stream.header.sequence);
+           
+            if ( stream.header.isReliable )
+            {
+                NetworkConfig.ProfileBegin("GenerateAckKey");
+                if ( stream.header.sendType == SendType.Request && stream.retryCount == 0 )
+                {
+                    stream.ackkey = GenerateAckKey(stream);
+                    stream.Write(stream.ackkey);
+                }
+                else
+                {
+                    stream.Write(stream.ackkey);
+                }
+                NetworkConfig.ProfileEnd("GenerateAckKey");
+            }
             
-            stream.ackkey = GenerateAckKey(stream);
+
             //Console.WriteLine("WriteHeader AckKey: " + stream.ackkey);
         }
     
@@ -68,9 +83,8 @@ namespace OpenP2P
             //NetworkStream stream = (NetworkStream)sender;
             stream.header.id = stream.ReadUShort();
             stream.header.sequence = stream.ReadUShort();
-            NetworkConfig.ProfileBegin("GenerateAckKey");
-            stream.ackkey = GenerateAckKey(stream);
-            NetworkConfig.ProfileEnd("GenerateAckKey");
+            if (stream.header.isReliable)
+                stream.ackkey = stream.ReadULong();
             //Console.WriteLine("ReadHeader AckKey: " + stream.ackkey);
         }
 
@@ -80,7 +94,7 @@ namespace OpenP2P
 
             MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
-            protocol.SendRequest(ep, msg);
+            protocol.SendReliableRequest(ep, msg);
         }
 
         //Server receives request from client
@@ -197,8 +211,8 @@ namespace OpenP2P
             ulong key = 0;
             if( stream.header.id == 0 )
             {
-                int remoteHash = random.Next(0, 100000);// stream.remoteEndPoint.ToString().GetHashCode();
-                int localHash = random.Next(0, 100000);//stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
+                int remoteHash = random.Next(0, 1000000000);// stream.remoteEndPoint.ToString().GetHashCode();
+                int localHash = random.Next(0, 1000000000);//stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
                 //Console.WriteLine("Remote: " + stream.remoteEndPoint.ToString() + " :: " + remoteHash);
                 //Console.WriteLine("Local: " + stream.socket.sendSocket.LocalEndPoint.ToString() + " :: " + localHash);
                 key = ((ulong)remoteHash + (ulong)localHash);

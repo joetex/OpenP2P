@@ -18,7 +18,7 @@ namespace OpenP2P
         public IPEndPoint serverHost = null;
 
 
-        public static int receiveCnt = 0;
+        public int receiveCnt = 0;
         static Stopwatch recieveTimer;
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
@@ -42,7 +42,7 @@ namespace OpenP2P
         {
             MsgHeartbeat msg = protocol.Create<MsgHeartbeat>();
             msg.timestamp = NetworkTime.Milliseconds();
-            protocol.SendReliableRequest(serverHost, msg);
+            protocol.SendRequest(serverHost, msg);
         }
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)

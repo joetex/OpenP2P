@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 100000;
+        public const int MAXSEND = 200000;
 
         static void Main(string[] args)
         {
@@ -33,6 +33,7 @@ namespace OpenP2P
             
             NetworkConfig.ProfileEnable();
             
+
             //createClient.Stop();
             //Console.WriteLine("Clients created in " + ((float)createClient.ElapsedMilliseconds / 1000f) + " seconds");
 
@@ -42,7 +43,7 @@ namespace OpenP2P
                 client.ConnectToServer("JoeOfTex");
             }
 
-            NetworkThread.StartNetworkThreads();
+            
             /*
             NetworkConfig.ProfileBegin("TEST_SEND_LOOP");
             int clientReceiveCnt = 0;
@@ -53,15 +54,18 @@ namespace OpenP2P
                 //clientReceiveCnt += clients[i].receiveCnt;
             }
             NetworkConfig.ProfileEnd("TEST_SEND_LOOP");*/
-            //Thread.Sleep(3000);
+            Thread.Sleep(5000);
 
             //NetworkConfig.ProfileReportAll();
             //Console.WriteLine("Reliable Count: " + NetworkThread.RELIABLEQUEUE.Count);
             //Console.WriteLine("Ack Count: " + NetworkThread.ACKNOWLEDGED.Count);
             //Console.WriteLine("StreamPool Count = " + NetworkThread.STREAMPOOL.streamCount);
-            //Console.WriteLine("Client Receive Cnt: " + NetworkClient.receiveCnt);
-            //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+            Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
+            Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+            Thread.Sleep(20000);
 
+            Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
+            Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             //Thread.Sleep(1000);
             //NetworkConfig.ProfileReportAll(); 
         }

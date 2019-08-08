@@ -16,7 +16,7 @@ namespace OpenP2P
         public IPEndPoint remote;
         public IPEndPoint local;
         public IPEndPoint anyHost;
-
+        public NetworkThread thread = null;
 
         //public NetworkThread threads = null;
 
@@ -61,6 +61,9 @@ namespace OpenP2P
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
             //if (localPort != 0)
             socket.Bind(local);
+
+            thread = new NetworkThread();
+            thread.StartNetworkThreads();
         }
 
         /**
@@ -152,14 +155,17 @@ namespace OpenP2P
 
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
-                //lock (NetworkThread.RELIABLEQUEUE)
+                //Console.WriteLine("Adding Reliable: " + stream.ackkey);
+                stream.sentTime = NetworkTime.Milliseconds();
+                stream.retryCount++;
+
+                /*
+                lock (NetworkThread.RELIABLEQUEUE)
                 {
-                    //Console.WriteLine("Adding Reliable: " + stream.ackkey);
-                    stream.sentTime = NetworkTime.Milliseconds();
-                    stream.retryCount++;
+                    
 
                     NetworkThread.RELIABLEQUEUE.Enqueue(stream);
-                }
+                }*/
             }
             else
             {
@@ -176,7 +182,7 @@ namespace OpenP2P
          */
         public NetworkStream Reserve()
         {
-            NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
+            NetworkStream stream = thread.STREAMPOOL.Reserve();
             //stream.socket = this;
             
             return stream;
@@ -188,7 +194,7 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            NetworkThread.STREAMPOOL.Free(stream);
+            thread.STREAMPOOL.Free(stream);
         }
 
         /**

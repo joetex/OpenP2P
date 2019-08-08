@@ -9,8 +9,8 @@ namespace OpenP2P
 {
     public class NetworkStreamPool
     {
-        //Queue<NetworkStream> available = new Queue<NetworkStream>();
-        ConcurrentBag<NetworkStream> available = new ConcurrentBag<NetworkStream>();
+        Queue<NetworkStream> available = new Queue<NetworkStream>();
+        //ConcurrentBag<NetworkStream> available = new ConcurrentBag<NetworkStream>();
         int initialPoolCount = 0;
         int initialBufferSize = 0;
         public int streamCount = 0;
@@ -34,7 +34,7 @@ namespace OpenP2P
             streamCount++;
             NetworkStream stream = new NetworkStream(initialBufferSize);
             //available.Add(stream);
-            available.Add(stream);
+            available.Enqueue(stream);
         }
 
         /**
@@ -44,13 +44,14 @@ namespace OpenP2P
         {
             NetworkStream stream = null;
             //while (stream == null)
-            //lock (available)
+            lock (available)
             {
                 if (available.Count == 0)
                     New();
 
                 //available.TryTake(out stream);
-                available.TryTake(out stream);
+                //available.TryTake(out stream);
+                stream = available.Dequeue();
             }
 
             if (stream == null)
@@ -73,10 +74,10 @@ namespace OpenP2P
         {
             stream.header.isReliable = false;
 
-            //lock (available)
+            lock (available)
             {
                 //available.Add(stream);
-                available.Add(stream);
+                available.Enqueue(stream);
             }
 
         }
@@ -86,7 +87,8 @@ namespace OpenP2P
             NetworkStream stream = null;
             while (available.Count > 0)
             {
-                if( available.TryTake(out stream) )
+                //if( available.TryTake(out stream) )
+                stream = available.Dequeue();
                 //NetworkStream stream = null;
                 //available.TryTake(out stream);
                     stream.Dispose();

@@ -24,6 +24,8 @@ namespace OpenP2P
 
         public Socket sendSocket = null;
 
+        public NetworkThread thread = null;
+
         public enum NetworkIPType
         {
             Any,
@@ -54,11 +56,16 @@ namespace OpenP2P
 
         public void Setup(int localPort)
         {
-            if(IsSupportIpv4())
+            thread = new NetworkThread();
+            thread.StartNetworkThreads();
+
+            if (IsSupportIpv4())
                 SetupIPv4(localPort);
 
-            if(IsSupportIpv6())
+            if (IsSupportIpv6())
                 SetupIPv6(localPort);
+
+            
         }
 
         public static bool supportsIpv6 = false;
@@ -183,7 +190,7 @@ namespace OpenP2P
 
             stream.Reset();
 
-            NetworkThread.BeginRecvThread(stream);
+            thread.BeginRecvThread(stream);
            // ExecuteListen(stream);
             //lock (NetworkThread.RECVQUEUE)
             //{
@@ -269,10 +276,10 @@ namespace OpenP2P
         {
             stream.Complete();
 
-            //lock (NetworkThread.SENDQUEUE)
+            lock (thread.SENDQUEUE)
             {
                 NetworkConfig.ProfileBegin("SENDQUEUE_INSERT");
-                NetworkThread.SENDQUEUE.Enqueue(stream);
+                thread.SENDQUEUE.Enqueue(stream);
                 NetworkConfig.ProfileEnd("SENDQUEUE_INSERT");
             }
         }
@@ -299,14 +306,16 @@ namespace OpenP2P
             
             if (stream.header.sendType == SendType.Request && stream.header.isReliable)
             {
-                //lock (NetworkThread.RELIABLEQUEUE)
+                //Console.WriteLine("Adding Reliable: " + stream.ackkey);
+                stream.sentTime = NetworkTime.Milliseconds();
+                stream.retryCount++;
+
+                lock (thread.RELIABLEQUEUE)
                 {
-                    //Console.WriteLine("Adding Reliable: " + stream.ackkey);
-                    stream.sentTime = NetworkTime.Milliseconds();
-                    stream.retryCount++;
+                    
 
                     NetworkConfig.ProfileBegin("RELIABLE_INSERT");
-                    NetworkThread.RELIABLEQUEUE.Enqueue(stream);
+                    thread.RELIABLEQUEUE.Enqueue(stream);
                     NetworkConfig.ProfileEnd("RELIABLE_INSERT");
                 }
             }
@@ -326,7 +335,7 @@ namespace OpenP2P
         public NetworkStream Reserve()
         {
             NetworkConfig.ProfileBegin("POOL_RESERVE");
-            NetworkStream stream = NetworkThread.STREAMPOOL.Reserve();
+            NetworkStream stream = thread.STREAMPOOL.Reserve();
             NetworkConfig.ProfileEnd("POOL_RESERVE");
             stream.socket = this;
             stream.remoteEndPoint = anyHost4;
@@ -340,7 +349,7 @@ namespace OpenP2P
         public void Free(NetworkStream stream)
         {
             NetworkConfig.ProfileBegin("POOL_FREE");
-            NetworkThread.STREAMPOOL.Free(stream);
+            thread.STREAMPOOL.Free(stream);
             NetworkConfig.ProfileEnd("POOL_FREE");
         }
 

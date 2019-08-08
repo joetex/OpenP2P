@@ -22,10 +22,10 @@ namespace OpenP2P
         //important to sleep more, since they are on infinite loops
         public const int ThreadWaitingSleepTime = 0;
         public const int ThreadSendRateSleepTime = 0;
-        public const int ThreadReliableSleepTime = 0;
+        public const int ThreadReliableSleepTime = 10;
 
-        public const long SocketReliableRetryDelay = 300;
-        public const long SocketReliableRetryAttempts = 4;
+        public const long SocketReliableRetryDelay = 400;
+        public const long SocketReliableRetryAttempts = 3;
 
         public static Stopwatch profiler = new Stopwatch();
         public static Dictionary<string, long> profileTimes = new Dictionary<string, long>();
@@ -38,34 +38,34 @@ namespace OpenP2P
         }
         public static void ProfileBegin(string name)
         {
-            lock(profileStart)
-            {
-                if (!profileStart.ContainsKey(name))
-                {
-                    profileStart.Add(name, profiler.ElapsedMilliseconds);
-                }
-                else
-                {
-                    profileStart[name] = profiler.ElapsedMilliseconds;
-                }
-            }
+            //lock(profileStart)
+            //{
+            //    if (!profileStart.ContainsKey(name))
+            //    {
+            //        profileStart.Add(name, profiler.ElapsedMilliseconds);
+            //    }
+            //    else
+            //    {
+            //        profileStart[name] = profiler.ElapsedMilliseconds;
+            //    }
+            //}
         }
 
         public static void ProfileEnd(string name)
         {
-            lock (profileTimes)
-            {
-                if (!profileTimes.ContainsKey(name))
-                {
-                    profileTimes.Add(name, 0);
-                }
+            //lock (profileTimes)
+            //{
+            //    if (!profileTimes.ContainsKey(name))
+            //    {
+            //        profileTimes.Add(name, 0);
+            //    }
 
-                long saved = profileTimes[name];
-                long start = profileStart[name];
-                long end = profiler.ElapsedMilliseconds;
-                long diff = end - start;
-                profileTimes[name] = diff + saved;
-            }
+            //    long saved = profileTimes[name];
+            //    long start = profileStart[name];
+            //    long end = profiler.ElapsedMilliseconds;
+            //    long diff = end - start;
+            //    profileTimes[name] = diff + saved;
+            //}
         }
 
         public static void ProfileReport(string name)
@@ -76,7 +76,7 @@ namespace OpenP2P
 
         public static void ProfileReportAll()
         {
-            lock(profileTimes)
+            //lock(profileTimes)
             {
                 foreach (KeyValuePair<string, long> pair in profileTimes)
                 {

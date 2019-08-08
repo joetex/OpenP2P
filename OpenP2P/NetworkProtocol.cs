@@ -96,6 +96,7 @@ namespace OpenP2P
             stream.header.sendType = SendType.Response;
             stream.header.sequence = requestStream.header.sequence;
             stream.header.id = requestStream.header.id;
+            stream.ackkey = requestStream.ackkey;
             Send(stream, message);
         }
        
@@ -121,11 +122,11 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                //lock (NetworkThread.ACKNOWLEDGED)
+                lock (stream.socket.thread.ACKNOWLEDGED)
                 {
-                    if (NetworkThread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                    if (stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         Console.WriteLine("Already exists:" + stream.ackkey);
-                    NetworkThread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
                 stream.acknowledged = true;
             }
@@ -145,10 +146,12 @@ namespace OpenP2P
             switch (errorType)
             {
                 case NetworkErrorType.ErrorConnectToServer:
-                    OnErrorConnectToServer.Invoke(this, stream);
+                    if (OnErrorConnectToServer != null)
+                        OnErrorConnectToServer.Invoke(this, stream);
                     break;
                 case NetworkErrorType.ErrorReliableFailed:
-                    OnErrorReliableFailed.Invoke(this, stream);
+                    if( OnErrorReliableFailed != null )
+                        OnErrorReliableFailed.Invoke(this, stream);
                     break;
             }
         }
