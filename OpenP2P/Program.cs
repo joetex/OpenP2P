@@ -42,7 +42,7 @@ namespace OpenP2P
             string localIP = NetworkConfig.GetPublicIP();
             Console.WriteLine("IPAddress = " + localIP);
             
-            NetworkServer server = new NetworkServer(localIP, 9000);
+            NetworkServer server = new NetworkServer("127.0.0.1", 9000);
         }
 
         public static void RunClient()
