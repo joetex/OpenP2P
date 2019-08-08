@@ -115,17 +115,17 @@ namespace OpenP2P
 
         public override void OnReceive(object sender, NetworkStream stream)
         {
-            NetworkConfig.ProfileBegin("OnReceive");
+            //NetworkConfig.ProfileBegin("OnReceive");
             NetworkMessage message = ReadHeader(stream);
             message.InvokeOnRead(stream);
-            NetworkConfig.ProfileEnd("OnReceive");
+            //NetworkConfig.ProfileEnd("OnReceive");
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
                 lock (stream.socket.thread.ACKNOWLEDGED)
                 {
-                    if (stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
-                        Console.WriteLine("Already exists:" + stream.ackkey);
+                    if (!stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                        //Console.WriteLine("Already exists:" + stream.ackkey);
                     stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
                 stream.acknowledged = true;

@@ -61,7 +61,7 @@ namespace OpenP2P
            
             if ( stream.header.isReliable )
             {
-                NetworkConfig.ProfileBegin("GenerateAckKey");
+                //NetworkConfig.ProfileBegin("GenerateAckKey");
                 if ( stream.header.sendType == SendType.Request && stream.retryCount == 0 )
                 {
                     stream.ackkey = GenerateAckKey(stream);
@@ -71,7 +71,7 @@ namespace OpenP2P
                 {
                     stream.Write(stream.ackkey);
                 }
-                NetworkConfig.ProfileEnd("GenerateAckKey");
+                //NetworkConfig.ProfileEnd("GenerateAckKey");
             }
             
 

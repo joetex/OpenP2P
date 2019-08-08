@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 200000;
+        public const int MAXSEND = 100000;
 
         static void Main(string[] args)
         {
@@ -41,6 +41,8 @@ namespace OpenP2P
             for (int i=0;i<MAXSEND; i++)
             {
                 client.ConnectToServer("JoeOfTex");
+                if (i % 500 == 0)
+                    Thread.Sleep(1);
             }
 
             
@@ -59,7 +61,8 @@ namespace OpenP2P
             //NetworkConfig.ProfileReportAll();
             //Console.WriteLine("Reliable Count: " + NetworkThread.RELIABLEQUEUE.Count);
             //Console.WriteLine("Ack Count: " + NetworkThread.ACKNOWLEDGED.Count);
-            //Console.WriteLine("StreamPool Count = " + NetworkThread.STREAMPOOL.streamCount);
+            Console.WriteLine("Client StreamPool Count = " + client.protocol.socket.thread.STREAMPOOL.streamCount);
+            Console.WriteLine("Server StreamPool Count = " + server.protocol.socket.thread.STREAMPOOL.streamCount);
             Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
             Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             Thread.Sleep(20000);

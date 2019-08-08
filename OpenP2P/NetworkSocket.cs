@@ -219,15 +219,14 @@ namespace OpenP2P
                 //    return;
                 //}
 
-                NetworkConfig.ProfileBegin("RECV");
+                //NetworkConfig.ProfileBegin("RECV");
                 int bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
                 //socket.BeginReceiveFrom(stream.ByteBuffer, 0, stream.ByteBuffer.Length, SocketFlags.None, ref stream.remoteEndPoint, OnReceiveFromCallback, stream);
                 stream.SetBufferLength(bytesReceived);
 
-                if (OnReceive != null) //notify any event listeners
-                    OnReceive.Invoke(this, stream);
+                
 
-                NetworkConfig.ProfileEnd("RECV");
+                //NetworkConfig.ProfileEnd("RECV");
             }
             catch (Exception e)
             {
@@ -237,9 +236,15 @@ namespace OpenP2P
             ///Listen(stream); //listen again
         }
 
+        public void InvokeOnRecieve(NetworkStream stream)
+        {
+            if (OnReceive != null) //notify any event listeners
+                OnReceive.Invoke(this, stream);
+        }
+
         public void OnReceiveFromCallback(IAsyncResult res)
         {
-            NetworkConfig.ProfileBegin("ON_RECV");
+            //NetworkConfig.ProfileBegin("ON_RECV");
 
             NetworkStream stream = (NetworkStream)res.AsyncState;
 
@@ -251,7 +256,7 @@ namespace OpenP2P
             
             if (OnReceive != null) //notify any event listeners
                 OnReceive.Invoke(this, stream);
-            NetworkConfig.ProfileEnd("ON_RECV");
+            //NetworkConfig.ProfileEnd("ON_RECV");
 
             Listen(stream);
         }
@@ -278,9 +283,9 @@ namespace OpenP2P
 
             lock (thread.SENDQUEUE)
             {
-                NetworkConfig.ProfileBegin("SENDQUEUE_INSERT");
+                //NetworkConfig.ProfileBegin("SENDQUEUE_INSERT");
                 thread.SENDQUEUE.Enqueue(stream);
-                NetworkConfig.ProfileEnd("SENDQUEUE_INSERT");
+                //NetworkConfig.ProfileEnd("SENDQUEUE_INSERT");
             }
         }
 
@@ -292,12 +297,12 @@ namespace OpenP2P
         {
             try
             {
-                NetworkConfig.ProfileBegin("SEND");
+                //NetworkConfig.ProfileBegin("SEND");
                 if (stream.networkIPType == NetworkIPType.IPv4)
                     stream.byteSent = socket4.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
                 else
                     stream.byteSent = socket6.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
-                NetworkConfig.ProfileEnd("SEND");
+                //NetworkConfig.ProfileEnd("SEND");
             }
             catch (Exception e)
             {
@@ -314,9 +319,9 @@ namespace OpenP2P
                 {
                     
 
-                    NetworkConfig.ProfileBegin("RELIABLE_INSERT");
+                    //NetworkConfig.ProfileBegin("RELIABLE_INSERT");
                     thread.RELIABLEQUEUE.Enqueue(stream);
-                    NetworkConfig.ProfileEnd("RELIABLE_INSERT");
+                    //NetworkConfig.ProfileEnd("RELIABLE_INSERT");
                 }
             }
             else
@@ -334,9 +339,9 @@ namespace OpenP2P
          */
         public NetworkStream Reserve()
         {
-            NetworkConfig.ProfileBegin("POOL_RESERVE");
+            //NetworkConfig.ProfileBegin("POOL_RESERVE");
             NetworkStream stream = thread.STREAMPOOL.Reserve();
-            NetworkConfig.ProfileEnd("POOL_RESERVE");
+            //NetworkConfig.ProfileEnd("POOL_RESERVE");
             stream.socket = this;
             stream.remoteEndPoint = anyHost4;
             return stream;
@@ -348,9 +353,9 @@ namespace OpenP2P
          */
         public void Free(NetworkStream stream)
         {
-            NetworkConfig.ProfileBegin("POOL_FREE");
+            //NetworkConfig.ProfileBegin("POOL_FREE");
             thread.STREAMPOOL.Free(stream);
-            NetworkConfig.ProfileEnd("POOL_FREE");
+            //NetworkConfig.ProfileEnd("POOL_FREE");
         }
 
         /**
