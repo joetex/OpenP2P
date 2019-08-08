@@ -113,7 +113,7 @@ namespace OpenP2P
         {
             //remote4 = new IPEndPoint(IPAddress.Parse(remoteHost), remotePort);
             //local4 = new IPEndPoint(IPAddress.Parse(remoteHost), localPort);
-            anyHost4 = new IPEndPoint(IPAddress.Parse(localIP), localPort);
+            anyHost4 = new IPEndPoint(IPAddress.Any, localPort);
             try
             {
                 socket4 = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
