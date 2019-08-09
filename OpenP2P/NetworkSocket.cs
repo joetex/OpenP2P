@@ -125,7 +125,7 @@ namespace OpenP2P
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
                 //socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, true);
-                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoChecksum, true);
+                //socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoChecksum, true);
                 //if (localPort != 0)
                 socket4.Bind(anyHost4);
 
@@ -159,7 +159,7 @@ namespace OpenP2P
                 socket6.ExclusiveAddressUse = false;
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 socket6.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, true);
-                socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, NetworkConfig.SocketReceiveTimeout);
+                //socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, NetworkConfig.SocketReceiveTimeout);
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket6.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
