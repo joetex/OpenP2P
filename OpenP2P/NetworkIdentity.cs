@@ -88,13 +88,13 @@ namespace OpenP2P
             //Console.WriteLine("ReadHeader AckKey: " + stream.ackkey);
         }
 
-        public void ConnectToServer(IPEndPoint ep, string userName)
+        public NetworkStream ConnectToServer(IPEndPoint ep, string userName)
         {
             local.userName = userName;
 
             MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
-            protocol.SendReliableRequest(ep, msg);
+            return protocol.SendReliableRequest(ep, msg);
         }
 
         //Server receives request from client

@@ -19,7 +19,8 @@ namespace OpenP2P
 
 
         public int receiveCnt = 0;
-        static Stopwatch recieveTimer;
+        static Stopwatch timer;
+        static Dictionary<ulong, Stopwatch> recieveTimer = new Dictionary<ulong, Stopwatch>();
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             
@@ -31,11 +32,17 @@ namespace OpenP2P
         
         public void ConnectToServer(string userName)
         {
-            protocol.ConnectToServer(serverHost, userName);
+            
+            NetworkStream stream = protocol.ConnectToServer(serverHost, userName);
+
+            Stopwatch sw = new Stopwatch();
+            
+            recieveTimer.Add(stream.ackkey, sw);
+            sw.Start();
             /*MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.requestUsername = userName;
             protocol.SendReliableRequest(serverHost, msg);*/
-            
+
         }
 
         public void SendHeartbeat()
@@ -47,7 +54,10 @@ namespace OpenP2P
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-
+            NetworkStream stream = (NetworkStream)sender;
+            recieveTimer[stream.ackkey].Stop();
+            long end = recieveTimer[stream.ackkey].ElapsedMilliseconds;
+            Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
@@ -55,15 +65,15 @@ namespace OpenP2P
         public void PerformanceTest()
         {
             if (receiveCnt == 0)
-                recieveTimer = Stopwatch.StartNew();
+                timer = Stopwatch.StartNew();
 
             //Interlocked.Increment(ref receiveCnt);
             receiveCnt++;
 
             if (receiveCnt == Program.MAXSEND)
             {
-                recieveTimer.Stop();
-                Console.WriteLine("CLIENT Finished in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");
+                timer.Stop();
+                Console.WriteLine("CLIENT Finished in " + ((float)timer.ElapsedMilliseconds / 1000f) + " seconds");
             }
         }
     }

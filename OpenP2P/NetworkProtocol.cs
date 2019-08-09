@@ -62,12 +62,12 @@ namespace OpenP2P
             ident.RegisterServer(socket.sendSocket.LocalEndPoint);
         }
 
-        public void ConnectToServer(IPEndPoint ep, string userName)
+        public NetworkStream ConnectToServer(IPEndPoint ep, string userName)
         {
-            ident.ConnectToServer(ep, userName);
+            return ident.ConnectToServer(ep, userName);
         }
 
-        public void SendReliableRequest(EndPoint ep, NetworkMessage message)
+        public NetworkStream SendReliableRequest(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
             NetworkStream stream = socket.Prepare(ep);
@@ -78,9 +78,10 @@ namespace OpenP2P
             stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
             stream.header.id = ident.local.id;
             Send(stream, message);
+            return stream;
         }
 
-        public void SendRequest(EndPoint ep, NetworkMessage message)
+        public NetworkStream SendRequest(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
             NetworkStream stream = socket.Prepare(ep);
@@ -91,9 +92,10 @@ namespace OpenP2P
             stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
             stream.header.id = ident.local.id;
             Send(stream, message);
+            return stream;
         }
 
-        public void SendResponse(NetworkStream requestStream, NetworkMessage message)
+        public NetworkStream SendResponse(NetworkStream requestStream, NetworkMessage message)
         {
             NetworkStream stream = socket.Prepare(requestStream.remoteEndPoint);
             if(requestStream.remoteEndPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
@@ -108,6 +110,7 @@ namespace OpenP2P
             stream.header.id = requestStream.header.id;
             stream.ackkey = requestStream.ackkey;
             Send(stream, message);
+            return stream;
         }
        
         public void Send(NetworkStream stream, NetworkMessage message)

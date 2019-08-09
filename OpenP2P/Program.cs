@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 10000;
+        public const int MAXSEND = 100;
 
         static void Main(string[] args)
         {
@@ -68,10 +68,10 @@ namespace OpenP2P
 
             //Thread.Sleep(100);
             //int i = 0;
-            //for (int i=0;i<MAXSEND; i++)
+            for (int i=0;i<MAXSEND; i++)
             {
                 client.ConnectToServer("JoeOfTex");
-                //if (i % 500 == 0)
+                if (i % 500 == 0)
                 Thread.Sleep(1);
             }
 
