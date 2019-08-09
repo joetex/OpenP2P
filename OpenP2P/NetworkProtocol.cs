@@ -135,13 +135,13 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                //lock (stream.socket.thread.ACKNOWLEDGED)
+                lock (stream.socket.thread.ACKNOWLEDGED)
                 {
-                    //if (!stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                    if (!stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         //Console.WriteLine("Already exists:" + stream.ackkey);
-                    //stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
-                stream.acknowledged = true;
+                //stream.acknowledged = true;
             }
             
         }
