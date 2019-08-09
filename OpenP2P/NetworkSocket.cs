@@ -124,6 +124,8 @@ namespace OpenP2P
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, NetworkConfig.BufferMaxLength * NetworkConfig.SocketBufferCount);
                 socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, NetworkConfig.SocketReceiveTimeout);
+                //socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, true);
+                socket4.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoChecksum, true);
                 //if (localPort != 0)
                 socket4.Bind(anyHost4);
 

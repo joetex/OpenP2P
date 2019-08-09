@@ -18,7 +18,7 @@ namespace OpenP2P
 
         public const int BufferPoolStartCount = 1000;
         public const int BufferMaxLength = 1000;
-        public const int SocketBufferCount = 100000;
+        public const int SocketBufferCount = 1000;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
 

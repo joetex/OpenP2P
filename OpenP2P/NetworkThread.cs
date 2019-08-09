@@ -92,7 +92,7 @@ namespace OpenP2P
 
                 if (queueCount == 0)
                 {
-                    Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
+                    //Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
 
@@ -105,7 +105,7 @@ namespace OpenP2P
 
                     stream.socket.SendInternal(stream);
                 }
-                Thread.Sleep(0);
+                //Thread.Sleep(0);
             }
         }
 
@@ -147,7 +147,7 @@ namespace OpenP2P
                 
                 stream = stream.socket.Reserve();
                 stream.Reset();
-                Thread.Sleep(0);
+                //Thread.Sleep(0);
             }
         }
 
@@ -166,7 +166,7 @@ namespace OpenP2P
 
                 if (queueCount == 0)
                 {
-                    Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
+                    //Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
                     continue;
                 }
                 lock (RECVQUEUE)
@@ -176,7 +176,7 @@ namespace OpenP2P
                 stream.socket.InvokeOnRecieve(stream);
 
                 stream.socket.Free(stream);
-                Thread.Sleep(0);
+                //Thread.Sleep(0);
             }
             
         }
@@ -205,7 +205,11 @@ namespace OpenP2P
 
                 //for (int i = 0; i < queueCount; i++)
                 {
-                    stream = RELIABLEQUEUE.Dequeue();
+                    lock (RELIABLEQUEUE)
+                    {
+                        stream = RELIABLEQUEUE.Dequeue();
+                    }
+                        
                 
                     lock (ACKNOWLEDGED)
                     {
