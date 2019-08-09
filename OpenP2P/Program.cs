@@ -14,30 +14,23 @@ namespace OpenP2P
     {
         public const int MAXSEND = 1000;
 
+        public static string connectToAddress = "127.0.0.1";
+
         static void Main(string[] args)
         {
             bool isServer = false;
-            int localPort = 0;
-
+          
             for (int i = 0; i < args.Length; i++)
             {
                 if( args[i].ToLower().Equals("--server") )
                 {
                     isServer = true;
                 }
-                if( args[i].ToLower().StartsWith("--serveraddress") )
+                if( args[i].ToLower().StartsWith("--connectto") )
                 {
                     if( i < args.Length - 1 )
                     {
-                        i++;
-                        try
-                        {
-                            localPort = Int32.Parse(args[i]);
-                        }
-                        catch(Exception e)
-                        {
-                            Console.WriteLine(e.ToString());
-                        }
+                        connectToAddress = args[++i];
                     }
                 }
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
@@ -71,7 +64,7 @@ namespace OpenP2P
             //createClient.Start();
             //for (int i=0; i< MAXSEND; i++)
             {
-                client = new NetworkClient("104.197.212.5", 9000, 0);
+                client = new NetworkClient(connectToAddress, 9000, 0);
 
                 //clients.Add(client);
             }
