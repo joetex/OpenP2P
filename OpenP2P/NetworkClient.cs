@@ -57,7 +57,7 @@ namespace OpenP2P
             NetworkStream stream = (NetworkStream)sender;
             recieveTimer[stream.ackkey].Stop();
             long end = recieveTimer[stream.ackkey].ElapsedMilliseconds;
-            Console.WriteLine("Ping took: " + end + " milliseconds");
+            //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }

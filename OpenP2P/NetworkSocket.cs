@@ -229,7 +229,7 @@ namespace OpenP2P
                 //socket.BeginReceiveFrom(stream.ByteBuffer, 0, stream.ByteBuffer.Length, SocketFlags.None, ref stream.remoteEndPoint, OnReceiveFromCallback, stream);
                 stream.SetBufferLength(bytesReceived);
 
-                Console.WriteLine("Received ("+bytesReceived+" bytes) from: " + stream.remoteEndPoint.ToString());
+                //Console.WriteLine("Received ("+bytesReceived+" bytes) from: " + stream.remoteEndPoint.ToString());
 
                 //NetworkConfig.ProfileEnd("RECV");
             }
