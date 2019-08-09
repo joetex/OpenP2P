@@ -103,7 +103,7 @@ namespace OpenP2P
             }
             catch (Exception e)
             {
-                //Console.WriteLine(e.ToString());
+                Console.WriteLine(e.ToString());
             }
 
             Listen(stream); //listen again

@@ -70,7 +70,7 @@ namespace OpenP2P
 
         public void MainThread()
         {
-            NetworkStream stream = null;
+            //NetworkStream stream = null;
             while(true)
             {
 
