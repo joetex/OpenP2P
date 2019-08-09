@@ -50,10 +50,10 @@ namespace OpenP2P
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
-                //Thread t = new Thread(RecvProcessThread);
-                //t.Priority = ThreadPriority.Highest;
-                //RECVTHREADS.Add(t);
-                //RECVTHREADS[i].Start();
+                Thread t = new Thread(RecvProcessThread);
+                t.Priority = ThreadPriority.Highest;
+                RECVTHREADS.Add(t);
+                RECVTHREADS[i].Start();
             }
 
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
@@ -141,15 +141,15 @@ namespace OpenP2P
                 stream.socket.ExecuteListen(stream);
                 //NetworkConfig.ProfileEnd("LISTEN");
 
-                stream.socket.InvokeOnRecieve(stream);
-                /*
+               // stream.socket.InvokeOnRecieve(stream);
+                
                 lock (RECVQUEUE)
                 {
                     RECVQUEUE.Enqueue(stream);
                 }
                 
                 stream = stream.socket.Reserve();
-                stream.Reset();*/
+                stream.Reset();
                 Thread.Sleep(0);
             }
         }

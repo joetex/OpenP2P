@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 100;
+        public const int MAXSEND = 50;
 
         static void Main(string[] args)
         {
@@ -54,7 +54,7 @@ namespace OpenP2P
             //createClient.Start();
             //for (int i=0; i< MAXSEND; i++)
             {
-                client = new NetworkClient("104.197.212.5", 9000, 9002);
+                client = new NetworkClient("104.197.212.5", 9000, 0);
 
                 //clients.Add(client);
             }
