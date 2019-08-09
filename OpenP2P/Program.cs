@@ -17,11 +17,28 @@ namespace OpenP2P
         static void Main(string[] args)
         {
             bool isServer = false;
+            int localPort = 0;
+
             for (int i = 0; i < args.Length; i++)
             {
-                if( args[i].ToLower().Equals("-server") )
+                if( args[i].ToLower().Equals("--server") )
                 {
                     isServer = true;
+                }
+                if( args[i].ToLower().StartsWith("--serveraddress") )
+                {
+                    if( i < args.Length - 1 )
+                    {
+                        i++;
+                        try
+                        {
+                            localPort = Int32.Parse(args[i]);
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+                    }
                 }
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
