@@ -78,8 +78,8 @@ namespace OpenP2P
 
         public void SendThread()
         {
-            NetworkStream stream = null;
-            int queueCount = 0;
+            NetworkStream stream;
+            int queueCount;
 
             while (true)
             {
@@ -130,11 +130,8 @@ namespace OpenP2P
         public int recvId = 0;
         public void RecvThread(object ostream)
         {
-            //NetworkSocket.NetworkIPType ipType = (NetworkSocket.NetworkIPType)data;
             NetworkStream stream = (NetworkStream)ostream;
-            int queueCount = 0;
-            int currentId = 0;
-
+         
             while (true)
             {
                 //NetworkConfig.ProfileBegin("LISTEN");
@@ -157,7 +154,7 @@ namespace OpenP2P
         //Turns out this is slow...
         public void RecvProcessThread()
         {
-            int queueCount = 0;
+            int queueCount;
             NetworkStream stream;
 
             while(true)
@@ -179,6 +176,7 @@ namespace OpenP2P
                 stream.socket.InvokeOnRecieve(stream);
 
                 stream.socket.Free(stream);
+                Thread.Sleep(0);
             }
             
         }
@@ -187,25 +185,22 @@ namespace OpenP2P
         {
 
             NetworkStream stream;
-            NetworkStream acknowledgeStream = null;
-            int queueCount = 0;
+            //NetworkStream acknowledgeStream = null;
+            int queueCount;
             //Queue<NetworkStream> tempQueue = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
-            long curtime = 0;
-            long difftime = 0;
-
+            long curtime;
+            long difftime;
+            bool isAcknowledged;
             //while (true)
             {
                 lock (RELIABLEQUEUE)
                 {
                     queueCount = RELIABLEQUEUE.Count;
-                    //sleep if empty, to avoid 100% cpu
-                    if (queueCount == 0)
-                    {
+                }
 
-                        //Thread.Sleep(EMPTY_SLEEP_TIME);
-                        return;//return queueCount;
-                    }
-                    
+                if (queueCount == 0)
+                {
+                    return;
                 }
 
                 //for (int i = 0; i < queueCount; i++)
@@ -214,13 +209,14 @@ namespace OpenP2P
                 
                     lock (ACKNOWLEDGED)
                     {
-                        if (ACKNOWLEDGED.Remove(stream.ackkey))
-                        {
-                            stream.socket.Free(stream);
-                            return;//return queueCount;
-                        }
+                        isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
                     }
 
+                    if (isAcknowledged)
+                    {
+                        stream.socket.Free(stream);
+                        return;//return queueCount;
+                    }
                     curtime = NetworkTime.Milliseconds();
                     difftime = curtime - stream.sentTime;
                     if (difftime > NetworkConfig.SocketReliableRetryDelay)

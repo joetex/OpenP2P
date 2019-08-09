@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXSEND = 50;
+        public const int MAXSEND = 1000;
 
         static void Main(string[] args)
         {
