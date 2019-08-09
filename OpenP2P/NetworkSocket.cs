@@ -320,7 +320,7 @@ namespace OpenP2P
                 stream.sentTime = NetworkTime.Milliseconds();
                 stream.retryCount++;
 
-                lock (thread.RELIABLEQUEUE)
+               // lock (thread.RELIABLEQUEUE)
                 {
                     
 

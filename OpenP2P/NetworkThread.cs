@@ -18,12 +18,15 @@ namespace OpenP2P
         public NetworkStreamPool STREAMPOOL = new NetworkStreamPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
 
         public Queue<NetworkStream> SENDQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public Queue<NetworkStream> SENDQUEUEPOST = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
         //public static ConcurrentQueue<NetworkStream> SENDQUEUE = new ConcurrentQueue<NetworkStream>();
         public Queue<NetworkStream> RECVQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public Queue<NetworkStream> RECVQUEUEPOST = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
         //public List<NetworkStream> RECVQUEUE = new List<NetworkStream>(NetworkConfig.BufferPoolStartCount);
 
         //public static ConcurrentQueue<NetworkStream> RELIABLEQUEUE = new ConcurrentQueue<NetworkStream>();
         public Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
+        public Queue<NetworkStream> RELIABLEQUEUEPOST = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
         //public static ConcurrentDictionary<ulong, NetworkStream> ACKNOWLEDGED = new ConcurrentDictionary<ulong, NetworkStream>();
         public Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
 
@@ -50,10 +53,10 @@ namespace OpenP2P
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
-                Thread t = new Thread(RecvProcessThread);
-                t.Priority = ThreadPriority.Highest;
-                RECVTHREADS.Add(t);
-                RECVTHREADS[i].Start();
+                //Thread t = new Thread(RecvProcessThread);
+                //t.Priority = ThreadPriority.Highest;
+                //RECVTHREADS.Add(t);
+                //RECVTHREADS[i].Start();
             }
 
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
@@ -69,7 +72,7 @@ namespace OpenP2P
 
         public void MainThread()
         {
-            NetworkStream stream = null;
+            //NetworkStream stream = null;
             while(true)
             {
 
@@ -79,7 +82,7 @@ namespace OpenP2P
         public void SendThread()
         {
             NetworkStream stream;
-            int queueCount;
+            //int queueCount;
 
             while (true)
             {
@@ -87,10 +90,14 @@ namespace OpenP2P
 
                 lock (SENDQUEUE)
                 {
-                    queueCount = SENDQUEUE.Count;
+                    while(SENDQUEUE.Count > 0)
+                    {
+                        SENDQUEUEPOST.Enqueue(SENDQUEUE.Dequeue());
+                    }
+                    
                 }
-
-                if (queueCount == 0)
+                
+                if (SENDQUEUEPOST.Count == 0)
                 {
                     //Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
@@ -98,9 +105,9 @@ namespace OpenP2P
 
                 //for(int i=0; i<queueCount; i++)
                 {
-                    lock (SENDQUEUE)
+                    //lock (SENDQUEUE)
                     {
-                        stream = SENDQUEUE.Dequeue();
+                        stream = SENDQUEUEPOST.Dequeue();
                     }
 
                     stream.socket.SendInternal(stream);
@@ -138,15 +145,15 @@ namespace OpenP2P
                 stream.socket.ExecuteListen(stream);
                 //NetworkConfig.ProfileEnd("LISTEN");
 
-               // stream.socket.InvokeOnRecieve(stream);
-                
+                stream.socket.InvokeOnRecieve(stream);
+                /*
                 lock (RECVQUEUE)
                 {
                     RECVQUEUE.Enqueue(stream);
                 }
                 
                 stream = stream.socket.Reserve();
-                stream.Reset();
+                stream.Reset();*/
                 //Thread.Sleep(0);
             }
         }
@@ -154,25 +161,29 @@ namespace OpenP2P
         //Turns out this is slow...
         public void RecvProcessThread()
         {
-            int queueCount;
+            //int queueCount;
             NetworkStream stream;
 
             while(true)
             {
                 lock (RECVQUEUE)
                 {
-                    queueCount = RECVQUEUE.Count;
+                    while(RECVQUEUE.Count > 0)
+                    {
+                        RECVQUEUEPOST.Enqueue(RECVQUEUE.Dequeue());
+                    }
+                    
                 }
 
-                if (queueCount == 0)
+                //queueCount = ;
+                if (RECVQUEUE.Count == 0)
                 {
                     //Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
                     continue;
                 }
-                lock (RECVQUEUE)
-                {
-                    stream = RECVQUEUE.Dequeue();
-                }
+                
+                stream = RECVQUEUEPOST.Dequeue();
+                
                 stream.socket.InvokeOnRecieve(stream);
 
                 stream.socket.Free(stream);
@@ -186,37 +197,36 @@ namespace OpenP2P
 
             NetworkStream stream;
             //NetworkStream acknowledgeStream = null;
-            int queueCount;
+            //int queueCount;
             //Queue<NetworkStream> tempQueue = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
             long curtime;
             long difftime;
-            bool isAcknowledged;
+            //bool isAcknowledged;
             //while (true)
             {
-                lock (RELIABLEQUEUE)
+                //lock (RELIABLEQUEUE)
                 {
-                    queueCount = RELIABLEQUEUE.Count;
+                    //while(RELIABLEQUEUE.Count > 0)
+                    {
+                    //    RELIABLEQUEUEPOST.Enqueue(RELIABLEQUEUE.Dequeue());
+                    }
                 }
-
-                if (queueCount == 0)
+                
+                if (RELIABLEQUEUE.Count == 0)
                 {
                     return;
                 }
 
                 //for (int i = 0; i < queueCount; i++)
                 {
-                    lock (RELIABLEQUEUE)
-                    {
-                        stream = RELIABLEQUEUE.Dequeue();
-                    }
+                    stream = RELIABLEQUEUE.Dequeue();
                         
-                
-                    lock (ACKNOWLEDGED)
+                    //lock (ACKNOWLEDGED)
                     {
-                        isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
+                    //    isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
                     }
 
-                    if (isAcknowledged)
+                    if (stream.acknowledged)
                     {
                         stream.socket.Free(stream);
                         return;//return queueCount;
@@ -245,7 +255,7 @@ namespace OpenP2P
                         return;//return queueCount;
                     }
 
-                    lock (RELIABLEQUEUE)
+                    //lock (RELIABLEQUEUE)
                     {
                         //Console.WriteLine("Waiting: " + stream.ackkey);
                         RELIABLEQUEUE.Enqueue(stream);
