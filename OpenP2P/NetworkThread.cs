@@ -194,7 +194,7 @@ namespace OpenP2P
             bool isAcknowledged;
             //while (true)
             {
-                lock (RELIABLEQUEUE)
+                //lock (RELIABLEQUEUE)
                 {
                     queueCount = RELIABLEQUEUE.Count;
                 }
@@ -206,7 +206,7 @@ namespace OpenP2P
 
                 //for (int i = 0; i < queueCount; i++)
                 {
-                    lock (RELIABLEQUEUE)
+                    //lock (RELIABLEQUEUE)
                     {
                         stream = RELIABLEQUEUE.Dequeue();
                     }
@@ -246,7 +246,7 @@ namespace OpenP2P
                         return;//return queueCount;
                     }
 
-                    lock (RELIABLEQUEUE)
+                    //lock (RELIABLEQUEUE)
                     {
                         //Console.WriteLine("Waiting: " + stream.ackkey);
                         RELIABLEQUEUE.Enqueue(stream);
