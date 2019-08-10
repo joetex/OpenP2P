@@ -12,6 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
+        public const int MAXCLIENTS = 1;
         public const int MAXSEND = 1000;
 
         public static string connectToAddress = "127.0.0.1";
@@ -62,11 +63,11 @@ namespace OpenP2P
 
             //Stopwatch createClient = new Stopwatch();
             //createClient.Start();
-            //for (int i=0; i< MAXSEND; i++)
+            for (int i=0; i< MAXCLIENTS; i++)
             {
                 client = new NetworkClient(connectToAddress, 9000, 0);
 
-                //clients.Add(client);
+                clients.Add(client);
             }
 
 
@@ -78,12 +79,25 @@ namespace OpenP2P
 
             //Thread.Sleep(100);
             //int i = 0;
-            for (int i=0;i<MAXSEND; i++)
+            char[] letters = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray();
+            Random random = new Random();
+            string username = "";
+
+            for(int x=0; x<MAXCLIENTS; x++)
             {
-                client.ConnectToServer("JoeOfTex");
-                if (i % 500 == 0)
-                Thread.Sleep(1);
+                for (int i = 0; i < MAXSEND; i++)
+                {
+                    username = "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+                    //for (int j = 0; j < random.Next(10, 32); j++)
+                    {
+                        //username += letters[random.Next(0, letters.Length - 1)];
+                    }
+                    clients[x].ConnectToServer(username);
+                    //if (i % 500 == 0)
+                    //    Thread.Sleep(1);
+                }
             }
+           
 
 
             /*
@@ -101,13 +115,17 @@ namespace OpenP2P
             //NetworkConfig.ProfileReportAll();
             //Console.WriteLine("Reliable Count: " + NetworkThread.RELIABLEQUEUE.Count);
             //Console.WriteLine("Ack Count: " + NetworkThread.ACKNOWLEDGED.Count);
-            Console.WriteLine("Client StreamPool Count = " + client.protocol.socket.thread.STREAMPOOL.streamCount);
-            //Console.WriteLine("Server StreamPool Count = " + server.protocol.socket.thread.STREAMPOOL.streamCount);
-            Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
-            //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
-            Thread.Sleep(20000);
+            for(int i=0; i<MAXCLIENTS; i++)
+            {
+                Console.WriteLine("Client StreamPool Count = " + clients[i].protocol.socket.thread.STREAMPOOL.streamCount);
+                //Console.WriteLine("Server StreamPool Count = " + server.protocol.socket.thread.STREAMPOOL.streamCount);
+                Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
+                //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+                //Thread.Sleep(20000);
 
-            Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
+                //Console.WriteLine("Client Receive Cnt: " + client.receiveCnt);
+            }
+            
             //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             //Thread.Sleep(1000);
             //NetworkConfig.ProfileReportAll(); 

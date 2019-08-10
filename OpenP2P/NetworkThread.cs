@@ -93,7 +93,7 @@ namespace OpenP2P
 
                 if (queueCount == 0)
                 {
-                    //Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
+                    Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
 
@@ -106,7 +106,7 @@ namespace OpenP2P
 
                     stream.socket.SendInternal(stream);
                 }
-                //Thread.Sleep(0);
+                
             }
         }
 
@@ -212,12 +212,12 @@ namespace OpenP2P
                     }
                         
                 
-                    lock (ACKNOWLEDGED)
-                    {
-                        isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
-                    }
+                    //lock (ACKNOWLEDGED)
+                    //{
+                    //    isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
+                    //}
 
-                    if (isAcknowledged)
+                    if (stream.acknowledged)
                     {
                         stream.socket.Free(stream);
                         return;//return queueCount;
@@ -226,7 +226,7 @@ namespace OpenP2P
                     difftime = curtime - stream.sentTime;
                     if (difftime > NetworkConfig.SocketReliableRetryDelay)
                     {
-                        Console.WriteLine("Reliable message retry #" + stream.ackkey);
+                        //Console.WriteLine("Reliable message retry #" + stream.ackkey);
 
                         if ( stream.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
                         {

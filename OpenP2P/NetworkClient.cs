@@ -19,8 +19,8 @@ namespace OpenP2P
 
 
         public int receiveCnt = 0;
-        static Stopwatch timer;
-        static Dictionary<ulong, Stopwatch> recieveTimer = new Dictionary<ulong, Stopwatch>();
+        Stopwatch timer;
+        Dictionary<ulong, Stopwatch> recieveTimer = new Dictionary<ulong, Stopwatch>();
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             

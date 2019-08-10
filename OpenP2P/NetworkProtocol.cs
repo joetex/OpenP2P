@@ -39,7 +39,7 @@ namespace OpenP2P
 
         public void Setup(string localIP, int localPort, bool isServer)
         {
-            Console.WriteLine("Binding Socket to: " + localIP);
+            Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             socket = new NetworkSocket(localIP, localPort);
             AttachSocketListener(socket);
             BuildMessages();
@@ -135,11 +135,12 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                lock (stream.socket.thread.ACKNOWLEDGED)
+                //lock (stream.socket.thread.ACKNOWLEDGED)
                 {
-                    if (!stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                    if (!stream.acknowledged) // stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
                         //Console.WriteLine("Already exists:" + stream.ackkey);
-                    stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                        stream.acknowledged = true;
+                    //stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
                 }
                 //stream.acknowledged = true;
             }
