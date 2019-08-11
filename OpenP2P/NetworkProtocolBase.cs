@@ -53,7 +53,7 @@ namespace OpenP2P
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    //Console.WriteLine(e.ToString());
                     message = new MsgInvalid();
                 }
 
