@@ -12,7 +12,7 @@ namespace OpenP2P
     {
         public ServiceContainer messagesContainer = new ServiceContainer();
 
-        public Dictionary<int, NetworkMessage> messages = new Dictionary<int, NetworkMessage>();
+        public Dictionary<uint, NetworkMessage> messages = new Dictionary<uint, NetworkMessage>();
         public Dictionary<uint, uint> messageSequences = new Dictionary<uint, uint>();
 
         public Dictionary<string, MessageType> awaitingResponse = new Dictionary<string, MessageType>();
@@ -38,11 +38,11 @@ namespace OpenP2P
         /// Bind Messages to our Message Dictionary
         /// This uses reflection to map our Enum to a Message class
         /// </summary>
-        public virtual void BuildMessages()
+        public virtual void SetupNetworkMessages()
         {
             string enumName = "";
             NetworkMessage message = null;
-            for (int i = 0; i < (int)MessageType.LAST; i++)
+            for (uint i = 0; i < (uint)MessageType.LAST; i++)
             {
                 enumName = Enum.GetName(typeof(MessageType), (MessageType)i);
                 try
@@ -88,21 +88,23 @@ namespace OpenP2P
             socket.OnError += OnError;
         }
 
-        public virtual void AttachRequestListener(MessageType msgType, EventHandler<NetworkMessage> func)
+        public virtual void AttachMessageListener(MessageType msgType, EventHandler<NetworkMessage> func)
         {
-            GetMessage((int)msgType).OnRequest += func;
+            GetMessage((uint)msgType).OnMessage += func;
         }
         public virtual void AttachResponseListener(MessageType msgType, EventHandler<NetworkMessage> func)
         {
-            GetMessage((int)msgType).OnResponse += func;
+            GetMessage((uint)msgType).OnResponse += func;
         }
         public virtual void AttachErrorListener(NetworkErrorType errorType, EventHandler<NetworkStream> func)
         {
            
         }
+        
+
         public virtual NetworkMessage Create(MessageType _msgType)
         {
-            NetworkMessage message = GetMessage((int)_msgType);
+            NetworkMessage message = GetMessage((uint)_msgType);
             return message;
         }
 
@@ -117,7 +119,7 @@ namespace OpenP2P
             return Activator.CreateInstance(t);
         }
 
-        public virtual NetworkMessage GetMessage(int id)
+        public virtual NetworkMessage GetMessage(uint id)
         {
             if (!messages.ContainsKey(id))
                 return messages[(int)MessageType.Invalid];

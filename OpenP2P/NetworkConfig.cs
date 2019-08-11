@@ -16,9 +16,9 @@ namespace OpenP2P
         public const int MAX_RECV_THREADS = 1;
         public const int MAX_RELIABLE_THREADS = 1;
 
-        public const int BufferPoolStartCount = 1000;
+        public const int BufferPoolStartCount = 10000;
         public const int BufferMaxLength = 1000;
-        public const int SocketBufferCount = 1000;
+        public const int SocketBufferCount = 10000;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
 
@@ -28,7 +28,7 @@ namespace OpenP2P
         public const int ThreadReliableSleepTime = 0;
         public const int ThreadRecvProcessSleepTime = 0;
 
-        public const long SocketReliableRetryDelay = 400;
+        public const long SocketReliableRetryDelay = 250;
         public const long SocketReliableRetryAttempts = 5;
 
         public static Stopwatch profiler = new Stopwatch();

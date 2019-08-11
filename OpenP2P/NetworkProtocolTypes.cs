@@ -11,6 +11,9 @@ namespace OpenP2P
         Invalid,
 
         ConnectToServer,
+        ConnectToPeer,
+        DisconnectFromServer,
+        DisconnectFromPeer,
         //DisconnectFromServer,
 
         //interest mapping data sent to server
@@ -18,9 +21,9 @@ namespace OpenP2P
         // "interest" mapping to a QuadTree (x, y, width, height) 
         Heartbeat,
 
-        //Raw,
-        //Event,
-        //RPC,
+        Raw,
+        Event,
+        RPC,
 
         //GetPeers,
         //ConnectTo,
@@ -29,14 +32,16 @@ namespace OpenP2P
 
     public enum SendType
     {
-        Request,
+        Message,
         Response
     }
 
     public enum NetworkErrorType
     {
+        None,
         ErrorReliableFailed,
-        ErrorConnectToServer
+        ErrorConnectToServer,
+        ErrorMaxIdentitiesReached,
     }
 
     class NetworkProtocolTypes { } //dummy class

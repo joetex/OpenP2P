@@ -11,7 +11,7 @@ namespace OpenP2P
         public long timestamp = 0;
 
 
-        public override void WriteRequest(NetworkStream stream)
+        public override void WriteMessage(NetworkStream stream)
         {
             stream.Write(timestamp);
         }
@@ -20,7 +20,7 @@ namespace OpenP2P
         {
         }
 
-        public override void ReadRequest(NetworkStream stream)
+        public override void ReadMessage(NetworkStream stream)
         {
             timestamp = stream.ReadLong();
         }

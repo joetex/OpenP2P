@@ -26,7 +26,7 @@ namespace OpenP2P
         public Queue<NetworkStream> RELIABLEQUEUE = new Queue<NetworkStream>(NetworkConfig.BufferPoolStartCount);
 
         //public static ConcurrentDictionary<ulong, NetworkStream> ACKNOWLEDGED = new ConcurrentDictionary<ulong, NetworkStream>();
-        public Dictionary<ulong, NetworkStream> ACKNOWLEDGED = new Dictionary<ulong, NetworkStream>();
+        public Dictionary<uint, NetworkStream> ACKNOWLEDGED = new Dictionary<uint, NetworkStream>();
 
         //public Thread mainThread = new Thread(MainThread);
         public List<Thread> SENDTHREADS = new List<Thread>();
@@ -104,7 +104,7 @@ namespace OpenP2P
                         stream = SENDQUEUE.Dequeue();
                     }
 
-                    stream.socket.SendInternal(stream);
+                    stream.socket.SendFromThread(stream);
                 }
                 
             }
@@ -182,6 +182,8 @@ namespace OpenP2P
             
         }
 
+        public int failedReliableCount = 0;
+
         public void ReliableThread()
         {
 
@@ -212,12 +214,12 @@ namespace OpenP2P
                     }
                         
                 
-                    //lock (ACKNOWLEDGED)
-                    //{
-                    //    isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
-                    //}
+                    lock (ACKNOWLEDGED)
+                    {
+                        isAcknowledged = ACKNOWLEDGED.Remove(stream.ackkey);
+                    }
 
-                    if (stream.acknowledged)
+                    if (isAcknowledged)
                     {
                         stream.socket.Free(stream);
                         return;//return queueCount;
@@ -230,14 +232,16 @@ namespace OpenP2P
 
                         if ( stream.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
                         {
-                            Console.WriteLine("Retry count reached: " + stream.retryCount);
+                            //Console.WriteLine("Retry count reached: " + stream.retryCount);
 
                             if( stream.header.messageType == MessageType.ConnectToServer )
                             {
-                                stream.socket.Failed(NetworkErrorType.ErrorConnectToServer, stream);
+                                stream.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", stream);
                             }
-                            stream.socket.Failed(NetworkErrorType.ErrorReliableFailed, stream);
 
+                            failedReliableCount++;
+                            stream.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + stream.retryCount + " packets ("+failedReliableCount+") times.", stream);
+                            
                             stream.socket.Free(stream);
                             return;//return queueCount;
                         }

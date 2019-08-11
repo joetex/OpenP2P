@@ -15,13 +15,13 @@ namespace OpenP2P
         public NetworkServer(String localIP, int localPort)
         {
             protocol = new NetworkProtocol(localIP, localPort, true);
-            protocol.AttachRequestListener(MessageType.ConnectToServer, OnRequestConnectToServer);
-            protocol.AttachRequestListener(MessageType.Heartbeat, OnRequestHeartbeat);
+            protocol.AttachMessageListener(MessageType.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachMessageListener(MessageType.Heartbeat, OnMessageHeartbeat);
         }
 
         
 
-        public void OnRequestHeartbeat(object sender, NetworkMessage message)
+        public void OnMessageHeartbeat(object sender, NetworkMessage message)
         {
             
 
@@ -30,18 +30,11 @@ namespace OpenP2P
             //Console.WriteLine(heartbeat.timestamp);
         }
         
-        public void OnRequestConnectToServer(object sender, NetworkMessage message)
+        public void OnMessageConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
             
             NetworkStream stream = (NetworkStream)sender;
-            PeerIdentity peer = protocol.ident.RegisterPeer(stream.remoteEndPoint);
-
-            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            connectMsg.responseConnected = true;
-            connectMsg.responsePeerId = peer.id;
-            
-            protocol.SendResponse(stream, connectMsg);
         }
 
 

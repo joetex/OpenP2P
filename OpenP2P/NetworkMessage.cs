@@ -21,22 +21,22 @@ namespace OpenP2P
         public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
         public MessageType messageType = MessageType.Invalid;
 
-        public event EventHandler<NetworkMessage> OnRequest = null;
+        public event EventHandler<NetworkMessage> OnMessage = null;
         public event EventHandler<NetworkMessage> OnResponse = null;
 
-        public virtual void WriteRequest(NetworkStream stream) { }
+        public virtual void WriteMessage(NetworkStream stream) { }
         public virtual void WriteResponse(NetworkStream stream) { }
-        public virtual void ReadRequest(NetworkStream stream) { }
+        public virtual void ReadMessage(NetworkStream stream) { }
         public virtual void ReadResponse(NetworkStream stream) { }
 
         public virtual void InvokeOnRead(NetworkStream stream)
         {
             switch (stream.header.sendType)
             {
-                case SendType.Request:
-                    ReadRequest(stream);
-                    if (OnRequest != null)
-                        OnRequest.Invoke(stream, this);
+                case SendType.Message:
+                    ReadMessage(stream);
+                    if (OnMessage != null)
+                        OnMessage.Invoke(stream, this);
                     break;
                 case SendType.Response:
                     ReadResponse(stream);

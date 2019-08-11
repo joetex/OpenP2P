@@ -20,36 +20,37 @@ namespace OpenP2P
 
         public int receiveCnt = 0;
         Stopwatch timer;
-        Dictionary<ulong, Stopwatch> recieveTimer = new Dictionary<ulong, Stopwatch>();
+        Dictionary<uint, Stopwatch> recieveTimer = new Dictionary<uint, Stopwatch>();
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             
             protocol = new NetworkProtocol(localPort, false);
             serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             //protocol.Listen();
         }
         
+        public void OnErrorReliableFailed(object sender, NetworkStream stream)
+        {
+            Console.WriteLine("[ERROR] " + stream.lastErrorType.ToString() + ": " + stream.lastErrorMessage);
+        }
+
         public void ConnectToServer(string userName)
         {
-            
             NetworkStream stream = protocol.ConnectToServer(serverHost, userName);
 
             Stopwatch sw = new Stopwatch();
             
             recieveTimer.Add(stream.ackkey, sw);
             sw.Start();
-            /*MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
-            msg.requestUsername = userName;
-            protocol.SendReliableRequest(serverHost, msg);*/
-
         }
 
         public void SendHeartbeat()
         {
             MsgHeartbeat msg = protocol.Create<MsgHeartbeat>();
             msg.timestamp = NetworkTime.Milliseconds();
-            protocol.SendRequest(serverHost, msg);
+            protocol.SendMessage(serverHost, msg);
         }
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)

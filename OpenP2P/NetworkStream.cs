@@ -32,7 +32,7 @@ namespace OpenP2P
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
 
         public NetworkMessage.Header header = new NetworkMessage.Header();
-        public ulong ackkey = 0;
+        public uint ackkey = 0;
         public long sentTime = 0;
         public int retryCount = 0;
         public bool acknowledged = false;
@@ -42,6 +42,9 @@ namespace OpenP2P
         public int byteLength = 0; //total size of data 
         public int bytePos = 0; //current read position
         public int byteSent = 0;
+
+        public NetworkErrorType lastErrorType = NetworkErrorType.None;
+        public string lastErrorMessage = "";
 
         
         public NetworkStream(int initBufferSize)
@@ -75,6 +78,12 @@ namespace OpenP2P
         public void Dispose()
         {
 
+        }
+
+        public void Error(NetworkErrorType errorType, string errorMsg)
+        {
+            lastErrorMessage = errorMsg;
+            lastErrorType = errorType;
         }
     }
 }

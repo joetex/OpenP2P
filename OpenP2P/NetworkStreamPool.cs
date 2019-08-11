@@ -58,7 +58,7 @@ namespace OpenP2P
                 return Reserve();
 
             stream.header.isReliable = false;
-            stream.header.sendType = SendType.Request;
+            stream.header.sendType = SendType.Message;
             stream.ackkey = 0;
             stream.retryCount = 0;
             stream.sentTime = 0;

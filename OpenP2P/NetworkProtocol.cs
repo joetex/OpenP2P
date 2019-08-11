@@ -20,9 +20,9 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
-        const int BigEndianFlag = (1 << 7); //bit 8
-        const int ReliableFlag = (1 << 6);  //bit 7
-        const int SendTypeFlag = (1 << 5); //bit 6
+        const uint BigEndianFlag = (1 << 7); //bit 8
+        const uint ReliableFlag = (1 << 6);  //bit 7
+        const uint SendTypeFlag = (1 << 5); //bit 6
 
         public event EventHandler<NetworkStream> OnWriteHeader = null;
         public event EventHandler<NetworkStream> OnReadHeader = null;
@@ -39,15 +39,17 @@ namespace OpenP2P
 
         public void Setup(string localIP, int localPort, bool isServer)
         {
+            SetupNetworkMessages();
+
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             socket = new NetworkSocket(localIP, localPort);
             AttachSocketListener(socket);
-            BuildMessages();
+            
             AttachNetworkIdentity();
 
             if (isServer)
             {
-                RegisterAsServer();
+                ident.RegisterServer(socket.sendSocket.LocalEndPoint);
             }
         }
         
@@ -56,40 +58,37 @@ namespace OpenP2P
             ident = new NetworkIdentity();
             ident.AttachToProtocol(this);
         }
-
-        public void RegisterAsServer()
-        {
-            ident.RegisterServer(socket.sendSocket.LocalEndPoint);
-        }
+        
 
         public NetworkStream ConnectToServer(IPEndPoint ep, string userName)
         {
             return ident.ConnectToServer(ep, userName);
         }
 
-        public NetworkStream SendReliableRequest(EndPoint ep, NetworkMessage message)
+        public NetworkStream SendReliableMessage(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
             NetworkStream stream = socket.Prepare(ep);
 
             stream.header.messageType = message.messageType;
             stream.header.isReliable = true;
-            stream.header.sendType = SendType.Request;
-            stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
+            stream.header.sendType = SendType.Message;
+            if (stream.retryCount == 0)
+                stream.header.sequence = ident.local.NextSequence(message);
             stream.header.id = ident.local.id;
             Send(stream, message);
             return stream;
         }
 
-        public NetworkStream SendRequest(EndPoint ep, NetworkMessage message)
+        public NetworkStream SendMessage(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
             NetworkStream stream = socket.Prepare(ep);
 
             stream.header.messageType = message.messageType;
             stream.header.isReliable = false;
-            stream.header.sendType = SendType.Request;
-            stream.header.sequence = ident.local.messageSequence[(int)message.messageType]++;
+            stream.header.sendType = SendType.Message;
+            stream.header.sequence = ident.local.NextSequence(message);
             stream.header.id = ident.local.id;
             Send(stream, message);
             return stream;
@@ -118,7 +117,7 @@ namespace OpenP2P
             WriteHeader(stream);
             switch(stream.header.sendType)
             {
-                case SendType.Request: message.WriteRequest(stream); break;
+                case SendType.Message: message.WriteMessage(stream); break;
                 case SendType.Response: message.WriteResponse(stream); break;
             }
             
@@ -135,14 +134,13 @@ namespace OpenP2P
             if (stream.header.sendType == SendType.Response && stream.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + stream.ackkey + " -- id:"+ stream.header.id +", seq:"+stream.header.sequence);
-                //lock (stream.socket.thread.ACKNOWLEDGED)
+                lock (stream.socket.thread.ACKNOWLEDGED)
                 {
-                    if (!stream.acknowledged) // stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
-                        //Console.WriteLine("Already exists:" + stream.ackkey);
-                        stream.acknowledged = true;
-                    //stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    if (!stream.socket.thread.ACKNOWLEDGED.ContainsKey(stream.ackkey))
+                    {
+                        stream.socket.thread.ACKNOWLEDGED.Add(stream.ackkey, stream);
+                    }
                 }
-                //stream.acknowledged = true;
             }
             
         }
@@ -185,30 +183,44 @@ namespace OpenP2P
 
         public override void WriteHeader(NetworkStream stream)
         {
-            int msgBits = (int)stream.header.messageType;
-            if (msgBits < 0 || msgBits >= (int)MessageType.LAST)
+            uint msgBits = (uint)stream.header.messageType;
+            if (msgBits < 0 || msgBits >= (uint)MessageType.LAST)
                 msgBits = 0;
 
             //add sendType to bit 6 
-            msgBits |= (int)stream.header.sendType << 5;
+            msgBits |= (uint)stream.header.sendType << 5;
 
             //add reliable to bit 7
             msgBits |= stream.header.isReliable ? ReliableFlag : 0;
             
             //add little endian to bit 8
             if (!BitConverter.IsLittleEndian)
+            {
                 msgBits |= BigEndianFlag;
+            }
+                
 
             stream.header.isLittleEndian = BitConverter.IsLittleEndian;
 
             stream.Write((byte)msgBits);
+            stream.Write(stream.header.sequence);
 
             OnWriteHeader.Invoke(this, stream);
+
+            if (stream.header.isReliable)
+            {
+                if (stream.header.sendType == SendType.Message && stream.retryCount == 0)
+                {
+                    stream.ackkey = GenerateAckKey(stream);
+                }
+
+                stream.Write(stream.ackkey);
+            }
         }
 
         public override NetworkMessage ReadHeader(NetworkStream stream)
         {
-            int bits = stream.ReadByte();
+            uint bits = stream.ReadByte();
 
             bool isLittleEndian = (bits & BigEndianFlag) == 0;
             bool isReliable = (bits & ReliableFlag) > 0;
@@ -217,8 +229,8 @@ namespace OpenP2P
             //remove response and endian bits
             bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag);
 
-            if (bits < 0 || bits >= (int)MessageType.LAST)
-                return GetMessage((int)MessageType.Invalid);
+            if (bits < 0 || bits >= (uint)MessageType.LAST)
+                return GetMessage((uint)MessageType.Invalid);
 
             NetworkMessage message = GetMessage(bits);
 
@@ -227,9 +239,44 @@ namespace OpenP2P
             stream.header.sendType = sendType;
             stream.header.messageType = message.messageType;
 
+            stream.header.sequence = stream.ReadUShort();
+
             OnReadHeader.Invoke(this, stream);
             
+            if (stream.header.isReliable)
+            {
+                stream.ackkey = stream.ReadUInt();
+            }
+
             return message;
+        }
+
+
+        Random random = new Random();
+        public uint GenerateAckKey(NetworkStream stream)
+        {
+            /*
+            ulong key = 0;
+            if (stream.header.id == 0)
+            {
+                int remoteHash = random.Next(0, 1000000000);// stream.remoteEndPoint.ToString().GetHashCode();
+                int localHash = random.Next(0, 1000000000);//stream.socket.sendSocket.LocalEndPoint.ToString().GetHashCode();
+                //Console.WriteLine("Remote: " + stream.remoteEndPoint.ToString() + " :: " + remoteHash);
+                //Console.WriteLine("Local: " + stream.socket.sendSocket.LocalEndPoint.ToString() + " :: " + localHash);
+                key = ((ulong)remoteHash + (ulong)localHash);
+                return key;
+            }
+            key |= (ulong)((ulong)stream.header.messageType) << 31;
+            key |= (ulong)((ulong)stream.header.id) << 15;
+            key |= (ulong)((ulong)stream.header.sequence);
+            return key;
+            */
+            uint sequence = stream.header.sequence;
+            uint id = stream.header.id;
+
+            uint key = sequence | (id << 8);
+            return key;
+
         }
     }
 }

@@ -178,8 +178,10 @@ namespace OpenP2P
             }
         }
 
-        public void Failed(NetworkErrorType errorType, NetworkStream stream)
+        public void Failed(NetworkErrorType errorType, string errorMsg, NetworkStream stream)
         {
+            stream.Error(errorType, errorMsg);
+
             if(OnError != null)
                 OnError.Invoke(errorType, stream);
 
@@ -209,7 +211,7 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkStream stream)
         {
-            //stream.Reset();
+            stream.Reset();
             
             try
             {
@@ -298,7 +300,7 @@ namespace OpenP2P
          * Send Internal
          * Thread triggers send to remote point
          */
-        public void SendInternal(NetworkStream stream)
+        public void SendFromThread(NetworkStream stream)
         {
             try
             {
@@ -314,7 +316,7 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
             
-            if (stream.header.sendType == SendType.Request && stream.header.isReliable)
+            if (stream.header.sendType == SendType.Message && stream.header.isReliable)
             {
                 //Console.WriteLine("Adding Reliable: " + stream.ackkey);
                 stream.sentTime = NetworkTime.Milliseconds();

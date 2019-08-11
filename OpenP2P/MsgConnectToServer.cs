@@ -9,19 +9,19 @@ namespace OpenP2P
     class MsgConnectToServer : NetworkMessage
     {
         public const int MAX_NAME_LENGTH = 32;
-        public string requestUsername = "";
+        public string msgUsername = "";
 
         public bool responseConnected = false;
         public ushort responsePeerId = 0;
 
-        public override void WriteRequest(NetworkStream stream)
+        public override void WriteMessage(NetworkStream stream)
         {
-            if (requestUsername.Length > MAX_NAME_LENGTH)
+            if (msgUsername.Length > MAX_NAME_LENGTH)
             {
-                requestUsername = requestUsername.Substring(0, MAX_NAME_LENGTH);
+                msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
             }
             
-            stream.Write(requestUsername);
+            stream.Write(msgUsername);
         }
 
         public override void WriteResponse(NetworkStream stream)
@@ -30,9 +30,9 @@ namespace OpenP2P
             stream.Write(responsePeerId);
         }
 
-        public override void ReadRequest(NetworkStream stream)
+        public override void ReadMessage(NetworkStream stream)
         {
-            requestUsername = stream.ReadString();
+            msgUsername = stream.ReadString();
         }
 
         public override void ReadResponse(NetworkStream stream)
