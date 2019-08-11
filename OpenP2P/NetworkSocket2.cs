@@ -20,8 +20,8 @@ namespace OpenP2P
 
         //public NetworkThread threads = null;
 
-        public event EventHandler<NetworkStream> OnReceive;
-        public event EventHandler<NetworkStream> OnSend;
+        public event EventHandler<NetworkPacket> OnReceive;
+        public event EventHandler<NetworkPacket> OnSend;
 
         public NetworkSocket2(string remoteHost, int remotePort, int localPort)
         {
@@ -69,16 +69,16 @@ namespace OpenP2P
         /**
          * Request a Listen on the RecvThread
          */
-        public void Listen(NetworkStream stream)
+        public void Listen(NetworkPacket packet)
         {
-            if (stream == null)
-                stream = Reserve();
+            if (packet == null)
+                packet = Reserve();
 
-            stream.Reset();
+            packet.Reset();
 
-            socket.BeginReceiveFrom(stream.ByteBuffer, 0, stream.ByteBuffer.Length, SocketFlags.None, ref stream.remoteEndPoint, ExecuteListen, stream);
+            socket.BeginReceiveFrom(packet.ByteBuffer, 0, packet.ByteBuffer.Length, SocketFlags.None, ref packet.remoteEndPoint, ExecuteListen, packet);
 
-            //ExecuteListen(stream);
+            //ExecuteListen(packet);
         }
 
         /**
@@ -87,52 +87,52 @@ namespace OpenP2P
          */
         public void ExecuteListen(IAsyncResult iar)
         {
-            NetworkStream stream = (NetworkStream)iar.AsyncState;
+            NetworkPacket packet = (NetworkPacket)iar.AsyncState;
 
-            stream.Reset();
+            packet.Reset();
 
             try
             {
-                int bytesReceived = socket.EndReceiveFrom(iar, ref stream.remoteEndPoint);
+                int bytesReceived = socket.EndReceiveFrom(iar, ref packet.remoteEndPoint);
 
-                //int bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
-                stream.SetBufferLength(bytesReceived);
+                //int bytesReceived = socket.ReceiveFrom(packet.ByteBuffer, ref packet.remoteEndPoint);
+                packet.SetBufferLength(bytesReceived);
 
                 if (OnReceive != null) //notify any event listeners
-                    OnReceive.Invoke(this, stream);
+                    OnReceive.Invoke(this, packet);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
 
-            Listen(stream); //listen again
+            Listen(packet); //listen again
         }
         
         /**
          * Begin Send
-         * Starts the NetworkStream for writing data to byte buffer.
+         * Starts the NetworkPacket for writing data to byte buffer.
          */
-        public NetworkStream Prepare(EndPoint endPoint)
+        public NetworkPacket Prepare(EndPoint endPoint)
         {
-            NetworkStream stream = Reserve();
-            stream.remoteEndPoint = endPoint;
-            stream.SetBufferLength(0);
-            return stream;
+            NetworkPacket packet = Reserve();
+            packet.remoteEndPoint = endPoint;
+            packet.SetBufferLength(0);
+            return packet;
         }
         
         /**
          * End Send
-         * Finish writing the stream and push to send queue for SendThread
+         * Finish writing the packet and push to send queue for SendThread
          */
-        public void Send(NetworkStream stream)
+        public void Send(NetworkPacket packet)
         {
-            stream.Complete();
+            packet.Complete();
 
-            socket.BeginSendTo(stream.ByteBuffer, 0, stream.byteLength, SocketFlags.None, stream.remoteEndPoint, SendInternal, stream);
+            socket.BeginSendTo(packet.ByteBuffer, 0, packet.byteLength, SocketFlags.None, packet.remoteEndPoint, SendInternal, packet);
             //lock (threads.SENDQUEUE)
             //{
-            //   threads.SENDQUEUE.Enqueue(stream);
+            //   threads.SENDQUEUE.Enqueue(packet);
             //}
         }
 
@@ -142,59 +142,59 @@ namespace OpenP2P
          */
         public void SendInternal(IAsyncResult iar)
         {
-            NetworkStream stream = (NetworkStream)iar.AsyncState;
+            NetworkPacket packet = (NetworkPacket)iar.AsyncState;
             try
             {
-                stream.byteSent = socket.EndSendTo(iar);
-                //stream.byteSent = socket.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                packet.byteSent = socket.EndSendTo(iar);
+                //packet.byteSent = socket.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
 
-            if (stream.header.sendType == SendType.Message && stream.header.isReliable)
+            if (packet.header.sendType == SendType.Message && packet.header.isReliable)
             {
-                //Console.WriteLine("Adding Reliable: " + stream.ackkey);
-                stream.sentTime = NetworkTime.Milliseconds();
-                stream.retryCount++;
+                //Console.WriteLine("Adding Reliable: " + packet.ackkey);
+                packet.sentTime = NetworkTime.Milliseconds();
+                packet.retryCount++;
 
                 /*
                 lock (NetworkThread.RELIABLEQUEUE)
                 {
                     
 
-                    NetworkThread.RELIABLEQUEUE.Enqueue(stream);
+                    NetworkThread.RELIABLEQUEUE.Enqueue(packet);
                 }*/
             }
             else
             {
-                Free(stream);
+                Free(packet);
             }
 
             if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, stream);
+                OnSend.Invoke(this, packet);
         }
 
         /**
          * Reserve a socket event from the pool.  
          * Setup the socket, completed callback and UserToken
          */
-        public NetworkStream Reserve()
+        public NetworkPacket Reserve()
         {
-            NetworkStream stream = thread.STREAMPOOL.Reserve();
-            //stream.socket = this;
+            NetworkPacket packet = thread.PACKETPOOL.Reserve();
+            //packet.socket = this;
             
-            return stream;
+            return packet;
         }
 
         /**
          * Free a socket event back into the pool.
          * Reset all the initial properties to null.
          */
-        public void Free(NetworkStream stream)
+        public void Free(NetworkPacket packet)
         {
-            thread.STREAMPOOL.Free(stream);
+            thread.PACKETPOOL.Free(packet);
         }
 
         /**

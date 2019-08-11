@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public enum MessageType
+    public enum MessageChannel
     {
         Invalid,
 

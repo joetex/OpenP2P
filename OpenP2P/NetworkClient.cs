@@ -26,23 +26,23 @@ namespace OpenP2P
             
             protocol = new NetworkProtocol(localPort, false);
             serverHost = protocol.GetEndPoint(remoteHost, remotePort);
-            protocol.AttachResponseListener(MessageType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachResponseListener(MessageChannel.ConnectToServer, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             //protocol.Listen();
         }
         
-        public void OnErrorReliableFailed(object sender, NetworkStream stream)
+        public void OnErrorReliableFailed(object sender, NetworkPacket packet)
         {
-            Console.WriteLine("[ERROR] " + stream.lastErrorType.ToString() + ": " + stream.lastErrorMessage);
+            Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
         }
 
         public void ConnectToServer(string userName)
         {
-            NetworkStream stream = protocol.ConnectToServer(serverHost, userName);
+            NetworkPacket packet = protocol.ConnectToServer(serverHost, userName);
 
             Stopwatch sw = new Stopwatch();
             
-            recieveTimer.Add(stream.ackkey, sw);
+            recieveTimer.Add(packet.ackkey, sw);
             sw.Start();
         }
 
@@ -55,9 +55,9 @@ namespace OpenP2P
         
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            NetworkStream stream = (NetworkStream)sender;
-            recieveTimer[stream.ackkey].Stop();
-            long end = recieveTimer[stream.ackkey].ElapsedMilliseconds;
+            NetworkPacket packet = (NetworkPacket)sender;
+            recieveTimer[packet.ackkey].Stop();
+            long end = recieveTimer[packet.ackkey].ElapsedMilliseconds;
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;

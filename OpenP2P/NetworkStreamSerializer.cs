@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public partial class NetworkStream
+    public partial class NetworkPacket
     {
         public unsafe void WriteTimestamp()
         {

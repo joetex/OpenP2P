@@ -11,11 +11,11 @@ namespace OpenP2P
             public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
             public ushort id = 0;
             public string userName = "";
-            public List<ushort> messageSequence = new List<ushort>((int)MessageType.LAST);
+            public List<ushort> messageSequence = new List<ushort>((int)MessageChannel.LAST);
 
             public PeerIdentity()
             {
-                for(int i=0; i<(int)MessageType.LAST; i++)
+                for(int i=0; i<(int)MessageChannel.LAST; i++)
                 {
                     messageSequence.Add(1);
                 }
@@ -32,7 +32,7 @@ namespace OpenP2P
 
             public ushort NextSequence(NetworkMessage message)
             {
-                int index = (int)message.messageType;
+                int index = (int)message.messageChannel;
                 uint iSequence = ((uint)messageSequence[index] + 1) % 65534;
                 messageSequence[index] = (ushort)iSequence;
                 return messageSequence[index];
@@ -54,25 +54,33 @@ namespace OpenP2P
             protocol = p;
             protocol.OnReadHeader += OnReadHeader;
             protocol.OnWriteHeader += OnWriteHeader;
-            protocol.AttachMessageListener(MessageType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachMessageListener(MessageType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachMessageListener(MessageChannel.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachResponseListener(MessageChannel.ConnectToServer, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
             //local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
         }
 
        
-        public void OnWriteHeader(object sender, NetworkStream stream)
+        public void OnWriteHeader(object sender, NetworkPacket packet)
         {
-            stream.Write(stream.header.id);
+            packet.Write(packet.header.id);
         }
     
-        public void OnReadHeader(object sender, NetworkStream stream)
+        public void OnReadHeader(object sender, NetworkPacket packet)
         {
-            stream.header.id = stream.ReadUShort();
+            packet.header.id = packet.ReadUShort();
+            packet.header.peer = FindPeer(packet.header.id);
         }
 
-        public NetworkStream ConnectToServer(IPEndPoint ep, string userName)
+        public PeerIdentity FindPeer(ushort id)
+        {
+            if (peersById.ContainsKey(id))
+                return peersById[id];
+            return null;
+        }
+
+        public NetworkPacket ConnectToServer(IPEndPoint ep, string userName)
         {
             local.userName = userName;
 
@@ -85,11 +93,11 @@ namespace OpenP2P
         //Create the peer and send response
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
         {
-            NetworkStream stream = (NetworkStream)sender;
-            PeerIdentity peer = RegisterPeer(stream.remoteEndPoint);
+            NetworkPacket packet = (NetworkPacket)sender;
+            PeerIdentity peer = RegisterPeer(packet.remoteEndPoint);
             if( peer == null )
             {
-                stream.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", stream);
+                packet.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
                 return;
             }
 
@@ -97,20 +105,20 @@ namespace OpenP2P
             connectMsg.responseConnected = true;
             connectMsg.responsePeerId = peer.id;
             
-            protocol.SendResponse(stream, connectMsg);
+            protocol.SendResponse(packet, connectMsg);
 
-            //protocol.SendResponse(stream, connectMsg);
+            //protocol.SendResponse(packet, connectMsg);
         }
 
         //Client receives response from server
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
-            NetworkStream stream = (NetworkStream)sender;
+            NetworkPacket packet = (NetworkPacket)sender;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            RegisterLocal(connectMsg.responsePeerId, stream.socket.sendSocket.LocalEndPoint);
+            RegisterLocal(connectMsg.responsePeerId, packet.socket.sendSocket.LocalEndPoint);
         }
 
-        public void OnErrorConnectToServer(object sender, NetworkStream stream)
+        public void OnErrorConnectToServer(object sender, NetworkPacket packet)
         {
 
         }

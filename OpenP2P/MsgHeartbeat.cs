@@ -11,21 +11,21 @@ namespace OpenP2P
         public long timestamp = 0;
 
 
-        public override void WriteMessage(NetworkStream stream)
+        public override void WriteMessage(NetworkPacket packet)
         {
-            stream.Write(timestamp);
+            packet.Write(timestamp);
         }
 
-        public override void WriteResponse(NetworkStream stream)
+        public override void WriteResponse(NetworkPacket packet)
         {
         }
 
-        public override void ReadMessage(NetworkStream stream)
+        public override void ReadMessage(NetworkPacket packet)
         {
-            timestamp = stream.ReadLong();
+            timestamp = packet.ReadLong();
         }
 
-        public override void ReadResponse(NetworkStream stream)
+        public override void ReadResponse(NetworkPacket packet)
         {
 
         }

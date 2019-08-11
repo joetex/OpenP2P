@@ -31,9 +31,9 @@ namespace OpenP2P
 
         //public NetworkThread threads = null;
 
-        public event EventHandler<NetworkStream> OnReceive;
-        public event EventHandler<NetworkStream> OnSend;
-        public event EventHandler<NetworkStream> OnError;
+        public event EventHandler<NetworkPacket> OnReceive;
+        public event EventHandler<NetworkPacket> OnSend;
+        public event EventHandler<NetworkPacket> OnError;
         /*
         public NetworkSocket(string remoteHost, int remotePort, int localPort)
         {
@@ -178,30 +178,30 @@ namespace OpenP2P
             }
         }
 
-        public void Failed(NetworkErrorType errorType, string errorMsg, NetworkStream stream)
+        public void Failed(NetworkErrorType errorType, string errorMsg, NetworkPacket packet)
         {
-            stream.Error(errorType, errorMsg);
+            packet.Error(errorType, errorMsg);
 
             if(OnError != null)
-                OnError.Invoke(errorType, stream);
+                OnError.Invoke(errorType, packet);
 
         }
 
         /**
          * Request a Listen on the RecvThread
          */
-        public void Listen(NetworkStream stream)
+        public void Listen(NetworkPacket packet)
         {
-            if (stream == null)
-                stream = Reserve();
+            if (packet == null)
+                packet = Reserve();
 
-            stream.Reset();
+            packet.Reset();
 
-            thread.BeginRecvThread(stream);
-           // ExecuteListen(stream);
+            thread.BeginRecvThread(packet);
+           // ExecuteListen(packet);
             //lock (NetworkThread.RECVQUEUE)
             //{
-            //    NetworkThread.RECVQUEUE.Add(stream);
+            //    NetworkThread.RECVQUEUE.Add(packet);
             //}
         }
 
@@ -209,29 +209,29 @@ namespace OpenP2P
          * Execute Listen
          * Enters from RecvThread, and begins listening for packets.
          */
-        public void ExecuteListen(NetworkStream stream)
+        public void ExecuteListen(NetworkPacket packet)
         {
-            stream.Reset();
+            packet.Reset();
             
             try
             {
                 
                 Socket socket = socket4;
-                if(stream.networkIPType == NetworkIPType.IPv6)
+                if(packet.networkIPType == NetworkIPType.IPv6)
                     socket = socket6;
                
                 //if (socket.Available == 0)
                 //{
-                    //Listen(stream);
+                    //Listen(packet);
                 //    return;
                 //}
 
                 //NetworkConfig.ProfileBegin("RECV");
-                int bytesReceived = socket.ReceiveFrom(stream.ByteBuffer, ref stream.remoteEndPoint);
-                //socket.BeginReceiveFrom(stream.ByteBuffer, 0, stream.ByteBuffer.Length, SocketFlags.None, ref stream.remoteEndPoint, OnReceiveFromCallback, stream);
-                stream.SetBufferLength(bytesReceived);
+                int bytesReceived = socket.ReceiveFrom(packet.ByteBuffer, ref packet.remoteEndPoint);
+                //socket.BeginReceiveFrom(packet.ByteBuffer, 0, packet.ByteBuffer.Length, SocketFlags.None, ref packet.remoteEndPoint, OnReceiveFromCallback, packet);
+                packet.SetBufferLength(bytesReceived);
 
-                //Console.WriteLine("Received ("+bytesReceived+" bytes) from: " + stream.remoteEndPoint.ToString());
+                //Console.WriteLine("Received ("+bytesReceived+" bytes) from: " + packet.remoteEndPoint.ToString());
 
                 //NetworkConfig.ProfileEnd("RECV");
             }
@@ -240,58 +240,58 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
 
-            ///Listen(stream); //listen again
+            ///Listen(packet); //listen again
         }
 
-        public void InvokeOnRecieve(NetworkStream stream)
+        public void InvokeOnRecieve(NetworkPacket packet)
         {
             if (OnReceive != null) //notify any event listeners
-                OnReceive.Invoke(this, stream);
+                OnReceive.Invoke(this, packet);
         }
 
         public void OnReceiveFromCallback(IAsyncResult res)
         {
             //NetworkConfig.ProfileBegin("ON_RECV");
 
-            NetworkStream stream = (NetworkStream)res.AsyncState;
+            NetworkPacket packet = (NetworkPacket)res.AsyncState;
 
             Socket socket = socket4;
-            if (stream.networkIPType == NetworkIPType.IPv6)
+            if (packet.networkIPType == NetworkIPType.IPv6)
                 socket = socket6;
             int bytesReceived = socket.EndReceive(res);
-            stream.SetBufferLength(bytesReceived);
+            packet.SetBufferLength(bytesReceived);
             
             if (OnReceive != null) //notify any event listeners
-                OnReceive.Invoke(this, stream);
+                OnReceive.Invoke(this, packet);
             //NetworkConfig.ProfileEnd("ON_RECV");
 
-            Listen(stream);
+            Listen(packet);
         }
         
         /**
          * Begin Send
-         * Starts the NetworkStream for writing data to byte buffer.
+         * Starts the NetworkPacket for writing data to byte buffer.
          */
-        public NetworkStream Prepare(EndPoint endPoint)
+        public NetworkPacket Prepare(EndPoint endPoint)
         {
-            NetworkStream stream = Reserve();
-            stream.remoteEndPoint = endPoint;
-            stream.SetBufferLength(0);
-            return stream;
+            NetworkPacket packet = Reserve();
+            packet.remoteEndPoint = endPoint;
+            packet.SetBufferLength(0);
+            return packet;
         }
         
         /**
          * End Send
-         * Finish writing the stream and push to send queue for SendThread
+         * Finish writing the packet and push to send queue for SendThread
          */
-        public void Send(NetworkStream stream)
+        public void Send(NetworkPacket packet)
         {
-            stream.Complete();
+            packet.Complete();
 
             lock (thread.SENDQUEUE)
             {
                 //NetworkConfig.ProfileBegin("SENDQUEUE_INSERT");
-                thread.SENDQUEUE.Enqueue(stream);
+                thread.SENDQUEUE.Enqueue(packet);
                 //NetworkConfig.ProfileEnd("SENDQUEUE_INSERT");
             }
         }
@@ -300,15 +300,15 @@ namespace OpenP2P
          * Send Internal
          * Thread triggers send to remote point
          */
-        public void SendFromThread(NetworkStream stream)
+        public void SendFromThread(NetworkPacket packet)
         {
             try
             {
                 //NetworkConfig.ProfileBegin("SEND");
-                if (stream.networkIPType == NetworkIPType.IPv4)
-                    stream.byteSent = socket4.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                if (packet.networkIPType == NetworkIPType.IPv4)
+                    packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
                 else
-                    stream.byteSent = socket6.SendTo(stream.ByteBuffer, stream.byteLength, SocketFlags.None, stream.remoteEndPoint);
+                    packet.byteSent = socket6.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
                 //NetworkConfig.ProfileEnd("SEND");
             }
             catch (Exception e)
@@ -316,52 +316,52 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
             
-            if (stream.header.sendType == SendType.Message && stream.header.isReliable)
+            if (packet.header.sendType == SendType.Message && packet.header.isReliable)
             {
-                //Console.WriteLine("Adding Reliable: " + stream.ackkey);
-                stream.sentTime = NetworkTime.Milliseconds();
-                stream.retryCount++;
+                //Console.WriteLine("Adding Reliable: " + packet.ackkey);
+                packet.sentTime = NetworkTime.Milliseconds();
+                packet.retryCount++;
 
                // lock (thread.RELIABLEQUEUE)
                 {
                     
 
                     //NetworkConfig.ProfileBegin("RELIABLE_INSERT");
-                    thread.RELIABLEQUEUE.Enqueue(stream);
+                    thread.RELIABLEQUEUE.Enqueue(packet);
                     //NetworkConfig.ProfileEnd("RELIABLE_INSERT");
                 }
             }
             else
             {
-                Free(stream);
+                Free(packet);
             }
 
             if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, stream);
+                OnSend.Invoke(this, packet);
         }
 
         /**
          * Reserve a socket event from the pool.  
          * Setup the socket, completed callback and UserToken
          */
-        public NetworkStream Reserve()
+        public NetworkPacket Reserve()
         {
             //NetworkConfig.ProfileBegin("POOL_RESERVE");
-            NetworkStream stream = thread.STREAMPOOL.Reserve();
+            NetworkPacket packet = thread.PACKETPOOL.Reserve();
             //NetworkConfig.ProfileEnd("POOL_RESERVE");
-            stream.socket = this;
-            stream.remoteEndPoint = anyHost4;
-            return stream;
+            packet.socket = this;
+            packet.remoteEndPoint = anyHost4;
+            return packet;
         }
 
         /**
          * Free a socket event back into the pool.
          * Reset all the initial properties to null.
          */
-        public void Free(NetworkStream stream)
+        public void Free(NetworkPacket packet)
         {
             //NetworkConfig.ProfileBegin("POOL_FREE");
-            thread.STREAMPOOL.Free(stream);
+            thread.PACKETPOOL.Free(packet);
             //NetworkConfig.ProfileEnd("POOL_FREE");
         }
 

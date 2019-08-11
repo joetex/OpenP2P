@@ -13,7 +13,7 @@ namespace OpenP2P
     class Program
     {
         public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 1300;
+        public const int MAXSEND = 5000;
 
         public static string connectToAddress = "127.0.0.1";
 
@@ -111,15 +111,15 @@ namespace OpenP2P
                 //clientReceiveCnt += clients[i].receiveCnt;
             }
             NetworkConfig.ProfileEnd("TEST_SEND_LOOP");*/
-            Thread.Sleep(3000);
+            Thread.Sleep(6000);
 
             //NetworkConfig.ProfileReportAll();
             //Console.WriteLine("Reliable Count: " + NetworkThread.RELIABLEQUEUE.Count);
             //Console.WriteLine("Ack Count: " + NetworkThread.ACKNOWLEDGED.Count);
             for(int i=0; i<MAXCLIENTS; i++)
             {
-                Console.WriteLine("Client StreamPool Count = " + clients[i].protocol.socket.thread.STREAMPOOL.streamCount);
-                //Console.WriteLine("Server StreamPool Count = " + server.protocol.socket.thread.STREAMPOOL.streamCount);
+                Console.WriteLine("Client PacketPool Count = " + clients[i].protocol.socket.thread.PACKETPOOL.packetCount);
+                //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
                 Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
                 //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
                 //Thread.Sleep(20000);

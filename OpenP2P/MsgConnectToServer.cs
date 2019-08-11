@@ -14,31 +14,31 @@ namespace OpenP2P
         public bool responseConnected = false;
         public ushort responsePeerId = 0;
 
-        public override void WriteMessage(NetworkStream stream)
+        public override void WriteMessage(NetworkPacket packet)
         {
             if (msgUsername.Length > MAX_NAME_LENGTH)
             {
                 msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
             }
             
-            stream.Write(msgUsername);
+            packet.Write(msgUsername);
         }
 
-        public override void WriteResponse(NetworkStream stream)
+        public override void WriteResponse(NetworkPacket packet)
         {
-            stream.Write((byte)1);
-            stream.Write(responsePeerId);
+            packet.Write((byte)1);
+            packet.Write(responsePeerId);
         }
 
-        public override void ReadMessage(NetworkStream stream)
+        public override void ReadMessage(NetworkPacket packet)
         {
-            msgUsername = stream.ReadString();
+            msgUsername = packet.ReadString();
         }
 
-        public override void ReadResponse(NetworkStream stream)
+        public override void ReadResponse(NetworkPacket packet)
         {
-            responseConnected = stream.ReadByte() != 0;
-            responsePeerId = stream.ReadUShort();
+            responseConnected = packet.ReadByte() != 0;
+            responsePeerId = packet.ReadUShort();
         }
     }
 }

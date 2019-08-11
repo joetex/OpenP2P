@@ -28,8 +28,8 @@ namespace OpenP2P
         public const int ThreadReliableSleepTime = 0;
         public const int ThreadRecvProcessSleepTime = 0;
 
-        public const long SocketReliableRetryDelay = 250;
-        public const long SocketReliableRetryAttempts = 5;
+        public const long SocketReliableRetryDelay = 500;
+        public const long SocketReliableRetryAttempts = 10;
 
         public static Stopwatch profiler = new Stopwatch();
         public static Dictionary<string, long> profileTimes = new Dictionary<string, long>();

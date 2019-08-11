@@ -13,35 +13,34 @@ namespace OpenP2P
             public bool isReliable = false;
             public bool isLittleEndian = true;
             public SendType sendType = 0;
-            public MessageType messageType = MessageType.Invalid;
+            public MessageChannel messageChannel = MessageChannel.Invalid;
             public ushort sequence = 0;
             public ushort id = 0;
+            public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
         }
 
-        public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
-        public MessageType messageType = MessageType.Invalid;
+        
+        public MessageChannel messageChannel = MessageChannel.Invalid;
 
         public event EventHandler<NetworkMessage> OnMessage = null;
         public event EventHandler<NetworkMessage> OnResponse = null;
+        
+        public virtual void WriteMessage(NetworkPacket packet) { }
+        public virtual void WriteResponse(NetworkPacket packet) { }
+        public virtual void ReadMessage(NetworkPacket packet) { }
+        public virtual void ReadResponse(NetworkPacket packet) { }
 
-        public virtual void WriteMessage(NetworkStream stream) { }
-        public virtual void WriteResponse(NetworkStream stream) { }
-        public virtual void ReadMessage(NetworkStream stream) { }
-        public virtual void ReadResponse(NetworkStream stream) { }
-
-        public virtual void InvokeOnRead(NetworkStream stream)
+        public virtual void InvokeOnRead(NetworkPacket packet)
         {
-            switch (stream.header.sendType)
+            switch (packet.header.sendType)
             {
                 case SendType.Message:
-                    ReadMessage(stream);
                     if (OnMessage != null)
-                        OnMessage.Invoke(stream, this);
+                        OnMessage.Invoke(packet, this);
                     break;
                 case SendType.Response:
-                    ReadResponse(stream);
                     if (OnResponse != null)
-                        OnResponse.Invoke(stream, this);
+                        OnResponse.Invoke(packet, this);
                     break;
             }
         }

@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 namespace OpenP2P
 {
     /**
-     * Network Stream
+     * Network Packet
      * Read/Write directly to the socket's byte buffer for sending and receiving pipeline.
      * Extensions may be made to support more types.
      */
-    public partial class NetworkStream
+    public partial class NetworkPacket
     {
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint;
@@ -47,7 +47,7 @@ namespace OpenP2P
         public string lastErrorMessage = "";
 
         
-        public NetworkStream(int initBufferSize)
+        public NetworkPacket(int initBufferSize)
         {
             buffer = new byte[initBufferSize];
         }

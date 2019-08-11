@@ -15,8 +15,8 @@ namespace OpenP2P
         public NetworkServer(String localIP, int localPort)
         {
             protocol = new NetworkProtocol(localIP, localPort, true);
-            protocol.AttachMessageListener(MessageType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachMessageListener(MessageType.Heartbeat, OnMessageHeartbeat);
+            protocol.AttachMessageListener(MessageChannel.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachMessageListener(MessageChannel.Heartbeat, OnMessageHeartbeat);
         }
 
         
@@ -34,7 +34,7 @@ namespace OpenP2P
         {
             PerformanceTest();
             
-            NetworkStream stream = (NetworkStream)sender;
+            NetworkPacket packet = (NetworkPacket)sender;
         }
 
 

@@ -15,7 +15,7 @@ namespace OpenP2P
         public Dictionary<uint, NetworkMessage> messages = new Dictionary<uint, NetworkMessage>();
         public Dictionary<uint, uint> messageSequences = new Dictionary<uint, uint>();
 
-        public Dictionary<string, MessageType> awaitingResponse = new Dictionary<string, MessageType>();
+        public Dictionary<string, MessageChannel> awaitingResponse = new Dictionary<string, MessageChannel>();
 
         public NetworkSocket socket = null;
         public NetworkIdentity ident = null;
@@ -27,12 +27,12 @@ namespace OpenP2P
 
         public NetworkProtocolBase() { }
         
-        public virtual void WriteHeader(NetworkStream stream) { }
-        public virtual NetworkMessage ReadHeader(NetworkStream stream) { return null; }
+        public virtual void WriteHeader(NetworkPacket packet) { }
+        public virtual NetworkMessage ReadHeader(NetworkPacket packet) { return null; }
 
-        public virtual void OnReceive(object sender, NetworkStream stream) { }
-        public virtual void OnSend(object sender, NetworkStream stream) { }
-        public virtual void OnError(object sender, NetworkStream stream) { }
+        public virtual void OnReceive(object sender, NetworkPacket packet) { }
+        public virtual void OnSend(object sender, NetworkPacket packet) { }
+        public virtual void OnError(object sender, NetworkPacket packet) { }
 
         /// <summary>
         /// Bind Messages to our Message Dictionary
@@ -42,14 +42,14 @@ namespace OpenP2P
         {
             string enumName = "";
             NetworkMessage message = null;
-            for (uint i = 0; i < (uint)MessageType.LAST; i++)
+            for (uint i = 0; i < (uint)MessageChannel.LAST; i++)
             {
-                enumName = Enum.GetName(typeof(MessageType), (MessageType)i);
+                enumName = Enum.GetName(typeof(MessageChannel), (MessageChannel)i);
                 try
                 {
                     message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
                     messagesContainer.AddService(message.GetType(), message);
-                    message.messageType = (MessageType)i;
+                    message.messageChannel = (MessageChannel)i;
                 }
                 catch (Exception e)
                 {
@@ -88,25 +88,19 @@ namespace OpenP2P
             socket.OnError += OnError;
         }
 
-        public virtual void AttachMessageListener(MessageType msgType, EventHandler<NetworkMessage> func)
+        public virtual void AttachMessageListener(MessageChannel msgType, EventHandler<NetworkMessage> func)
         {
             GetMessage((uint)msgType).OnMessage += func;
         }
-        public virtual void AttachResponseListener(MessageType msgType, EventHandler<NetworkMessage> func)
+        public virtual void AttachResponseListener(MessageChannel msgType, EventHandler<NetworkMessage> func)
         {
             GetMessage((uint)msgType).OnResponse += func;
         }
-        public virtual void AttachErrorListener(NetworkErrorType errorType, EventHandler<NetworkStream> func)
+        public virtual void AttachErrorListener(NetworkErrorType errorType, EventHandler<NetworkPacket> func)
         {
            
         }
         
-
-        public virtual NetworkMessage Create(MessageType _msgType)
-        {
-            NetworkMessage message = GetMessage((uint)_msgType);
-            return message;
-        }
 
         public virtual T Create<T>()
         {
@@ -122,7 +116,7 @@ namespace OpenP2P
         public virtual NetworkMessage GetMessage(uint id)
         {
             if (!messages.ContainsKey(id))
-                return messages[(int)MessageType.Invalid];
+                return messages[(int)MessageChannel.Invalid];
             return messages[id];
         }
     }
