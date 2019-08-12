@@ -49,11 +49,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkChannel.cs" />
     <Compile Include="NetworkConfig.cs" />
     <Compile Include="NetworkIdentity.cs" />
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="MsgInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
+    <Compile Include="NetworkMessagePool.cs" />
     <Compile Include="NetworkPeer.cs" />
     <Compile Include="NetworkProtocol.cs" />
     <Compile Include="NetworkProtocolBase.cs" />

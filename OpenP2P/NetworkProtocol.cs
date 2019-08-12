@@ -39,7 +39,7 @@ namespace OpenP2P
 
         public void Setup(string localIP, int localPort, bool isServer)
         {
-            SetupNetworkMessages();
+            SetupNetworkChannels();
 
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             socket = new NetworkSocket(localIP, localPort);
@@ -70,7 +70,7 @@ namespace OpenP2P
             IPEndPoint ip = GetIPv6(ep);
             NetworkPacket packet = socket.Prepare(ep);
 
-            packet.header.messageChannel = message.messageChannel;
+            packet.header.channelType = message.channelType;
             packet.header.isReliable = true;
             packet.header.sendType = SendType.Message;
             if (packet.retryCount == 0)
@@ -85,7 +85,7 @@ namespace OpenP2P
             IPEndPoint ip = GetIPv6(ep);
             NetworkPacket packet = socket.Prepare(ep);
 
-            packet.header.messageChannel = message.messageChannel;
+            packet.header.channelType = message.channelType;
             packet.header.isReliable = false;
             packet.header.sendType = SendType.Message;
             packet.header.sequence = ident.local.NextSequence(message);
@@ -102,7 +102,7 @@ namespace OpenP2P
             else
                 packet.networkIPType = NetworkSocket.NetworkIPType.IPv6;
 
-            packet.header.messageChannel = requestPacket.header.messageChannel;
+            packet.header.channelType = requestPacket.header.channelType;
             packet.header.isReliable = requestPacket.header.isReliable;
             packet.header.sendType = SendType.Response;
             packet.header.sequence = requestPacket.header.sequence;
@@ -135,7 +135,9 @@ namespace OpenP2P
                 case SendType.Response: message.ReadResponse(packet); break;
             }
 
-            message.InvokeOnRead(packet);
+            NetworkChannel channel = GetNetworkChannel((uint)packet.header.channelType);
+
+            channel.InvokeChannelEvent(packet, message);
 
             if (packet.header.sendType == SendType.Response && packet.header.isReliable)
             {
@@ -189,8 +191,8 @@ namespace OpenP2P
 
         public override void WriteHeader(NetworkPacket packet)
         {
-            uint msgBits = (uint)packet.header.messageChannel;
-            if (msgBits < 0 || msgBits >= (uint)MessageChannel.LAST)
+            uint msgBits = (uint)packet.header.channelType;
+            if (msgBits < 0 || msgBits >= (uint)ChannelType.LAST)
                 msgBits = 0;
 
             //add sendType to bit 6 
@@ -235,15 +237,15 @@ namespace OpenP2P
             //remove response and endian bits
             bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag);
 
-            if (bits < 0 || bits >= (uint)MessageChannel.LAST)
-                return GetMessage((uint)MessageChannel.Invalid);
+            if (bits < 0 || bits >= (uint)ChannelType.LAST)
+                return GetMessage((uint)ChannelType.Invalid);
 
             NetworkMessage message = GetMessage(bits);
 
             packet.header.isReliable = isReliable;
             packet.header.isLittleEndian = isLittleEndian;
             packet.header.sendType = sendType;
-            packet.header.messageChannel = message.messageChannel;
+            packet.header.channelType = message.channelType;
             packet.header.sequence = packet.ReadUShort();
 
             OnReadHeader.Invoke(this, packet);

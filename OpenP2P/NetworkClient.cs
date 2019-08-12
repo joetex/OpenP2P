@@ -26,7 +26,7 @@ namespace OpenP2P
             
             protocol = new NetworkProtocol(localPort, false);
             serverHost = protocol.GetEndPoint(remoteHost, remotePort);
-            protocol.AttachResponseListener(MessageChannel.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             //protocol.Listen();
         }

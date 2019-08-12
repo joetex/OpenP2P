@@ -15,8 +15,8 @@ namespace OpenP2P
         public NetworkServer(String localIP, int localPort)
         {
             protocol = new NetworkProtocol(localIP, localPort, true);
-            protocol.AttachMessageListener(MessageChannel.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachMessageListener(MessageChannel.Heartbeat, OnMessageHeartbeat);
+            protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
 
         

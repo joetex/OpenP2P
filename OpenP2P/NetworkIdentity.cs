@@ -11,11 +11,11 @@ namespace OpenP2P
             public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
             public ushort id = 0;
             public string userName = "";
-            public List<ushort> messageSequence = new List<ushort>((int)MessageChannel.LAST);
+            public List<ushort> messageSequence = new List<ushort>((int)ChannelType.LAST);
 
             public PeerIdentity()
             {
-                for(int i=0; i<(int)MessageChannel.LAST; i++)
+                for(int i=0; i<(int)ChannelType.LAST; i++)
                 {
                     messageSequence.Add(1);
                 }
@@ -32,7 +32,7 @@ namespace OpenP2P
 
             public ushort NextSequence(NetworkMessage message)
             {
-                int index = (int)message.messageChannel;
+                int index = (int)message.channelType;
                 uint iSequence = ((uint)messageSequence[index] + 1) % 65534;
                 messageSequence[index] = (ushort)iSequence;
                 return messageSequence[index];
@@ -54,8 +54,8 @@ namespace OpenP2P
             protocol = p;
             protocol.OnReadHeader += OnReadHeader;
             protocol.OnWriteHeader += OnWriteHeader;
-            protocol.AttachMessageListener(MessageChannel.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachResponseListener(MessageChannel.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
             //local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
