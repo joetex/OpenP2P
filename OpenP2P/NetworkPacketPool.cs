@@ -31,10 +31,15 @@ namespace OpenP2P
          */
         public void New()
         {
-            packetCount++;
+            
             NetworkPacket packet = new NetworkPacket(initialBufferSize);
             //available.Add(packet);
-            available.Enqueue(packet);
+            lock(available)
+            {
+                packetCount++;
+                available.Enqueue(packet);
+            }
+               
         }
 
         /**
@@ -44,10 +49,19 @@ namespace OpenP2P
         {
             NetworkPacket packet = null;
             //while (packet == null)
+
+            int count = 0;
+            lock(available)
+            {
+                count = available.Count;
+            }
+
+            if (count == 0)
+                New();
+
             lock (available)
             {
-                if (available.Count == 0)
-                    New();
+                
 
                 //available.TryTake(out packet);
                 //available.TryTake(out packet);

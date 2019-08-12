@@ -13,7 +13,7 @@ namespace OpenP2P
     class Program
     {
         public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 1000;
+        public const int MAXSEND = 100;
 
         public static string connectToAddress = "127.0.0.1";
 
@@ -37,6 +37,8 @@ namespace OpenP2P
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
 
+
+            
             if(isServer )
             {
                 RunServer();
@@ -46,8 +48,40 @@ namespace OpenP2P
                 RunClient();
             }
             
+            //Thread t = new Thread(Test1);
+            //t.Start();
+            //t = new Thread(Test2);
+            //t.Start();
+
+            //Thread.Sleep(3000);
+        }
+        static void Test1()
+        {
+            int c = 1000000;
+            var sw = new Stopwatch();
+            sw.Start();
+            long sum = 0;
+            for (var i = 0; i < c; i++)
+            {
+                sum += Environment.TickCount;
+            }
+            sw.Stop();
+            Console.WriteLine("Test1 " + c + ": " + sw.ElapsedMilliseconds + "   (ignore: " + sum + ")");
         }
 
+        static void Test2()
+        {
+            int c = 1000000;
+            var sw = new Stopwatch();
+            sw.Start();
+            long sum = 0;
+            for (var i = 0; i < c; i++)
+            {
+                sum += DateTime.Now.Ticks;
+            }
+            sw.Stop();
+            Console.WriteLine("Test2 " + c + ": " + sw.ElapsedMilliseconds + "   (ignore: " + sum + ")");
+        }
         public static void RunServer()
         {
             string localIP = NetworkConfig.GetPublicIP();
