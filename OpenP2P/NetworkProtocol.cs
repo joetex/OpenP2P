@@ -70,12 +70,12 @@ namespace OpenP2P
             IPEndPoint ip = GetIPv6(ep);
             NetworkPacket packet = socket.Prepare(ep);
 
-            packet.header.channelType = message.channelType;
-            packet.header.isReliable = true;
-            packet.header.sendType = SendType.Message;
+            message.header.channelType = GetChannelType(message);
+            message.header.isReliable = true;
+            message.header.sendType = SendType.Message;
             if (packet.retryCount == 0)
-                packet.header.sequence = ident.local.NextSequence(message);
-            packet.header.id = ident.local.id;
+                message.header.sequence = ident.local.NextSequence(message);
+            message.header.id = ident.local.id;
             Send(packet, message);
             return packet;
         }
@@ -85,11 +85,11 @@ namespace OpenP2P
             IPEndPoint ip = GetIPv6(ep);
             NetworkPacket packet = socket.Prepare(ep);
 
-            packet.header.channelType = message.channelType;
-            packet.header.isReliable = false;
-            packet.header.sendType = SendType.Message;
-            packet.header.sequence = ident.local.NextSequence(message);
-            packet.header.id = ident.local.id;
+            message.header.channelType = GetChannelType(message);
+            message.header.isReliable = false;
+            message.header.sendType = SendType.Message;
+            message.header.sequence = ident.local.NextSequence(message);
+            message.header.id = ident.local.id;
             Send(packet, message);
             return packet;
         }
@@ -102,11 +102,11 @@ namespace OpenP2P
             else
                 packet.networkIPType = NetworkSocket.NetworkIPType.IPv6;
 
-            packet.header.channelType = requestPacket.header.channelType;
-            packet.header.isReliable = requestPacket.header.isReliable;
-            packet.header.sendType = SendType.Response;
-            packet.header.sequence = requestPacket.header.sequence;
-            packet.header.id = requestPacket.header.id;
+            message.header.channelType = requestPacket.message.header.channelType;
+            message.header.isReliable = requestPacket.message.header.isReliable;
+            message.header.sendType = SendType.Response;
+            message.header.sequence = requestPacket.message.header.sequence;
+            message.header.id = requestPacket.message.header.id;
             packet.ackkey = requestPacket.ackkey;
             Send(packet, message);
             return packet;
@@ -114,8 +114,10 @@ namespace OpenP2P
        
         public void Send(NetworkPacket packet, NetworkMessage message)
         {
+            packet.message = message;
+
             WriteHeader(packet);
-            switch(packet.header.sendType)
+            switch(message.header.sendType)
             {
                 case SendType.Message: message.WriteMessage(packet); break;
                 case SendType.Response: message.WriteResponse(packet); break;
@@ -129,17 +131,16 @@ namespace OpenP2P
         {
             NetworkMessage message = ReadHeader(packet);
 
-            switch (packet.header.sendType)
+            switch (message.header.sendType)
             {
                 case SendType.Message: message.ReadMessage(packet); break;
                 case SendType.Response: message.ReadResponse(packet); break;
             }
 
-            NetworkChannel channel = GetNetworkChannel((uint)packet.header.channelType);
-
+            NetworkChannel channel = GetNetworkChannel((uint)message.header.channelType);
             channel.InvokeChannelEvent(packet, message);
 
-            if (packet.header.sendType == SendType.Response && packet.header.isReliable)
+            if (message.header.sendType == SendType.Response && message.header.isReliable)
             {
                 //Console.WriteLine("Acknowledging: " + packet.ackkey + " -- id:"+ packet.header.id +", seq:"+packet.header.sequence);
                 lock (packet.socket.thread.ACKNOWLEDGED)
@@ -191,15 +192,15 @@ namespace OpenP2P
 
         public override void WriteHeader(NetworkPacket packet)
         {
-            uint msgBits = (uint)packet.header.channelType;
+            uint msgBits = (uint)packet.message.header.channelType;
             if (msgBits < 0 || msgBits >= (uint)ChannelType.LAST)
                 msgBits = 0;
 
             //add sendType to bit 6 
-            msgBits |= (uint)packet.header.sendType << 5;
+            msgBits |= (uint)packet.message.header.sendType << 5;
 
             //add reliable to bit 7
-            msgBits |= packet.header.isReliable ? ReliableFlag : 0;
+            msgBits |= packet.message.header.isReliable ? ReliableFlag : 0;
             
             //add little endian to bit 8
             if (!BitConverter.IsLittleEndian)
@@ -208,16 +209,16 @@ namespace OpenP2P
             }
                 
 
-            packet.header.isLittleEndian = BitConverter.IsLittleEndian;
+            packet.message.header.isLittleEndian = BitConverter.IsLittleEndian;
 
             packet.Write((byte)msgBits);
-            packet.Write(packet.header.sequence);
+            packet.Write(packet.message.header.sequence);
 
             OnWriteHeader.Invoke(this, packet);
 
-            if (packet.header.isReliable)
+            if (packet.message.header.isReliable)
             {
-                if (packet.header.sendType == SendType.Message && packet.retryCount == 0)
+                if (packet.message.header.sendType == SendType.Message && packet.retryCount == 0)
                 {
                     packet.ackkey = GenerateAckKey(packet);
                 }
@@ -238,24 +239,24 @@ namespace OpenP2P
             bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
-                return GetMessage((uint)ChannelType.Invalid);
+                return CreateMessage((uint)ChannelType.Invalid);
 
-            NetworkMessage message = GetMessage(bits);
-
-            packet.header.isReliable = isReliable;
-            packet.header.isLittleEndian = isLittleEndian;
-            packet.header.sendType = sendType;
-            packet.header.channelType = message.channelType;
-            packet.header.sequence = packet.ReadUShort();
+            packet.message = CreateMessage(bits);
+            packet.message.header.isReliable = isReliable;
+            packet.message.header.isLittleEndian = isLittleEndian;
+            packet.message.header.sendType = sendType;
+            packet.message.header.channelType = (ChannelType)bits;
+            packet.message.header.sequence = packet.ReadUShort();
 
             OnReadHeader.Invoke(this, packet);
             
-            if (packet.header.isReliable)
+            if (packet.message.header.isReliable)
             {
                 packet.ackkey = packet.ReadUInt();
             }
 
-            return message;
+            
+            return packet.message;
         }
 
 
@@ -278,8 +279,8 @@ namespace OpenP2P
             key |= (ulong)((ulong)packet.header.sequence);
             return key;
             */
-            uint sequence = packet.header.sequence;
-            uint id = packet.header.id;
+            uint sequence = packet.message.header.sequence;
+            uint id = packet.message.header.id;
 
             uint key = sequence | (id << 8);
             return key;

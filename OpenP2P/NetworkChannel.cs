@@ -34,7 +34,7 @@ namespace OpenP2P
 
     public class NetworkChannel
     {
-        public ChannelType channelType = ChannelType.Invalid;
+        
 
         public static Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
         {
@@ -52,12 +52,14 @@ namespace OpenP2P
             // more of the same
         };
 
+        public ChannelType channelType = ChannelType.Invalid;
+
         public event EventHandler<NetworkMessage> OnChannelMessage = null;
         public event EventHandler<NetworkMessage> OnChannelResponse = null;
 
         public virtual void InvokeChannelEvent(NetworkPacket packet, NetworkMessage message)
         {
-            switch (packet.header.sendType)
+            switch (message.header.sendType)
             {
                 case SendType.Message:
                     if (OnChannelMessage != null)

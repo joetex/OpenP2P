@@ -57,8 +57,8 @@ namespace OpenP2P
             if (packet == null)
                 return Reserve();
 
-            packet.header.isReliable = false;
-            packet.header.sendType = SendType.Message;
+            //packet.message.header.isReliable = false;
+            //packet.message.header.sendType = SendType.Message;
             packet.ackkey = 0;
             packet.retryCount = 0;
             packet.sentTime = 0;
@@ -72,7 +72,7 @@ namespace OpenP2P
          */
         public void Free(NetworkPacket packet)
         {
-            packet.header.isReliable = false;
+            //packet.header.isReliable = false;
 
             lock (available)
             {

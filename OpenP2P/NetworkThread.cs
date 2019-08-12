@@ -234,7 +234,7 @@ namespace OpenP2P
                         {
                             //Console.WriteLine("Retry count reached: " + packet.retryCount);
 
-                            if( packet.header.channelType == ChannelType.ConnectToServer )
+                            if( packet.message.header.channelType == ChannelType.ConnectToServer )
                             {
                                 packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
                             }

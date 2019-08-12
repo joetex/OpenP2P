@@ -55,6 +55,7 @@
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="MsgInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
+    <Compile Include="NetworkMessageFactory.cs" />
     <Compile Include="NetworkMessagePool.cs" />
     <Compile Include="NetworkPeer.cs" />
     <Compile Include="NetworkProtocol.cs" />

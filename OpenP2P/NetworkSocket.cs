@@ -316,7 +316,7 @@ namespace OpenP2P
                 Console.WriteLine(e.ToString());
             }
             
-            if (packet.header.sendType == SendType.Message && packet.header.isReliable)
+            if (packet.message.header.sendType == SendType.Message && packet.message.header.isReliable)
             {
                 //Console.WriteLine("Adding Reliable: " + packet.ackkey);
                 packet.sentTime = NetworkTime.Milliseconds();

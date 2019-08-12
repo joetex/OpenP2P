@@ -13,8 +13,8 @@ namespace OpenP2P
     {
         public ServiceContainer channelContainer = new ServiceContainer();
 
-        
-        
+
+        public Dictionary<Type, ChannelType> messageTypes = new Dictionary<Type, ChannelType>();
         public Dictionary<uint, NetworkChannel> channels = new Dictionary<uint, NetworkChannel>();
         public Dictionary<uint, uint> messageSequences = new Dictionary<uint, uint>();
         
@@ -46,20 +46,21 @@ namespace OpenP2P
             for (uint i = 0; i < (uint)ChannelType.LAST; i++)
             {
                 enumName = Enum.GetName(typeof(ChannelType), (ChannelType)i);
-                //try
-                //{
-                channel = new NetworkChannel();// (NetworkChannel)GetInstance("OpenP2P.Msg" + enumName);
+              
+                channel = new NetworkChannel();
                 channel.channelType = (ChannelType)i;
-                    //channelContainer.AddService(channel.GetType(), channel);
-                    //channel.channelType = (ChannelType)i;
-                //}
-                //catch (Exception e)
-                //{
-                    //Console.WriteLine(e.ToString());
-                    //channel = new MsgInvalid();
-                //}
-                //messageConstructors.Add(i, New<channel.GetType()>.Instance() )
                 channels.Add(i, channel);
+
+                try
+                {
+                    NetworkMessage message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
+                    messageTypes.Add(message.GetType(), (ChannelType)i);
+                }
+                catch(Exception e)
+                {
+                    //messageTypes.Add(message.GetType(), (ChannelType)i);
+                }
+                
             }
         }
 
@@ -102,11 +103,37 @@ namespace OpenP2P
         {
            
         }
-        
+
+        public static class New<T> where T : new()
+        {
+            public static readonly Func<T> Instance = Expression.Lambda<Func<T>>
+                                                      (
+                                                       Expression.New(typeof(T))
+                                                      ).Compile();
+        }
+
+        public T Create<T>() where T : new()
+        {
+            T obj = New<T>.Instance();
+            return obj;
+        }
+        /*
+        public T CreateMessage<T>()
+        {
+            ChannelType type = messageTypes[typeof(T)];
+            T obj = (T)NetworkChannel.constructors[(uint)type]();
+            return obj;
+        }*/
+
+        /*
         public virtual T Create<T>()
         {
-            return (T)channelContainer.GetService(typeof(T));
-        }
+            //NetworkMessage me = New<NetworkMessage>.Instance();
+            return new T();// Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
+            //return New<T>.Instance();
+            //return (T)channelContainer.GetService(typeof(T));
+        }*/
+        
 
         public virtual object GetInstance(string strFullyQualifiedName)
         {
@@ -121,14 +148,36 @@ namespace OpenP2P
             return channels[id];
         }
 
-        public virtual NetworkMessage GetMessage(uint id)
+        public virtual NetworkMessage CreateMessage(ChannelType type)
+        {
+            NetworkMessage message = NetworkChannel.constructors[(uint)type]();// messageConstructors[id].Invoke();
+            message.header.channelType = type;
+            return message;
+        }
+
+        public virtual NetworkMessage CreateMessage(uint id)
         {
             NetworkMessage message = NetworkChannel.constructors[id]();// messageConstructors[id].Invoke();
+            message.header.channelType = (ChannelType)id;
             return message;
             /*
             if (!channels.ContainsKey(id))
                 return channels[(int)MessageChannel.Invalid];
             return channels[id];*/
+        }
+
+        public NetworkMessage CreateMessage<T>()
+        {
+            ChannelType type = messageTypes[typeof(T)];
+            NetworkMessage obj = NetworkChannel.constructors[(uint)type]();
+            obj.header.channelType = type;
+            return obj;
+        }
+
+        public ChannelType GetChannelType(NetworkMessage msg)
+        {
+            Type type = msg.GetType();
+            return messageTypes[type];
         }
     }
 }

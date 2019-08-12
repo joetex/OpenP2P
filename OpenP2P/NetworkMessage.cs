@@ -20,7 +20,7 @@ namespace OpenP2P
         }
 
         public Header header = new Header();
-        public ChannelType channelType = ChannelType.Invalid;
+        //public ChannelType channelType = ChannelType.Invalid;
 
         public virtual void WriteMessage(NetworkPacket packet) { }
         public virtual void WriteResponse(NetworkPacket packet) { }

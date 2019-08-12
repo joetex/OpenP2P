@@ -32,7 +32,7 @@ namespace OpenP2P
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
 
         public NetworkMessage message = null;
-        public NetworkMessage.Header header = new NetworkMessage.Header();
+        //public NetworkMessage.Header header = new NetworkMessage.Header();
         public uint ackkey = 0;
         public long sentTime = 0;
         public int retryCount = 0;

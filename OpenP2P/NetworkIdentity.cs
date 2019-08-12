@@ -32,7 +32,7 @@ namespace OpenP2P
 
             public ushort NextSequence(NetworkMessage message)
             {
-                int index = (int)message.channelType;
+                int index = (int)message.header.channelType;
                 uint iSequence = ((uint)messageSequence[index] + 1) % 65534;
                 messageSequence[index] = (ushort)iSequence;
                 return messageSequence[index];
@@ -64,13 +64,13 @@ namespace OpenP2P
        
         public void OnWriteHeader(object sender, NetworkPacket packet)
         {
-            packet.Write(packet.header.id);
+            packet.Write(packet.message.header.id);
         }
     
         public void OnReadHeader(object sender, NetworkPacket packet)
         {
-            packet.header.id = packet.ReadUShort();
-            packet.header.peer = FindPeer(packet.header.id);
+            packet.message.header.id = packet.ReadUShort();
+            packet.message.header.peer = FindPeer(packet.message.header.id);
         }
 
         public PeerIdentity FindPeer(ushort id)
@@ -84,6 +84,7 @@ namespace OpenP2P
         {
             local.userName = userName;
 
+            //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.msgUsername = userName;
             return protocol.SendReliableMessage(ep, msg);
