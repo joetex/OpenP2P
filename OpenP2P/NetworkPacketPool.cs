@@ -31,9 +31,7 @@ namespace OpenP2P
          */
         public void New()
         {
-            
             NetworkPacket packet = new NetworkPacket(initialBufferSize);
-            //available.Add(packet);
             lock(available)
             {
                 packetCount++;
@@ -61,22 +59,13 @@ namespace OpenP2P
 
             lock (available)
             {
-                
-
-                //available.TryTake(out packet);
-                //available.TryTake(out packet);
                 packet = available.Dequeue();
             }
 
             if (packet == null)
                 return Reserve();
-
-            //packet.message.header.isReliable = false;
-            //packet.message.header.sendType = SendType.Message;
-            packet.ackkey = 0;
-            packet.retryCount = 0;
-            packet.sentTime = 0;
-            packet.acknowledged = false;
+            
+            packet.messages.Clear();
 
             return packet;
         }
@@ -86,14 +75,10 @@ namespace OpenP2P
          */
         public void Free(NetworkPacket packet)
         {
-            //packet.header.isReliable = false;
-
             lock (available)
             {
-                //available.Add(packet);
                 available.Enqueue(packet);
             }
-
         }
 
         public void Dispose()
@@ -101,11 +86,8 @@ namespace OpenP2P
             NetworkPacket packet = null;
             while (available.Count > 0)
             {
-                //if( available.TryTake(out packet) )
                 packet = available.Dequeue();
-                //NetworkPacket packet = null;
-                //available.TryTake(out packet);
-                    packet.Dispose();
+                packet.Dispose();
             }
         }
     }

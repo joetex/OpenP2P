@@ -13,12 +13,13 @@ namespace OpenP2P
     class Program
     {
         public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 100;
+        public const int MAXSEND = 1000;
 
         public static string connectToAddress = "127.0.0.1";
 
         static void Main(string[] args)
         {
+            
             bool isServer = false;
           
             for (int i = 0; i < args.Length; i++)
@@ -38,8 +39,8 @@ namespace OpenP2P
             }
 
 
-            
-            if(isServer )
+
+            if (isServer )
             {
                 RunServer();
             }
@@ -48,6 +49,8 @@ namespace OpenP2P
                 RunClient();
             }
             
+            //RunServer();
+            //RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
             //t = new Thread(Test2);

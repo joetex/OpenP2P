@@ -42,8 +42,12 @@ namespace OpenP2P
 
             Stopwatch sw = new Stopwatch();
             
-            recieveTimer.Add(packet.ackkey, sw);
-            sw.Start();
+            /*for(int i=0; i<packet.messages.Count; i++)
+            {
+                recieveTimer.Add(packet.messages[i].header.ackkey, sw);
+                sw.Start();
+            }*/
+            
         }
 
         public void SendHeartbeat()
@@ -56,8 +60,8 @@ namespace OpenP2P
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
-            recieveTimer[packet.ackkey].Stop();
-            long end = recieveTimer[packet.ackkey].ElapsedMilliseconds;
+            //recieveTimer[message.header.ackkey].Stop();
+            //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;

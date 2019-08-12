@@ -28,7 +28,7 @@ namespace OpenP2P
 
         public NetworkProtocolBase() { }
         
-        public virtual void WriteHeader(NetworkPacket packet) { }
+        public virtual void WriteHeader(NetworkPacket packet, NetworkMessage message) { }
         public virtual NetworkMessage ReadHeader(NetworkPacket packet) { return null; }
 
         public virtual void OnReceive(object sender, NetworkPacket packet) { }
@@ -36,8 +36,8 @@ namespace OpenP2P
         public virtual void OnError(object sender, NetworkPacket packet) { }
         
         /// <summary>
-        /// Bind Messages to our Message Dictionary
-        /// This uses reflection to map our Enum to a Message class
+        /// Setup Network Channels
+        /// Cache channels to a dictionary for fast access
         /// </summary>
         public virtual void SetupNetworkChannels()
         {
@@ -45,7 +45,7 @@ namespace OpenP2P
             NetworkChannel channel = null;
             for (uint i = 0; i < (uint)ChannelType.LAST; i++)
             {
-                enumName = Enum.GetName(typeof(ChannelType), (ChannelType)i);
+                
               
                 channel = new NetworkChannel();
                 channel.channelType = (ChannelType)i;
@@ -53,12 +53,14 @@ namespace OpenP2P
 
                 try
                 {
+                    enumName = Enum.GetName(typeof(ChannelType), (ChannelType)i);
                     NetworkMessage message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
                     messageTypes.Add(message.GetType(), (ChannelType)i);
                 }
                 catch(Exception e)
                 {
-                    //messageTypes.Add(message.GetType(), (ChannelType)i);
+                    //Console.WriteLine(e.ToString());
+
                 }
                 
             }
@@ -93,11 +95,11 @@ namespace OpenP2P
 
         public virtual void AttachMessageListener(ChannelType msgType, EventHandler<NetworkMessage> func)
         {
-            GetNetworkChannel((uint)msgType).OnChannelMessage += func;
+            GetChannel((uint)msgType).OnChannelMessage += func;
         }
         public virtual void AttachResponseListener(ChannelType msgType, EventHandler<NetworkMessage> func)
         {
-            GetNetworkChannel((uint)msgType).OnChannelResponse += func;
+            GetChannel((uint)msgType).OnChannelResponse += func;
         }
         public virtual void AttachErrorListener(NetworkErrorType errorType, EventHandler<NetworkPacket> func)
         {
@@ -117,23 +119,6 @@ namespace OpenP2P
             T obj = New<T>.Instance();
             return obj;
         }
-        /*
-        public T CreateMessage<T>()
-        {
-            ChannelType type = messageTypes[typeof(T)];
-            T obj = (T)NetworkChannel.constructors[(uint)type]();
-            return obj;
-        }*/
-
-        /*
-        public virtual T Create<T>()
-        {
-            //NetworkMessage me = New<NetworkMessage>.Instance();
-            return new T();// Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
-            //return New<T>.Instance();
-            //return (T)channelContainer.GetService(typeof(T));
-        }*/
-        
 
         public virtual object GetInstance(string strFullyQualifiedName)
         {
@@ -141,7 +126,12 @@ namespace OpenP2P
             return Activator.CreateInstance(t);
         }
 
-        public virtual NetworkChannel GetNetworkChannel(uint id)
+        public virtual NetworkChannel GetChannel(ChannelType type)
+        {
+            return GetChannel((uint)type);
+        }
+
+        public virtual NetworkChannel GetChannel(uint id)
         {
             if (!channels.ContainsKey(id))
                 return channels[(int)ChannelType.Invalid];
@@ -150,30 +140,18 @@ namespace OpenP2P
 
         public virtual NetworkMessage CreateMessage(ChannelType type)
         {
-            NetworkMessage message = NetworkChannel.constructors[(uint)type]();// messageConstructors[id].Invoke();
+            NetworkMessage message = NetworkChannel.CreateMessage(type);// messageConstructors[id].Invoke();
             message.header.channelType = type;
             return message;
         }
 
         public virtual NetworkMessage CreateMessage(uint id)
         {
-            NetworkMessage message = NetworkChannel.constructors[id]();// messageConstructors[id].Invoke();
+            NetworkMessage message = NetworkChannel.CreateMessage(id);// messageConstructors[id].Invoke();
             message.header.channelType = (ChannelType)id;
             return message;
-            /*
-            if (!channels.ContainsKey(id))
-                return channels[(int)MessageChannel.Invalid];
-            return channels[id];*/
         }
-
-        public NetworkMessage CreateMessage<T>()
-        {
-            ChannelType type = messageTypes[typeof(T)];
-            NetworkMessage obj = NetworkChannel.constructors[(uint)type]();
-            obj.header.channelType = type;
-            return obj;
-        }
-
+        
         public ChannelType GetChannelType(NetworkMessage msg)
         {
             Type type = msg.GetType();

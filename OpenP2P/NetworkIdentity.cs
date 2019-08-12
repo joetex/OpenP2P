@@ -45,6 +45,7 @@ namespace OpenP2P
         public PeerIdentity server = null;
         public NetworkProtocol protocol = null;
         public Random random = new Random();
+        public const int MAX_IDENTITIES = 65534;
 
         public NetworkIdentity() { }
     
@@ -62,15 +63,17 @@ namespace OpenP2P
         }
 
        
-        public void OnWriteHeader(object sender, NetworkPacket packet)
+        public void OnWriteHeader(object sender, NetworkMessage message)
         {
-            packet.Write(packet.message.header.id);
+            NetworkPacket packet = (NetworkPacket)sender;
+            packet.Write(message.header.id);
         }
     
-        public void OnReadHeader(object sender, NetworkPacket packet)
+        public void OnReadHeader(object sender, NetworkMessage message)
         {
-            packet.message.header.id = packet.ReadUShort();
-            packet.message.header.peer = FindPeer(packet.message.header.id);
+            NetworkPacket packet = (NetworkPacket)sender;
+            message.header.id = packet.ReadUShort();
+            message.header.peer = FindPeer(message.header.id);
         }
 
         public PeerIdentity FindPeer(ushort id)
@@ -95,20 +98,28 @@ namespace OpenP2P
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
-            PeerIdentity peer = RegisterPeer(packet.remoteEndPoint);
+
+            PeerIdentity peer;
+            if( message.header.id == 0 )
+            {
+                peer = RegisterPeer(message.header.source);
+            }
+            else
+            {
+                peer = FindPeer(message.header.id);
+            }
+            
             if( peer == null )
             {
-                packet.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
+                protocol.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
                 return;
             }
 
-            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            connectMsg.responseConnected = true;
-            connectMsg.responsePeerId = peer.id;
+            MsgConnectToServer response = protocol.Create<MsgConnectToServer>();// message;
+            response.responseConnected = true;
+            response.responsePeerId = peer.id;
             
-            protocol.SendResponse(packet, connectMsg);
-
-            //protocol.SendResponse(packet, connectMsg);
+            protocol.SendResponse(message, response);
         }
 
         //Client receives response from server
@@ -116,7 +127,7 @@ namespace OpenP2P
         {
             NetworkPacket packet = (NetworkPacket)sender;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            RegisterLocal(connectMsg.responsePeerId, packet.socket.sendSocket.LocalEndPoint);
+            RegisterLocal(connectMsg.responsePeerId, protocol.socket.sendSocket.LocalEndPoint);
         }
 
         public void OnErrorConnectToServer(object sender, NetworkPacket packet)
@@ -153,11 +164,16 @@ namespace OpenP2P
         public PeerIdentity RegisterPeer(ushort id, EndPoint ep)
         {
             PeerIdentity identity = null;
+            string endpoint = ep.ToString();
 
             if (peersById.ContainsKey(id))
-                return peersById[id];
-
-            string endpoint = ep.ToString();
+            {
+                identity = peersById[id];
+                if (!peersByEndpoint.ContainsKey(endpoint))
+                    peersByEndpoint.Add(endpoint, identity);
+                return identity;
+            }
+                
             if (peersByEndpoint.ContainsKey(endpoint))
                 return peersByEndpoint[endpoint];
 
@@ -171,7 +187,7 @@ namespace OpenP2P
             return identity;
         }
 
-        public const int MAX_IDENTITIES = 65534;
+        
         /// <summary>
         /// Server Generate Peer Identity
         /// Generates a random ushort number in range [1, 65534] to identify a user.
@@ -181,22 +197,6 @@ namespace OpenP2P
         /// <returns></returns>
         public ushort ServerGeneratePeerId(EndPoint ep)
         {
-            /*string endpoint = ep.ToString();
-            if (peersByEndpoint.ContainsKey(endpoint))
-                return peersByEndpoint[endpoint].id;
-
-            ushort id = 0;
-            int signedid = endpoint.GetHashCode();
-            if (signedid < 0)
-                signedid = signedid * -1;
-
-            id = (ushort)signedid;
-
-            while( peersById.ContainsKey(id) )
-            {
-                id += 1;
-            }
-            */
             int id = random.Next(1, MAX_IDENTITIES);
             int testId = id;
             int increment = 0;

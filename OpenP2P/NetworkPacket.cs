@@ -31,13 +31,8 @@ namespace OpenP2P
 
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
 
-        public NetworkMessage message = null;
-        //public NetworkMessage.Header header = new NetworkMessage.Header();
-        public uint ackkey = 0;
-        public long sentTime = 0;
-        public int retryCount = 0;
-        public bool acknowledged = false;
-        
+        public List<NetworkMessage> messages = new List<NetworkMessage>();
+       
         public byte[] buffer;
         public byte[] ByteBuffer { get { return buffer; } }
         public int byteLength = 0; //total size of data 
@@ -62,7 +57,7 @@ namespace OpenP2P
         public void Reset()
         {
             remoteEndPoint = socket.anyHost4;
-            acknowledged = false;
+            //acknowledged = false;
         }
         
         public void Complete()

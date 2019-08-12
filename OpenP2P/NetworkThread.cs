@@ -13,36 +13,23 @@ namespace OpenP2P
     {
         public NetworkProtocol protocol = null;
 
-        
-
         public NetworkPacketPool PACKETPOOL = new NetworkPacketPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
-
         public Queue<NetworkPacket> SENDQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-        //public static ConcurrentQueue<NetworkPacket> SENDQUEUE = new ConcurrentQueue<NetworkPacket>();
         public Queue<NetworkPacket> RECVQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-        //public List<NetworkPacket> RECVQUEUE = new List<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-
-        //public static ConcurrentQueue<NetworkPacket> RELIABLEQUEUE = new ConcurrentQueue<NetworkPacket>();
         public Queue<NetworkPacket> RELIABLEQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-
-        //public static ConcurrentDictionary<ulong, NetworkPacket> ACKNOWLEDGED = new ConcurrentDictionary<ulong, NetworkPacket>();
         public Dictionary<uint, NetworkPacket> ACKNOWLEDGED = new Dictionary<uint, NetworkPacket>();
-
-        //public Thread mainThread = new Thread(MainThread);
+        
         public List<Thread> SENDTHREADS = new List<Thread>();
         public List<Thread> RECVTHREADS = new List<Thread>();
         public List<Thread> RELIABLETHREADS = new List<Thread>();
 
+        public NetworkPacket recvPacket = null;
+        public int recvId = 0;
+        public int failedReliableCount = 0;
 
-        //public static NetworkThread(NetworkProtocol p)
-        //{
-        //    protocol = p;
-        //}
 
         public void StartNetworkThreads()
         {
-            
-            
             for (int i = 0; i < NetworkConfig.MAX_SEND_THREADS; i++)
             {
                 Thread t = new Thread(SendThread);
@@ -56,26 +43,13 @@ namespace OpenP2P
                 //RECVTHREADS.Add(t);
                 //RECVTHREADS[i].Start();
             }
-
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
             {
                 //RELIABLETHREADS.Add(new Thread(ReliableThread));
                 //RELIABLETHREADS[i].Start();
             }
-
-            
-
-            //mainThread.Start();
         }
 
-        public void MainThread()
-        {
-            //NetworkPacket packet = null;
-            while(true)
-            {
-
-            }
-        }
 
         public void SendThread()
         {
@@ -96,19 +70,16 @@ namespace OpenP2P
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
-
-                //for(int i=0; i<queueCount; i++)
-                {
-                    lock (SENDQUEUE)
-                    {
-                        packet = SENDQUEUE.Dequeue();
-                    }
-
-                    packet.socket.SendFromThread(packet);
-                }
                 
+                lock (SENDQUEUE)
+                {
+                    packet = SENDQUEUE.Dequeue();
+                }
+
+                packet.socket.SendFromThread(packet);
             }
         }
+
 
         public void UpdatePriority()
         {
@@ -119,6 +90,8 @@ namespace OpenP2P
                 pt.ProcessorAffinity = (IntPtr)1;
             }
         }
+
+
         public void BeginRecvThread(NetworkPacket packet)
         {
             Thread t = new Thread(RecvThread);
@@ -126,39 +99,97 @@ namespace OpenP2P
             RECVTHREADS.Add(t);
             RECVTHREADS[RECVTHREADS.Count-1].Start(packet);
         }
+        
 
-        public NetworkPacket recvPacket = null;
-        public int recvId = 0;
         public void RecvThread(object opacket)
         {
             NetworkPacket packet = (NetworkPacket)opacket;
          
             while (true)
             {
-                //NetworkConfig.ProfileBegin("LISTEN");
                 packet.socket.ExecuteListen(packet);
-                //NetworkConfig.ProfileEnd("LISTEN");
-
                 packet.socket.InvokeOnRecieve(packet);
-                /*
-                lock (RECVQUEUE)
-                {
-                    RECVQUEUE.Enqueue(packet);
-                }
-                
-                packet = packet.socket.Reserve();
-                packet.Reset();*/
-                //Thread.Sleep(0);
             }
         }
 
-        //Turns out this is slow...
+       
+        public void ReliableThread()
+        {
+            int queueCount = RELIABLEQUEUE.Count;
+            if (queueCount == 0)
+                return;
+            
+            NetworkPacket packet = RELIABLEQUEUE.Dequeue();
+
+            long difftime;
+            bool isAcknowledged;
+            long curtime = NetworkTime.Milliseconds();
+            bool hasFailed = false;
+            bool shouldResend = false;
+            NetworkMessage message;
+
+            for(int i=0; i<packet.messages.Count; i++)
+            {
+                message = packet.messages[i];
+
+                lock (ACKNOWLEDGED)
+                {
+                    isAcknowledged = ACKNOWLEDGED.Remove(message.header.ackkey);
+                }
+
+                if (isAcknowledged)
+                {
+                    packet.socket.Free(packet);
+                    return;
+                }
+
+                difftime = curtime - message.header.sentTime;
+                if (difftime > NetworkConfig.SocketReliableRetryDelay)
+                {
+                    if (message.header.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
+                    {
+                        if (message.header.channelType == ChannelType.ConnectToServer)
+                        {
+                            packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
+                        }
+
+                        failedReliableCount++;
+                        packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
+
+                        hasFailed = true;
+                                
+                        continue;
+                    }
+
+                    shouldResend = true;
+                            
+                    continue;
+                }
+            }
+                    
+
+            if( hasFailed )
+            {
+                packet.socket.Free(packet);
+            }
+            else if( shouldResend )
+            {
+                packet.socket.Send(packet);
+            }
+            
+            RELIABLEQUEUE.Enqueue(packet);
+        
+            //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
+            return;
+        }
+
+
         public void RecvProcessThread()
         {
             int queueCount;
             NetworkPacket packet;
 
-            while(true)
+            while (true)
             {
                 lock (RECVQUEUE)
                 {
@@ -177,87 +208,6 @@ namespace OpenP2P
                 packet.socket.InvokeOnRecieve(packet);
 
                 packet.socket.Free(packet);
-                //Thread.Sleep(0);
-            }
-            
-        }
-
-        public int failedReliableCount = 0;
-
-        public void ReliableThread()
-        {
-
-            NetworkPacket packet;
-            //NetworkPacket acknowledgePacket = null;
-            int queueCount;
-            //Queue<NetworkPacket> tempQueue = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-            long curtime;
-            long difftime;
-            bool isAcknowledged;
-            //while (true)
-            {
-                //lock (RELIABLEQUEUE)
-                {
-                    queueCount = RELIABLEQUEUE.Count;
-                }
-
-                if (queueCount == 0)
-                {
-                    return;
-                }
-
-                //for (int i = 0; i < queueCount; i++)
-                {
-                    //lock (RELIABLEQUEUE)
-                    {
-                        packet = RELIABLEQUEUE.Dequeue();
-                    }
-                        
-                
-                    lock (ACKNOWLEDGED)
-                    {
-                        isAcknowledged = ACKNOWLEDGED.Remove(packet.ackkey);
-                    }
-
-                    if (isAcknowledged)
-                    {
-                        packet.socket.Free(packet);
-                        return;//return queueCount;
-                    }
-                    curtime = NetworkTime.Milliseconds();
-                    difftime = curtime - packet.sentTime;
-                    if (difftime > NetworkConfig.SocketReliableRetryDelay)
-                    {
-                        //Console.WriteLine("Reliable message retry #" + packet.ackkey);
-
-                        if ( packet.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
-                        {
-                            //Console.WriteLine("Retry count reached: " + packet.retryCount);
-
-                            if( packet.message.header.channelType == ChannelType.ConnectToServer )
-                            {
-                                packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
-                            }
-
-                            failedReliableCount++;
-                            packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + packet.retryCount + " packets ("+failedReliableCount+") times.", packet);
-                            
-                            packet.socket.Free(packet);
-                            return;//return queueCount;
-                        }
-                    
-                        packet.socket.Send(packet);
-                        return;//return queueCount;
-                    }
-
-                    //lock (RELIABLEQUEUE)
-                    {
-                        //Console.WriteLine("Waiting: " + packet.ackkey);
-                        RELIABLEQUEUE.Enqueue(packet);
-                    }
-                }
-                //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
-                return;//return queueCount;
             }
         }
     }

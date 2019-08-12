@@ -10,54 +10,63 @@ namespace OpenP2P
 {
     public class NetworkMessagePool
     {
-        Queue<NetworkMessage> available = new Queue<NetworkMessage>();
+        List<Queue<NetworkMessage>> available = new List<Queue<NetworkMessage>>();
+        //Queue<NetworkMessage> available = new Queue<NetworkMessage>();
         //ConcurrentBag<NetworkPacket> available = new ConcurrentBag<NetworkPacket>();
         int initialPoolCount = 0;
-        public int count = 0;
+        public int messageCount = 0;
 
         public NetworkMessagePool(int initPoolCount)
         {
             initialPoolCount = initPoolCount;
+            Queue<NetworkMessage> queue = null;
 
-            for (int i = 0; i < initialPoolCount; i++)
+            for(int i=0; i<(int)ChannelType.LAST; i++)
             {
-                New();
+                queue = new Queue<NetworkMessage>(initPoolCount);
+                available.Add(queue);
+
+                for (int j = 0; j < initPoolCount; j++)
+                {
+                    New((ChannelType)i, queue);
+                }
             }
         }
 
         /**
          * Add another NetworkBuffer to the Pool
          */
-        public void New()
+        public void New(ChannelType channelType, Queue<NetworkMessage> queue)
         {
-            count++;
-            NetworkMessage message = new NetworkMessage();
-            //available.Add(packet);
-            available.Enqueue(message);
+            messageCount++;
+            NetworkMessage message = NetworkChannel.constructors[(uint)channelType]();
+            queue.Enqueue(message);
         }
 
         /**
          * Reserve a NetworkBuffer from this pool.
          */
-        public NetworkMessage Reserve()
+        public NetworkMessage Reserve(ChannelType channelType)
         {
             NetworkMessage message = null;
-            //while (packet == null)
-            lock (available)
-            {
-                if (available.Count == 0)
-                    New();
+            Queue<NetworkMessage> queue = available[(int)channelType];
+            
+            int availableCount = 0;
 
-                //available.TryTake(out packet);
-                //available.TryTake(out packet);
-                message = available.Dequeue();
+            lock(queue)
+            {
+                availableCount = queue.Count;
+
+                if (availableCount == 0)
+                    New(channelType, queue);
+
+                message = queue.Dequeue();
             }
+                
 
             if (message == null)
-                return Reserve();
-
-           
-
+                return Reserve(channelType);
+            
             return message;
         }
 
@@ -66,25 +75,25 @@ namespace OpenP2P
          */
         public void Free(NetworkMessage message)
         {
-
-            lock (available)
+            Queue<NetworkMessage> queue = available[(int)message.header.channelType];
+            lock (queue)
             {
-                //available.Add(packet);
-                available.Enqueue(message);
+                queue.Enqueue(message);
             }
-
         }
 
         public void Dispose()
         {
             NetworkMessage message = null;
-            while (available.Count > 0)
+            Queue<NetworkMessage> queue;
+
+            for(int i=0; i<(int)ChannelType.LAST; i++)
             {
-                //if( available.TryTake(out packet) )
-                message = available.Dequeue();
-                //NetworkPacket packet = null;
-                //available.TryTake(out packet);
-                //message.Dispose();
+                queue = available[i];
+                while (queue.Count > 0)
+                {
+                    message = queue.Dequeue();
+                }
             }
         }
     }

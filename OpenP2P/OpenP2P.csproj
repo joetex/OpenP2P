@@ -63,7 +63,6 @@
     <Compile Include="NetworkProtocolBase.cs" />
     <Compile Include="NetworkProtocolTypes.cs" />
     <Compile Include="NetworkServer.cs" />
-    <Compile Include="NetworkSocket2.cs" />
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkPacket.cs" />
     <Compile Include="NetworkPacketPool.cs" />

@@ -14,28 +14,19 @@ namespace OpenP2P
         ConnectToPeer,
         DisconnectFromServer,
         DisconnectFromPeer,
-        //DisconnectFromServer,
-
         //interest mapping data sent to server
         //Peers will be connected together at higher priorities based on the 
         // "interest" mapping to a QuadTree (x, y, width, height) 
         Heartbeat,
-
         Raw,
         Event,
         RPC,
-
-        //GetPeers,
-        //ConnectTo,
         LAST
     }
 
     
-
     public class NetworkChannel
     {
-        
-
         public static Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
         {
             {(uint)ChannelType.Invalid, () => new MsgInvalid()},
@@ -48,16 +39,35 @@ namespace OpenP2P
             {(uint)ChannelType.Event, () => new MsgInvalid()},
             {(uint)ChannelType.RPC, () => new MsgInvalid()},
             {(uint)ChannelType.LAST, () => new MsgInvalid()},
-            //{2, () => new ClassB()}
-            // more of the same
+
         };
+
+        public static NetworkMessagePool MESSAGEPOOL = new NetworkMessagePool(NetworkConfig.MessagePoolInitialCount);
 
         public ChannelType channelType = ChannelType.Invalid;
 
         public event EventHandler<NetworkMessage> OnChannelMessage = null;
         public event EventHandler<NetworkMessage> OnChannelResponse = null;
 
-        public virtual void InvokeChannelEvent(NetworkPacket packet, NetworkMessage message)
+
+        public static NetworkMessage CreateMessage(ChannelType type)
+        {
+            return MESSAGEPOOL.Reserve(type);
+            //return constructors[(uint)type]();
+        }
+
+        public static NetworkMessage CreateMessage(uint type)
+        {
+            return MESSAGEPOOL.Reserve((ChannelType)type);
+            //return constructors[type]();
+        }
+
+        public static void FreeMessage(NetworkMessage message)
+        {
+            MESSAGEPOOL.Free(message);
+        }
+
+        public virtual void InvokeEvent(NetworkPacket packet, NetworkMessage message)
         {
             switch (message.header.sendType)
             {
@@ -70,15 +80,6 @@ namespace OpenP2P
                         OnChannelResponse.Invoke(packet, message);
                     break;
             }
-        }
-
-        public static NetworkMessage CreateMessage(ChannelType type)
-        {
-            NetworkMessage message = null;
-            
-
-
-            return message;
         }
     }
 }
