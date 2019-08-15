@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MsgConnectToServer : NetworkMessage
+    public class MsgConnectToServer : NetworkMessage
     {
         public const int MAX_NAME_LENGTH = 32;
         public string msgUsername = "";

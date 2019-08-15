@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MsgHeartbeat : NetworkMessage
+    public class MsgHeartbeat : NetworkMessage
     {
         public long timestamp = 0;
 

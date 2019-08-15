@@ -6,43 +6,10 @@ namespace OpenP2P
 {
     public class NetworkIdentity
     {
-        public class PeerIdentity
-        {
-            public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
-            public ushort id = 0;
-            public string userName = "";
-            public List<ushort> messageSequence = new List<ushort>((int)ChannelType.LAST);
-
-            public PeerIdentity()
-            {
-                for(int i=0; i<(int)ChannelType.LAST; i++)
-                {
-                    messageSequence.Add(1);
-                }
-            }
-            public void AddEndpoint(string endpoint, EndPoint ep)
-            {
-                endpoints.Add(endpoint, ep);
-            }
-
-            public EndPoint FindEndpoint(string endpoint)
-            {
-                return endpoints[endpoint];
-            }
-
-            public ushort NextSequence(NetworkMessage message)
-            {
-                int index = (int)message.header.channelType;
-                uint iSequence = ((uint)messageSequence[index] + 1) % 65534;
-                messageSequence[index] = (ushort)iSequence;
-                return messageSequence[index];
-            }
-        }
-
-        public Dictionary<string, PeerIdentity> peersByEndpoint = new Dictionary<string, PeerIdentity>();
-        public Dictionary<ushort, PeerIdentity> peersById = new Dictionary<ushort, PeerIdentity>();
-        public PeerIdentity local = new PeerIdentity();
-        public PeerIdentity server = null;
+        public Dictionary<string, NetworkPeer> peersByEndpoint = new Dictionary<string, NetworkPeer>();
+        public Dictionary<ushort, NetworkPeer> peersById = new Dictionary<ushort, NetworkPeer>();
+        public NetworkPeer local = null;
+        public NetworkPeer server = null;
         public NetworkProtocol protocol = null;
         public Random random = new Random();
         public const int MAX_IDENTITIES = 65534;
@@ -52,6 +19,8 @@ namespace OpenP2P
        
         public void AttachToProtocol(NetworkProtocol p)
         {
+            local = new NetworkPeer(p);
+
             protocol = p;
             protocol.OnReadHeader += OnReadHeader;
             protocol.OnWriteHeader += OnWriteHeader;
@@ -76,21 +45,21 @@ namespace OpenP2P
             message.header.peer = FindPeer(message.header.id);
         }
 
-        public PeerIdentity FindPeer(ushort id)
+        public NetworkPeer FindPeer(ushort id)
         {
             if (peersById.ContainsKey(id))
                 return peersById[id];
             return null;
         }
 
-        public NetworkPacket ConnectToServer(IPEndPoint ep, string userName)
+        public NetworkMessage ConnectToServer(string userName)
         {
             local.userName = userName;
 
             //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             msg.msgUsername = userName;
-            return protocol.SendReliableMessage(ep, msg);
+            return msg;
         }
 
         //Server receives message from client
@@ -99,7 +68,7 @@ namespace OpenP2P
         {
             NetworkPacket packet = (NetworkPacket)sender;
 
-            PeerIdentity peer;
+            NetworkPeer peer;
             if( message.header.id == 0 )
             {
                 peer = RegisterPeer(message.header.source);
@@ -127,7 +96,9 @@ namespace OpenP2P
         {
             NetworkPacket packet = (NetworkPacket)sender;
             MsgConnectToServer connectMsg = (MsgConnectToServer)message;
-            RegisterLocal(connectMsg.responsePeerId, protocol.socket.sendSocket.LocalEndPoint);
+
+            if( local.id == 0 )
+                RegisterLocal(connectMsg.responsePeerId, protocol.socket.sendSocket.LocalEndPoint);
         }
 
         public void OnErrorConnectToServer(object sender, NetworkPacket packet)
@@ -135,20 +106,20 @@ namespace OpenP2P
 
         }
 
-        public PeerIdentity RegisterLocal(ushort id, EndPoint ep)
+        public NetworkPeer RegisterLocal(ushort id, EndPoint ep)
         {
             local = RegisterPeer(id, ep);
             return local;
         }
         
-        public PeerIdentity RegisterServer(EndPoint ep)
+        public NetworkPeer RegisterServer(EndPoint ep)
         {
             ushort id = ServerGeneratePeerId(ep);
             server = RegisterPeer(id, ep);
             return server;
         }
 
-        public PeerIdentity RegisterPeer(EndPoint ep)
+        public NetworkPeer RegisterPeer(EndPoint ep)
         {
             //string endpoint = ep.ToString();
             //if (peersByEndpoint.ContainsKey(endpoint))
@@ -161,25 +132,24 @@ namespace OpenP2P
             return RegisterPeer(id, ep);
         }
 
-        public PeerIdentity RegisterPeer(ushort id, EndPoint ep)
+        public NetworkPeer RegisterPeer(ushort id, EndPoint ep)
         {
-            PeerIdentity identity = null;
-            string endpoint = ep.ToString();
+            NetworkPeer identity = null;
+            
 
             if (peersById.ContainsKey(id))
             {
                 identity = peersById[id];
-                if (!peersByEndpoint.ContainsKey(endpoint))
-                    peersByEndpoint.Add(endpoint, identity);
                 return identity;
             }
-                
+
+            string endpoint = ep.ToString();
             if (peersByEndpoint.ContainsKey(endpoint))
                 return peersByEndpoint[endpoint];
 
-            identity = new PeerIdentity();
+            identity = new NetworkPeer(protocol);
             identity.id = id;
-            identity.AddEndpoint(endpoint, ep);
+            identity.AddEndpoint(ep);
             
             peersById.Add(id, identity);
             peersByEndpoint.Add(endpoint, identity);

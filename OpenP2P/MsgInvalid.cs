@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    class MsgInvalid : NetworkMessage
+    public class MsgInvalid : NetworkMessage
     {
         
     }

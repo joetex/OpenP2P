@@ -10,14 +10,16 @@ namespace OpenP2P
 {
     public class NetworkMessagePool
     {
+        NetworkChannel channel = null;
         List<Queue<NetworkMessage>> available = new List<Queue<NetworkMessage>>();
         //Queue<NetworkMessage> available = new Queue<NetworkMessage>();
         //ConcurrentBag<NetworkPacket> available = new ConcurrentBag<NetworkPacket>();
         int initialPoolCount = 0;
         public int messageCount = 0;
 
-        public NetworkMessagePool(int initPoolCount)
+        public NetworkMessagePool(NetworkChannel _channel, int initPoolCount)
         {
+            channel = _channel;
             initialPoolCount = initPoolCount;
             Queue<NetworkMessage> queue = null;
 
@@ -39,14 +41,20 @@ namespace OpenP2P
         public void New(ChannelType channelType, Queue<NetworkMessage> queue)
         {
             messageCount++;
-            NetworkMessage message = NetworkChannel.constructors[(uint)channelType]();
+            NetworkMessage message = channel.InstantiateMessage(channelType);
             queue.Enqueue(message);
+        }
+
+        public T Reserve<T>() where T : INetworkMessage
+        {
+            T msg = (T)Reserve(channel.messageToChannelType[typeof(T)]);
+            return msg;
         }
 
         /**
          * Reserve a NetworkBuffer from this pool.
          */
-        public NetworkMessage Reserve(ChannelType channelType)
+        public INetworkMessage Reserve(ChannelType channelType)
         {
             NetworkMessage message = null;
             Queue<NetworkMessage> queue = available[(int)channelType];

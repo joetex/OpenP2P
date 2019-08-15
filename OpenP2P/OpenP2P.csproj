@@ -51,12 +51,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="NetworkChannel.cs" />
+    <Compile Include="NetworkChannelEvent.cs" />
     <Compile Include="NetworkConfig.cs" />
     <Compile Include="NetworkIdentity.cs" />
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="MsgInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
-    <Compile Include="NetworkMessageFactory.cs" />
     <Compile Include="NetworkMessagePool.cs" />
     <Compile Include="NetworkPeer.cs" />
     <Compile Include="NetworkProtocol.cs" />

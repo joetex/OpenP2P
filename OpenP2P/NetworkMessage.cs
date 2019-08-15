@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class NetworkMessage
+    public interface INetworkMessage { }
+
+    public class NetworkMessage : INetworkMessage
     {
         public class Header
         {
@@ -23,11 +25,10 @@ namespace OpenP2P
             public bool isRedirect = false;
             public EndPoint source = null;
             public EndPoint destination = null;
-            public NetworkIdentity.PeerIdentity peer = new NetworkIdentity.PeerIdentity();
+            public NetworkPeer peer = null;
         }
 
         public Header header = new Header();
-        //public ChannelType channelType = ChannelType.Invalid;
 
         public virtual void WriteMessage(NetworkPacket packet) { }
         public virtual void WriteResponse(NetworkPacket packet) { }

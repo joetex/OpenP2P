@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,59 +28,118 @@ namespace OpenP2P
     
     public class NetworkChannel
     {
-        public static Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
+        public Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
         {
-            {(uint)ChannelType.Invalid, () => new MsgInvalid()},
-            {(uint)ChannelType.ConnectToServer, () => new MsgConnectToServer()},
-            {(uint)ChannelType.ConnectToPeer, () => new MsgInvalid()},
-            {(uint)ChannelType.DisconnectFromServer, () => new MsgInvalid()},
-            {(uint)ChannelType.DisconnectFromPeer, () => new MsgInvalid()},
-            {(uint)ChannelType.Heartbeat, () => new MsgHeartbeat()},
-            {(uint)ChannelType.Raw, () => new MsgInvalid()},
-            {(uint)ChannelType.Event, () => new MsgInvalid()},
-            {(uint)ChannelType.RPC, () => new MsgInvalid()},
-            {(uint)ChannelType.LAST, () => new MsgInvalid()},
-
+            {(uint)ChannelType.Invalid, Create<MsgInvalid> },
+            {(uint)ChannelType.ConnectToServer, Create<MsgConnectToServer>},
+            {(uint)ChannelType.ConnectToPeer, Create<MsgInvalid>},
+            {(uint)ChannelType.DisconnectFromServer, Create<MsgInvalid>},
+            {(uint)ChannelType.DisconnectFromPeer, Create<MsgInvalid>},
+            {(uint)ChannelType.Heartbeat, Create<MsgHeartbeat>},
+            {(uint)ChannelType.Raw, Create<MsgInvalid>},
+            {(uint)ChannelType.Event, Create<MsgInvalid>},
+            {(uint)ChannelType.RPC, Create<MsgInvalid>},
+            {(uint)ChannelType.LAST, Create<MsgInvalid>}
         };
 
-        public static NetworkMessagePool MESSAGEPOOL = new NetworkMessagePool(NetworkConfig.MessagePoolInitialCount);
+        public NetworkMessagePool MESSAGEPOOL = null;
 
-        public ChannelType channelType = ChannelType.Invalid;
+        public Dictionary<Type, ChannelType> messageToChannelType = new Dictionary<Type, ChannelType>();
+        public Dictionary<ChannelType, Type> channelTypeToMessage = new Dictionary<ChannelType, Type>();
+        public Dictionary<uint, NetworkChannelEvent> channels = new Dictionary<uint, NetworkChannelEvent>();
 
-        public event EventHandler<NetworkMessage> OnChannelMessage = null;
-        public event EventHandler<NetworkMessage> OnChannelResponse = null;
+        public NetworkChannel() {
+            SetupNetworkChannels();
 
-
-        public static NetworkMessage CreateMessage(ChannelType type)
+            MESSAGEPOOL = new NetworkMessagePool(this, NetworkConfig.MessagePoolInitialCount);
+        }
+        /// <summary>
+        /// Setup Network Channels
+        /// Cache channels to a dictionary for fast access
+        /// </summary>
+        public void SetupNetworkChannels()
         {
-            return MESSAGEPOOL.Reserve(type);
-            //return constructors[(uint)type]();
+            string enumName = "";
+            NetworkChannelEvent channelEvent = null;
+            for (uint i = 0; i < (uint)ChannelType.LAST; i++)
+            {
+                //these are used for channel events
+                channelEvent = new NetworkChannelEvent();
+                channelEvent.channelType = (ChannelType)i;
+                channels.Add(i, channelEvent);
+
+                try
+                {
+                    //these are used to map message object types to channel types
+                    enumName = Enum.GetName(typeof(ChannelType), (ChannelType)i);
+                    NetworkMessage message = (NetworkMessage)GetInstance("OpenP2P.Msg" + enumName);
+                    messageToChannelType.Add(message.GetType(), (ChannelType)i);
+                    channelTypeToMessage.Add((ChannelType)i, message.GetType());
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine(e.ToString());
+                }
+
+            }
         }
 
-        public static NetworkMessage CreateMessage(uint type)
+        public NetworkMessage InstantiateMessage(ChannelType type)
         {
-            return MESSAGEPOOL.Reserve((ChannelType)type);
-            //return constructors[type]();
+            return constructors[(uint)type]();
         }
 
-        public static void FreeMessage(NetworkMessage message)
+        public INetworkMessage CreateMessage(ChannelType type)
+        {
+            NetworkMessage message = (NetworkMessage)MESSAGEPOOL.Reserve(type);
+            message.header.channelType = type;
+            return message;
+        }
+
+        public INetworkMessage CreateMessage(uint id)
+        {
+            NetworkMessage message = (NetworkMessage)MESSAGEPOOL.Reserve((ChannelType)id);
+            message.header.channelType = (ChannelType)id;
+            return message;
+        }
+
+        public INetworkMessage CreateMessage<T>()
+        {
+            ChannelType ct = messageToChannelType[typeof(T)];
+            NetworkMessage message = (NetworkMessage)MESSAGEPOOL.Reserve(ct);
+            message.header.channelType = (ChannelType)ct;
+            return message;
+        }
+
+        public void FreeMessage(NetworkMessage message)
         {
             MESSAGEPOOL.Free(message);
         }
 
-        public virtual void InvokeEvent(NetworkPacket packet, NetworkMessage message)
+        public ChannelType GetChannelType(NetworkMessage msg)
         {
-            switch (message.header.sendType)
-            {
-                case SendType.Message:
-                    if (OnChannelMessage != null)
-                        OnChannelMessage.Invoke(packet, message);
-                    break;
-                case SendType.Response:
-                    if (OnChannelResponse != null)
-                        OnChannelResponse.Invoke(packet, message);
-                    break;
-            }
+            Type type = msg.GetType();
+            return messageToChannelType[type];
+        }
+
+        public object GetInstance(string strFullyQualifiedName)
+        {
+            Type t = Type.GetType(strFullyQualifiedName);
+            return Activator.CreateInstance(t);
+        }
+
+        public static class New<T> where T : new()
+        {
+            public static readonly Func<T> Instance = Expression.Lambda<Func<T>>
+                                                      (
+                                                       Expression.New(typeof(T))
+                                                      ).Compile();
+        }
+
+        public static NetworkMessage Create<T>() where T : INetworkMessage, new()
+        {
+            INetworkMessage obj = New<T>.Instance();
+            return (NetworkMessage)obj;
         }
     }
 }

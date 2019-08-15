@@ -56,7 +56,7 @@ namespace OpenP2P
 
         public void Reset()
         {
-            remoteEndPoint = socket.anyHost4;
+            //remoteEndPoint = socket.anyHost4;
             //acknowledged = false;
         }
         

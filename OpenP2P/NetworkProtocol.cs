@@ -50,9 +50,8 @@ namespace OpenP2P
 
         public void Setup(string localIP, int localPort, bool isServer)
         {
-            SetupNetworkChannels();
-
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
+            channel = new NetworkChannel();
             socket = new NetworkSocket(localIP, localPort);
             AttachSocketListener(socket);
             
@@ -72,9 +71,9 @@ namespace OpenP2P
         }
         
 
-        public NetworkPacket ConnectToServer(IPEndPoint ep, string userName)
+        public NetworkMessage ConnectToServer(string userName)
         {
-            return ident.ConnectToServer(ep, userName);
+            return ident.ConnectToServer(userName);
         }
 
 
@@ -84,7 +83,7 @@ namespace OpenP2P
             NetworkPacket packet = socket.Prepare(ep);
 
             message.header.destination = ep;
-            message.header.channelType = GetChannelType(message);
+            message.header.channelType = channel.GetChannelType(message);
             message.header.isReliable = true;
             message.header.sendType = SendType.Message;
             message.header.id = ident.local.id;
@@ -103,7 +102,7 @@ namespace OpenP2P
             IPEndPoint ip = GetIPv6(ep);
             NetworkPacket packet = socket.Prepare(ep);
 
-            message.header.channelType = GetChannelType(message);
+            message.header.channelType = channel.GetChannelType(message);
             message.header.isReliable = false;
             message.header.sendType = SendType.Message;
             message.header.sequence = ident.local.NextSequence(message);
@@ -166,7 +165,7 @@ namespace OpenP2P
                 case SendType.Response: message.ReadResponse(packet); break;
             }
 
-            NetworkChannel channel = GetChannel(message.header.channelType);
+            NetworkChannelEvent channel = GetChannelEvent(message.header.channelType);
             channel.InvokeEvent(packet, message);
 
             if (message.header.sendType == SendType.Response 
@@ -275,12 +274,12 @@ namespace OpenP2P
             SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
            
             //remove response and endian bits
-            bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag);
+            bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
-                return CreateMessage(ChannelType.Invalid);
+                return (NetworkMessage)channel.CreateMessage(ChannelType.Invalid);
 
-            NetworkMessage message = CreateMessage(bits);
+            NetworkMessage message = (NetworkMessage)channel.CreateMessage(bits);
             message.header.isReliable = isReliable;
             message.header.isLittleEndian = isLittleEndian;
             message.header.sendType = sendType;
