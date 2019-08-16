@@ -146,7 +146,7 @@ namespace OpenP2P
                 difftime = curtime - message.header.sentTime;
                 if (difftime > NetworkConfig.SocketReliableRetryDelay)
                 {
-                    if (message.header.retryCount >= NetworkConfig.SocketReliableRetryAttempts)
+                    if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
                     {
                         if (message.header.channelType == ChannelType.ConnectToServer)
                         {
@@ -157,24 +157,24 @@ namespace OpenP2P
                         packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
 
                         hasFailed = true;
-                                
-                        continue;
+                        packet.socket.Free(packet);
+                        return;
                     }
 
                     shouldResend = true;
-                            
-                    continue;
+                    packet.socket.Send(packet);
+                    return;
                 }
             }
                     
 
             if( hasFailed )
             {
-                packet.socket.Free(packet);
+                
             }
             else if( shouldResend )
             {
-                packet.socket.Send(packet);
+                
             }
             
             RELIABLEQUEUE.Enqueue(packet);

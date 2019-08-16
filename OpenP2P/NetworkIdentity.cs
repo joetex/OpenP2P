@@ -88,6 +88,7 @@ namespace OpenP2P
             if( !hasConnected )
             {
                 hasConnected = true;
+                Console.WriteLine(message.header.source.ToString());
                 Console.WriteLine(incoming.msgUsername + ", " + incoming.msgNumber + ", " + incoming.msgShort + ", " + incoming.msgBool);
 
             }
