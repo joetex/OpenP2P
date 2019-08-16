@@ -30,20 +30,22 @@ namespace OpenP2P
             packet.Write((byte)(msgBool == true ? 1 : 0));
         }
 
-        public override void WriteResponse(NetworkPacket packet)
-        {
-            packet.Write((byte)1);
-            packet.Write(responsePeerId);
-        }
-
         public override void ReadMessage(NetworkPacket packet)
         {
             msgUsername = packet.ReadString();
             msgNumber = packet.ReadInt();
             msgShort = packet.ReadShort();
             msgBool = packet.ReadByte() > 0 ? true : false;
-
         }
+
+
+        public override void WriteResponse(NetworkPacket packet)
+        {
+            packet.Write((byte)1);
+            packet.Write(responsePeerId);
+        }
+
+        
 
         public override void ReadResponse(NetworkPacket packet)
         {

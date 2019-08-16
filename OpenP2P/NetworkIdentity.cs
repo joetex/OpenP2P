@@ -62,6 +62,7 @@ namespace OpenP2P
             return msg;
         }
 
+        public bool hasConnected = false;
         //Server receives message from client
         //Create the peer and send response
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
@@ -84,7 +85,12 @@ namespace OpenP2P
                 return;
             }
             MsgConnectToServer incoming = (MsgConnectToServer)message;
-            Console.WriteLine(incoming.msgUsername + ", " + incoming.msgNumber + ", " + incoming.msgShort + ", " + incoming.msgBool);
+            if( !hasConnected )
+            {
+                hasConnected = true;
+                Console.WriteLine(incoming.msgUsername + ", " + incoming.msgNumber + ", " + incoming.msgShort + ", " + incoming.msgBool);
+
+            }
 
             MsgConnectToServer response = protocol.Create<MsgConnectToServer>();// message;
             response.responseConnected = true;
