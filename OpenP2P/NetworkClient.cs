@@ -25,6 +25,7 @@ namespace OpenP2P
         {
             protocol = new NetworkProtocol(localPort, false);
             protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             
             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
@@ -45,23 +46,7 @@ namespace OpenP2P
             message.msgBool = true;
 
             protocol.SendReliableMessage(server.GetEndpoint(), message);
-
-            Stopwatch sw = new Stopwatch();
-            /*for(int i=0; i<packet.messages.Count; i++)
-            {
-                recieveTimer.Add(packet.messages[i].header.ackkey, sw);
-                sw.Start();
-            }*/
-            
         }
-
-        public void SendHeartbeat()
-        {
-            MsgHeartbeat msg = protocol.CreateMessage<MsgHeartbeat>();
-            msg.timestamp = NetworkTime.Milliseconds();
-            protocol.SendMessage(serverHost, msg);
-        }
-        
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
@@ -72,6 +57,25 @@ namespace OpenP2P
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 
+
+        public long latencyStartTime = 0;
+        public long latency = 0;
+
+        public void SendHeartbeat()
+        {
+            MsgHeartbeat msg = protocol.CreateMessage<MsgHeartbeat>();
+            latencyStartTime = NetworkTime.Milliseconds();
+            msg.timestamp = latencyStartTime;
+            protocol.SendReliableMessage(server.GetEndpoint(), msg);
+        }
+        
+        public void OnResponseHeartbeat(object sender, NetworkMessage message)
+        {
+            latency = NetworkTime.Milliseconds() - latencyStartTime;
+            Console.WriteLine("Ping = " + (latency / 1000f));
+
+        }
+        
         public void PerformanceTest()
         {
             if (receiveCnt == 0)

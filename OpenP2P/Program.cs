@@ -13,7 +13,7 @@ namespace OpenP2P
     class Program
     {
         public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 1000;
+        public const int MAXSEND = 1;
 
         public static string connectToAddress = "127.0.0.1";
 
