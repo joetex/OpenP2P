@@ -16,11 +16,11 @@ namespace OpenP2P
         public const int MAX_RECV_THREADS = 1;
         public const int MAX_RELIABLE_THREADS = 1;
 
-        public const int MessagePoolInitialCount = 100;
+        public const int MessagePoolInitialCount = 10;
 
-        public const int BufferPoolStartCount = 1000;
+        public const int BufferPoolStartCount = 10;
         public const int BufferMaxLength = 1000;
-        public const int SocketBufferCount = 10000;
+        public const int SocketBufferCount = 100;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
 
