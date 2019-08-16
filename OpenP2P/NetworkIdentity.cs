@@ -83,6 +83,8 @@ namespace OpenP2P
                 protocol.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
                 return;
             }
+            MsgConnectToServer incoming = (MsgConnectToServer)message;
+            Console.WriteLine(incoming.msgUsername + ", " + incoming.msgNumber + ", " + incoming.msgShort + ", " + incoming.msgBool);
 
             MsgConnectToServer response = protocol.Create<MsgConnectToServer>();// message;
             response.responseConnected = true;

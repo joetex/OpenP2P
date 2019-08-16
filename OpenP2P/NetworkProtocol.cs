@@ -71,9 +71,9 @@ namespace OpenP2P
         }
         
 
-        public NetworkMessage ConnectToServer(string userName)
+        public MsgConnectToServer ConnectToServer(string userName)
         {
-            return ident.ConnectToServer(userName);
+            return (MsgConnectToServer)ident.ConnectToServer(userName);
         }
 
 

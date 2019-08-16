@@ -39,7 +39,11 @@ namespace OpenP2P
 
         public void ConnectToServer(string userName)
         {
-            NetworkMessage message = protocol.ConnectToServer(userName);
+            MsgConnectToServer message = protocol.ConnectToServer(userName);
+            message.msgNumber = 10;
+            message.msgShort = 20;
+            message.msgBool = true;
+
             protocol.SendReliableMessage(server.GetEndpoint(), message);
 
             Stopwatch sw = new Stopwatch();
