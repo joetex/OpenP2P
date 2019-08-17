@@ -38,10 +38,10 @@ namespace OpenP2P
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
-                //Thread t = new Thread(RecvProcessThread);
-                //t.Priority = ThreadPriority.Highest;
-                //RECVTHREADS.Add(t);
-                //RECVTHREADS[i].Start();
+                Thread t = new Thread(RecvProcessThread);
+                t.Priority = ThreadPriority.Highest;
+                RECVTHREADS.Add(t);
+                RECVTHREADS[i].Start();
             }
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
             {
@@ -55,7 +55,7 @@ namespace OpenP2P
         {
             NetworkPacket packet;
             int queueCount;
-
+            uint sentCount = 0;
             while (true)
             {
                 ReliableThread();
@@ -77,6 +77,14 @@ namespace OpenP2P
                 }
 
                 packet.socket.SendFromThread(packet);
+
+                sentCount += (uint)packet.byteSent;
+                if( sentCount > NetworkConfig.ThreadSendSleepEvery)
+                {
+                    sentCount = 0;
+                    Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
+                }
+                
             }
         }
 
@@ -108,7 +116,15 @@ namespace OpenP2P
             while (true)
             {
                 packet.socket.ExecuteListen(packet);
-                packet.socket.InvokeOnRecieve(packet);
+                //packet.socket.InvokeOnRecieve(packet);
+
+                lock (RECVQUEUE)
+                {
+                    RECVQUEUE.Enqueue(packet);
+                }
+
+                packet = packet.socket.Reserve();
+                //packet.Reset();
             }
         }
 
@@ -162,6 +178,7 @@ namespace OpenP2P
                     }
 
                     shouldResend = true;
+                    Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
                     packet.socket.Send(packet);
                     return;
                 }
@@ -198,7 +215,7 @@ namespace OpenP2P
 
                 if (queueCount == 0)
                 {
-                    //Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
+                    Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
                     continue;
                 }
                 lock (RECVQUEUE)

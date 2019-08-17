@@ -26,7 +26,7 @@ namespace OpenP2P
             protocol = p;
             for (int i = 0; i < (int)ChannelType.LAST; i++)
             {
-                messageSequence.Add(1);
+                messageSequence.Add(0);
             }
         }
 

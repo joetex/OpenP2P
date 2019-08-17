@@ -156,19 +156,9 @@ namespace OpenP2P
             NetworkMessage message = ReadHeader(packet);
 
             packet.messages.Add(message);
-
             message.header.source = packet.remoteEndPoint;
 
-            switch (message.header.sendType)
-            {
-                case SendType.Message: message.ReadMessage(packet); break;
-                case SendType.Response: message.ReadResponse(packet); break;
-            }
-
-            NetworkChannelEvent channel = GetChannelEvent(message.header.channelType);
-            channel.InvokeEvent(packet, message);
-
-            if (message.header.sendType == SendType.Response 
+            if (message.header.sendType == SendType.Response
                 && message.header.isReliable)
             {
                 lock (socket.thread.ACKNOWLEDGED)
@@ -178,7 +168,18 @@ namespace OpenP2P
                         socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
                     }
                 }
+
             }
+            switch (message.header.sendType)
+            {
+                case SendType.Message: message.ReadMessage(packet); break;
+                case SendType.Response: message.ReadResponse(packet); break;
+            }
+
+            NetworkChannelEvent channel = GetChannelEvent(message.header.channelType);
+            channel.InvokeEvent(packet, message);
+
+            
             
         }
 

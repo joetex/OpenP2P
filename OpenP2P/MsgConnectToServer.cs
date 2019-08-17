@@ -19,9 +19,9 @@ namespace OpenP2P
 
         public override void WriteMessage(NetworkPacket packet)
         {
-            if (msgUsername.Length > MAX_NAME_LENGTH)
+            if (msgUsername.Length > 1436)
             {
-                msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
+                //msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
             }
             
             packet.Write(msgUsername);

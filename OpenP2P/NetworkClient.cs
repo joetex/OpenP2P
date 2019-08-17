@@ -72,8 +72,18 @@ namespace OpenP2P
         public void OnResponseHeartbeat(object sender, NetworkMessage message)
         {
             latency = NetworkTime.Milliseconds() - latencyStartTime;
-            Console.WriteLine("Ping = " + (latency / 1000f));
-
+            Console.WriteLine("Ping = " + (latency) + " ms");
+            //NetworkConfig.SocketReliableRetryDelay = Math.Max(100, latency * 2);
+            Random r = new Random();
+            string username = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+            //for (int x = 0; x < MAXCLIENTS; x++)
+            {
+                for (int i = 0; i < NetworkConfig.MAXSEND; i++)
+                {
+                    //username += "JoeOfTex" + r.Next(1000, 100000) + r.Next(1000, 100000) + r.Next(1000, 100000);
+                    ConnectToServer(username);
+                }
+            }
         }
         
         public void PerformanceTest()
@@ -84,10 +94,10 @@ namespace OpenP2P
             //Interlocked.Increment(ref receiveCnt);
             receiveCnt++;
 
-            if (receiveCnt == Program.MAXSEND)
+            if (receiveCnt % 50 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
-                timer.Stop();
-                Console.WriteLine("CLIENT Finished in " + ((float)timer.ElapsedMilliseconds / 1000f) + " seconds");
+                //timer.Stop();
+                Console.WriteLine("CLIENT Finished " + receiveCnt + " packets in " + ((float)timer.ElapsedMilliseconds / 1000f) + " seconds");
             }
         }
     }

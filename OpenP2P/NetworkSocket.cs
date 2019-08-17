@@ -63,7 +63,7 @@ namespace OpenP2P
                 if (ip.AddressFamily == AddressFamily.InterNetworkV6)
                 {
                     supportsIpv6 = true;
-                    Console.WriteLine("Found IPV6: " + ip.ToString());
+                    //Console.WriteLine("Found IPV6: " + ip.ToString());
                 }
             }
             return supportsIpv6;
@@ -80,7 +80,7 @@ namespace OpenP2P
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
                     supportsIpv4 = true;
-                    Console.WriteLine("Found IPV4: " + ip.ToString());
+                    //Console.WriteLine("Found IPV4: " + ip.ToString());
                 }
             }
             return supportsIpv4;

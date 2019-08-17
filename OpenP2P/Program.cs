@@ -12,8 +12,7 @@ namespace OpenP2P
 {
     class Program
     {
-        public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 1;
+        
 
         public static string connectToAddress = "127.0.0.1";
 
@@ -61,8 +60,8 @@ namespace OpenP2P
         
         public static void RunServer()
         {
-            string localIP = NetworkConfig.GetPublicIP();
-            Console.WriteLine("IPAddress = " + localIP);
+            //string localIP = NetworkConfig.GetPublicIP();
+            //Console.WriteLine("IPAddress = " + localIP);
             
             NetworkServer server = new NetworkServer("127.0.0.1", 9000);
         }
@@ -72,7 +71,7 @@ namespace OpenP2P
             List<NetworkClient> clients = new List<NetworkClient>();
             NetworkClient client = null;// new NetworkClient("127.0.0.1", 9000, 9002);
 
-            for (int i=0; i< MAXCLIENTS; i++)
+            for (int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
                 client = new NetworkClient(connectToAddress, 9000, 0);
 
@@ -81,18 +80,11 @@ namespace OpenP2P
 
 
             NetworkConfig.ProfileEnable();
-            string username = "";
-            for(int x=0; x<MAXCLIENTS; x++)
-            {
-                for (int i = 0; i < MAXSEND; i++)
-                {
-                    username = "JoeOfTex";
-                    clients[x].ConnectToServer(username);
-                }
-            }
+            clients[0].SendHeartbeat();
+            
            
             Thread.Sleep(4000);
-            for(int i=0; i<MAXCLIENTS; i++)
+            for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
                 Console.WriteLine("Client PacketPool Count = " + clients[i].protocol.socket.thread.PACKETPOOL.packetCount);
                 //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
