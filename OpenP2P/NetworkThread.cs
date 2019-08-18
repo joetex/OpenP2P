@@ -26,7 +26,7 @@ namespace OpenP2P
         public NetworkPacket recvPacket = null;
         public int recvId = 0;
         public int failedReliableCount = 0;
-
+        public int sentBufferSize = 0;
 
         public void StartNetworkThreads()
         {
@@ -56,6 +56,7 @@ namespace OpenP2P
             NetworkPacket packet;
             int queueCount;
             uint sentCount = 0;
+            uint packetsPerFrame = 0;
             while (true)
             {
                 ReliableThread();
@@ -78,13 +79,20 @@ namespace OpenP2P
 
                 packet.socket.SendFromThread(packet);
 
+                sentBufferSize += packet.byteSent;
                 sentCount += (uint)packet.byteSent;
-                if( sentCount > NetworkConfig.ThreadSendSleepEvery)
+                packetsPerFrame++;
+                if( packetsPerFrame > NetworkConfig.ThreadSendSleepPacketsPerFrame )
+                {
+                    packetsPerFrame = 0;
+                    Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
+                    continue;
+                }
+                if( sentCount > NetworkConfig.ThreadSendSleepPacketSizePerFrame)
                 {
                     sentCount = 0;
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                 }
-                
             }
         }
 
