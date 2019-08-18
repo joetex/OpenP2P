@@ -27,7 +27,7 @@ NetworkChannel defines the types of messages that can be created.  NetworkMessag
 
 In future NetworkPeer and NetworkPeerGroup will allow stacking messages into a single packet, when possible.  
 
-NetworkMessage header encodes 5 bytes for ChannelType (up to 16 channels, 4 bits), SendType (Message/Response 1 bit), Reliable (yes/no 1 bit), Redirect (add 2 bytes for user id), Message Owner ID (2 bytes), Message Sequence (2 bytes).
+NetworkMessage header encodes 5 bytes for ChannelType (up to 16 channels, 4 bits), SendType (Message/Response 1 bit), Reliable (yes/no 1 bit), Redirect (1 bit +  2 bytes for user id), Message Owner ID (2 bytes), Message Sequence (2 bytes).
 
 ###### Event System
 
