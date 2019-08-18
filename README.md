@@ -39,4 +39,4 @@ Send, Receive, and Receive Processing are the 3 sub threads on top of main threa
 
 ###### Goals
 
-Build P2P system that can send reliable and unreliable messages, and connect users
+Build P2P system that can send reliable and unreliable messages, and connect users via a position based topology.  The end goal is to support 1,000 + real-time players on a single server.
