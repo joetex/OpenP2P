@@ -5,6 +5,7 @@ Peer-to-Peer networking library for thousands of players simulatenously.
 
 ###### Networking Core Design
 
+```
 NetworkClient/NetworkServer 
 
   -> NetworkProtocol 
@@ -18,6 +19,7 @@ NetworkClient/NetworkServer
       -> NetworkPacket
       
         ->NetworkMessage
+```
 
 ###### Multi-threaded
 
