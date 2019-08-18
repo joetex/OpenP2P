@@ -116,7 +116,6 @@ namespace OpenP2P
             while (true)
             {
                 packet.socket.ExecuteListen(packet);
-                //packet.socket.InvokeOnRecieve(packet);
 
                 lock (RECVQUEUE)
                 {
@@ -124,7 +123,6 @@ namespace OpenP2P
                 }
 
                 packet = packet.socket.Reserve();
-                //packet.Reset();
             }
         }
 

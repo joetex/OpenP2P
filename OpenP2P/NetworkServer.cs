@@ -16,6 +16,8 @@ namespace OpenP2P
         {
             protocol = new NetworkProtocol(localIP, localPort, true);
             protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
+            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+
             protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
 
@@ -23,15 +25,32 @@ namespace OpenP2P
 
         public void OnMessageHeartbeat(object sender, NetworkMessage message)
         {
-            
-
             MsgHeartbeat heartbeat = (MsgHeartbeat)message;
             heartbeat.responseTimestamp = NetworkTime.Milliseconds();
             protocol.SendResponse(heartbeat, heartbeat);
             //Console.WriteLine("Received Heartbeat from ("+ message.peer.id +") :");
             //Console.WriteLine(heartbeat.timestamp);
+
+            for (int i = 0; i < NetworkConfig.MAXSEND; i++)
+            {
+                //username += "JoeOfTex" + r.Next(1000, 100000) + r.Next(1000, 100000) + r.Next(1000, 100000);
+                MsgConnectToServer tmp = protocol.Create<MsgConnectToServer>();
+                tmp.msgUsername = "JoeOfTex";
+                tmp.msgNumber = 10;
+                tmp.msgShort = 20;
+                tmp.msgBool = true;
+
+                protocol.SendReliableMessage(message.header.source, tmp);
+            }
         }
-        
+
+        private void OnResponseConnectToServer(object sender, NetworkMessage e)
+        {
+            PerformanceTest();
+
+            NetworkPacket packet = (NetworkPacket)sender;
+        }
+
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();

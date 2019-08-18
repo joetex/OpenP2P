@@ -54,12 +54,7 @@ namespace OpenP2P
             bytePos = 0;
         }
 
-        public void Reset()
-        {
-            //remoteEndPoint = socket.anyHost4;
-            //acknowledged = false;
-        }
-        
+       
         public void Complete()
         {
             SetBufferLength(byteLength);

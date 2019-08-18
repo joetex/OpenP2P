@@ -66,7 +66,7 @@
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkPacket.cs" />
     <Compile Include="NetworkPacketPool.cs" />
-    <Compile Include="NetworkStreamSerializer.cs" />
+    <Compile Include="NetworkPacketSerializer.cs" />
     <Compile Include="NetworkThread.cs" />
     <Compile Include="NetworkTime.cs" />
     <Compile Include="Program.cs" />

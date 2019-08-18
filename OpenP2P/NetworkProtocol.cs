@@ -260,7 +260,7 @@ namespace OpenP2P
                     message.header.ackkey = GenerateAckKey(packet, message);
                 }
 
-                packet.Write((byte)1);
+                //packet.Write((byte)1);
             }
         }
 
@@ -291,8 +291,8 @@ namespace OpenP2P
             
             if (message.header.isReliable)
             {
-                byte hasAck = packet.ReadByte();
-                if(hasAck > 0 )
+                //byte hasAck = packet.ReadByte();
+                //if(hasAck > 0 )
                 //message.header.ackkey = packet.ReadUInt();
                     message.header.ackkey = GenerateAckKey(packet, message);
             }

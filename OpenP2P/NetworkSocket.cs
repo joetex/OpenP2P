@@ -154,9 +154,7 @@ namespace OpenP2P
         {
             if (packet == null)
                 packet = Reserve();
-
-            packet.Reset();
-
+            
             thread.BeginRecvThread(packet);
         }
 
@@ -166,8 +164,6 @@ namespace OpenP2P
          */
         public void ExecuteListen(NetworkPacket packet)
         {
-            packet.Reset();
-            
             try
             {
                 Socket socket = socket4;
