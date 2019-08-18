@@ -85,12 +85,14 @@ namespace OpenP2P
                 if( packetsPerFrame > NetworkConfig.ThreadSendSleepPacketsPerFrame )
                 {
                     packetsPerFrame = 0;
+                    sentCount = 0;
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
                 if( sentCount > NetworkConfig.ThreadSendSleepPacketSizePerFrame)
                 {
                     sentCount = 0;
+                    packetsPerFrame = 0;
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                 }
             }
