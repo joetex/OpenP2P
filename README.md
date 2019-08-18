@@ -5,22 +5,17 @@ Peer-to-Peer networking library for thousands of players simulatenously.
 
 ###### Networking Core Design
 
-Client or Server  ->  Data Controller
-
-NetworkProtocol ->  Simplify message management
-  
-NetworkMessage  ->  Custom Message Protocols
-  
-NetworkStream   ->  ByteBuffer Write/Read
-  
-NetworkSocket   ->  Interfaces with low-level sockets
-
+NetworkClient/NetworkServer 
+  -> NetworkProtocol 
+    -> NetworkSocket
+      -> NetworkThread
+    -> NetworkChannel
+      -> NetworkPacket
+        ->NetworkMessage
 
 ###### Multi-threaded
 
-1 send thread
-
-X listener threads, where X is total clients and/or servers running together.
+Send, Receive, and Receive Processing are the 3 sub threads on top of main thread.
 
 ###### Goals
 
