@@ -220,7 +220,7 @@ namespace OpenP2P
         }
 
         // 0000 0000
-        // bits 1-4 => Channel Type
+        // bits 1-4 => Channel Type (up to 16 channels)
         // bits 5 => Send Type
         // bits 6 => Reliable Flag
         // bits 7 => Endian Flag
@@ -259,8 +259,6 @@ namespace OpenP2P
                 {
                     message.header.ackkey = GenerateAckKey(packet, message);
                 }
-
-                //packet.Write((byte)1);
             }
         }
 
@@ -291,10 +289,7 @@ namespace OpenP2P
             
             if (message.header.isReliable)
             {
-                //byte hasAck = packet.ReadByte();
-                //if(hasAck > 0 )
-                //message.header.ackkey = packet.ReadUInt();
-                    message.header.ackkey = GenerateAckKey(packet, message);
+                message.header.ackkey = GenerateAckKey(packet, message);
             }
             
             return message;

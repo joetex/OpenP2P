@@ -13,16 +13,21 @@ namespace OpenP2P
     {
         public class Header
         {
+            //encoded into packet
             public bool isReliable = false;
             public bool isLittleEndian = true;
+            public bool isRedirect = false;
             public SendType sendType = 0;
             public ChannelType channelType = ChannelType.Invalid;
             public ushort sequence = 0;
             public ushort id = 0;
+
+            //packet status
             public uint ackkey = 0;
             public long sentTime = 0;
             public int retryCount = 0;
-            public bool isRedirect = false;
+            
+            //packet endpoints
             public EndPoint source = null;
             public EndPoint destination = null;
             public NetworkPeer peer = null;
