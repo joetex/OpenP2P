@@ -25,20 +25,20 @@ namespace OpenP2P
                 //msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
             }
             
-            //packet.Write(msgUsername);
-            //packet.Write(msgNumber);
-            //packet.Write(msgShort);
-            //packet.Write((byte)(msgBool == true ? 1 : 0));
-            packet.Write(string100Bytes);
+            packet.Write(msgUsername);
+            packet.Write(msgNumber);
+            packet.Write(msgShort);
+            packet.Write((byte)(msgBool == true ? 1 : 0));
+            //packet.Write(string100Bytes);
         }
 
         public override void ReadMessage(NetworkPacket packet)
         {
-            msgUsername = "test";// packet.ReadString();
-            //msgNumber = packet.ReadInt();
-            //msgShort = packet.ReadShort();
-            //msgBool = packet.ReadByte() > 0 ? true : false;
-            string longStr = packet.ReadString();
+            msgUsername = packet.ReadString();
+            msgNumber = packet.ReadInt();
+            msgShort = packet.ReadShort();
+            msgBool = packet.ReadByte() > 0 ? true : false;
+            //string longStr = packet.ReadString();
         }
 
 
