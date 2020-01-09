@@ -12,13 +12,16 @@ namespace OpenP2P
 
         public long responseTimestamp = 0;
 
+        public string string100Bytes = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
         public override void WriteMessage(NetworkPacket packet)
         {
             packet.Write(timestamp);
+            packet.Write(string100Bytes);
         }
         public override void ReadMessage(NetworkPacket packet)
         {
             timestamp = packet.ReadLong();
+            string longStr = packet.ReadString();
         }
 
 

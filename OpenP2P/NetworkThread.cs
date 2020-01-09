@@ -61,7 +61,7 @@ namespace OpenP2P
             {
                 ReliableThread();
 
-                lock (SENDQUEUE)
+                //lock (SENDQUEUE)
                 {
                     queueCount = SENDQUEUE.Count;
                 }
