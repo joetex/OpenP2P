@@ -66,7 +66,7 @@ namespace OpenP2P
 
             receiveCnt++;
 
-            if (receiveCnt % 50 == 0 || receiveCnt == NetworkConfig.MAXSEND)
+            if (receiveCnt % 500 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
                 //recieveTimer.Stop();
                 Console.WriteLine("SERVER Finished in " + receiveCnt + " packets in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");

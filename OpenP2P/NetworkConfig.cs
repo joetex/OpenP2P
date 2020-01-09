@@ -28,12 +28,12 @@ namespace OpenP2P
         public const int SocketReceiveTimeout = 0;
 
         //important to sleep more, since they are on infinite loops
-        public const int ThreadSendSleepPacketSizePerFrame = 1500;
-        public const int ThreadSendSleepPacketsPerFrame = 20;
+        public const int ThreadSendSleepPacketSizePerFrame = 10000;
+        public const int ThreadSendSleepPacketsPerFrame = 100;
         public const int ThreadWaitingSleepTime = 1;
         public const int ThreadSendRateSleepTime = 0;
         public const int ThreadReliableSleepTime = 0;
-        public const int ThreadRecvProcessSleepTime = 2;
+        public const int ThreadRecvProcessSleepTime = 1;
 
         public static long SocketReliableRetryDelay = 1000;
         public static long SocketReliableRetryAttempts = 10;

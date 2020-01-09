@@ -37,9 +37,9 @@ namespace OpenP2P
                 }
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
-            
 
-            if (isServer )
+
+            if (isServer)
             {
                 RunServer();
             }
@@ -47,7 +47,7 @@ namespace OpenP2P
             {
                 RunClient();
             }
-            
+
             //RunServer();
             //RunClient();
             //Thread t = new Thread(Test1);
@@ -55,7 +55,7 @@ namespace OpenP2P
             //t = new Thread(Test2);
             //t.Start();
 
-            //Thread.Sleep(3000);
+            Thread.Sleep(3000);
         }
         
         public static void RunServer()
