@@ -26,7 +26,7 @@ namespace OpenP2P
         public void OnMessageHeartbeat(object sender, NetworkMessage message)
         {
             MsgHeartbeat heartbeat = (MsgHeartbeat)message;
-            heartbeat.responseTimestamp = NetworkTime.Milliseconds();
+            heartbeat.responseTimestamp = heartbeat.timestamp;
             protocol.SendResponse(heartbeat, heartbeat);
             //Console.WriteLine("Received Heartbeat from ("+ message.peer.id +") :");
             //Console.WriteLine(heartbeat.timestamp);

@@ -71,6 +71,8 @@ namespace OpenP2P
             //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
+            mainThread = new Thread(MainThread);
+            mainThread.Start();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 
@@ -88,7 +90,9 @@ namespace OpenP2P
         
         public void OnResponseHeartbeat(object sender, NetworkMessage message)
         {
-            latency = NetworkTime.Milliseconds() - latencyStartTime;
+            MsgHeartbeat msg = (MsgHeartbeat)message;
+
+            latency = NetworkTime.Milliseconds() - msg.responseTimestamp;
             Console.WriteLine("Ping = " + (latency) + " ms");
             NetworkConfig.SocketReliableRetryDelay = Math.Max(100, latency * 2);
             Random r = new Random();
