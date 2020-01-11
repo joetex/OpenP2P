@@ -22,7 +22,7 @@ namespace OpenP2P
         public List<Thread> SENDTHREADS = new List<Thread>();
         public List<Thread> RECVTHREADS = new List<Thread>();
         public List<Thread> RELIABLETHREADS = new List<Thread>();
-
+        
         public NetworkPacket recvPacket = null;
         public int recvId = 0;
         public int failedReliableCount = 0;
@@ -48,8 +48,11 @@ namespace OpenP2P
                 //RELIABLETHREADS.Add(new Thread(ReliableThread));
                 //RELIABLETHREADS[i].Start();
             }
+
+            
         }
 
+       
 
         public void SendThread()
         {

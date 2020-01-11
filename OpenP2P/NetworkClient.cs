@@ -11,12 +11,14 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class NetworkClient
+    public partial class NetworkClient
     {
         public NetworkProtocol protocol = null;
 
         public IPEndPoint serverHost = null;
         public NetworkPeer server = null;
+        public Thread mainThread = null;
+        
 
         public int receiveCnt = 0;
         Stopwatch timer;
@@ -32,6 +34,8 @@ namespace OpenP2P
             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(protocol);
             server.AddEndpoint(serverHost);
+
+            
         }
 
         private void OnMessageConnectToServer(object sender, NetworkMessage e)
@@ -41,6 +45,9 @@ namespace OpenP2P
             //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
+
+            mainThread = new Thread(MainThread);
+            mainThread.Start();
         }
 
         public void OnErrorReliableFailed(object sender, NetworkPacket packet)
@@ -90,10 +97,10 @@ namespace OpenP2P
             string username = "JoeOfTex";
             //for (int x = 0; x < MAXCLIENTS; x++)
             {
-                for (int i = 0; i < NetworkConfig.MAXSEND; i++)
+                //for (int i = 0; i < NetworkConfig.MAXSEND; i++)
                 {
                     //username += "JoeOfTex" + r.Next(1000, 100000) + r.Next(1000, 100000) + r.Next(1000, 100000);
-                    ConnectToServer(username);
+                    //ConnectToServer(username);
                 }
             }
         }

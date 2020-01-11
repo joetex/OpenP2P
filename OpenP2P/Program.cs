@@ -80,7 +80,7 @@ namespace OpenP2P
 
 
             NetworkConfig.ProfileEnable();
-            clients[0].SendHeartbeat();
+            clients[0].ConnectToServer("JoeOfTexas");
             
            
             Thread.Sleep(4000);

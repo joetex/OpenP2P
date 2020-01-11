@@ -38,6 +38,8 @@ namespace OpenP2P
         public static long SocketReliableRetryDelay = 200;
         public static long SocketReliableRetryAttempts = 2;
 
+        public static long NetworkSendRate = 50;
+
         public static Stopwatch profiler = new Stopwatch();
         public static Dictionary<string, long> profileTimes = new Dictionary<string, long>();
         public static Dictionary<string, long> profileStart = new Dictionary<string, long>();

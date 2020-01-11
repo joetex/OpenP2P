@@ -34,21 +34,24 @@ namespace OpenP2P
 
         Random random = new Random();
 
+        public bool isClient = false;
+        public bool isServer = false;
 
-        public NetworkProtocol(string localIP, int localPort, bool isServer)
+
+        public NetworkProtocol(string localIP, int localPort, bool _isServer)
         {
-            Setup(localIP, localPort, isServer);
+            Setup(localIP, localPort, _isServer);
         }
 
 
-        public NetworkProtocol(int localPort, bool isServer)
+        public NetworkProtocol(int localPort, bool _isServer)
         {
             string localIP = "127.0.0.1";
-            Setup(localIP, localPort, isServer);
+            Setup(localIP, localPort, _isServer);
         }
 
 
-        public void Setup(string localIP, int localPort, bool isServer)
+        public void Setup(string localIP, int localPort, bool _isServer)
         {
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             channel = new NetworkChannel();
@@ -61,6 +64,9 @@ namespace OpenP2P
             {
                 ident.RegisterServer(socket.sendSocket.LocalEndPoint);
             }
+           
+            isClient = !isServer;
+            isServer = _isServer;
         }
         
 
