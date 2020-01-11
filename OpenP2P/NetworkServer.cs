@@ -29,7 +29,7 @@ namespace OpenP2P
             MsgHeartbeat response = protocol.CreateMessage<MsgHeartbeat>();
             response.responseTimestamp = heartbeat.timestamp;
             protocol.SendResponse(heartbeat, response);
-            //Console.WriteLine("Received Heartbeat from ("+ message.peer.id +") :");
+            Console.WriteLine("Received Heartbeat from ("+ heartbeat.header.peer.id +") :");
             //Console.WriteLine(heartbeat.timestamp);
 
             /*for (int i = 0; i < NetworkConfig.MAXSEND; i++)
