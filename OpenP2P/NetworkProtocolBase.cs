@@ -19,7 +19,7 @@ namespace OpenP2P
         
         public virtual void WriteHeader(NetworkPacket packet, NetworkMessage message) { }
         public virtual NetworkMessage ReadHeader(NetworkPacket packet) { return null; }
-
+        public virtual NetworkMessage[] ReadHeaders(NetworkPacket packet) { return null; }
         public virtual void OnReceive(object sender, NetworkPacket packet) { }
         public virtual void OnSend(object sender, NetworkPacket packet) { }
         public virtual void OnError(object sender, NetworkPacket packet) { }

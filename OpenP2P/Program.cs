@@ -70,19 +70,20 @@ namespace OpenP2P
         {
             List<NetworkClient> clients = new List<NetworkClient>();
             NetworkClient client = null;// new NetworkClient("127.0.0.1", 9000, 9002);
-
+            NetworkConfig.ProfileEnable();
             for (int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
                 client = new NetworkClient(connectToAddress, 9000, 0);
 
                 clients.Add(client);
+                client.ConnectToServer("JoeOfTexas" + i);
             }
 
 
-            NetworkConfig.ProfileEnable();
-            clients[0].ConnectToServer("JoeOfTexas");
             
-           
+            
+            
+           /*
             Thread.Sleep(4000);
             for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
@@ -90,7 +91,7 @@ namespace OpenP2P
                 //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
                 Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
                 Console.WriteLine("Client bandwidth sent: " + clients[i].protocol.socket.thread.sentBufferSize);
-            }
+            }*/
             
         }
 

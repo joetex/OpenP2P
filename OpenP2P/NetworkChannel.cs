@@ -15,6 +15,7 @@ namespace OpenP2P
         ConnectToPeer,
         DisconnectFromServer,
         DisconnectFromPeer,
+        MultiPacket, //multiple packets packed into one packet
         //interest mapping data sent to server
         //Peers will be connected together at higher priorities based on the 
         // "interest" mapping to a QuadTree (x, y, width, height) 
@@ -35,6 +36,7 @@ namespace OpenP2P
             {(uint)ChannelType.ConnectToPeer, Create<MsgInvalid>},
             {(uint)ChannelType.DisconnectFromServer, Create<MsgInvalid>},
             {(uint)ChannelType.DisconnectFromPeer, Create<MsgInvalid>},
+            {(uint)ChannelType.MultiPacket, Create<MsgInvalid>},
             {(uint)ChannelType.Heartbeat, Create<MsgHeartbeat>},
             {(uint)ChannelType.Raw, Create<MsgInvalid>},
             {(uint)ChannelType.Event, Create<MsgInvalid>},

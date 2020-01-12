@@ -278,7 +278,7 @@ namespace OpenP2P
             bool isReliable = (bits & ReliableFlag) > 0;
             SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
            
-            //remove response and endian bits
+            //remove flag bits to reveal channel type
             bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
@@ -299,6 +299,34 @@ namespace OpenP2P
             }
             
             return message;
+        }
+
+        public override NetworkMessage[] ReadHeaders(NetworkPacket packet)
+        {
+            uint bits = packet.ReadByte();
+
+            bool isRedirect = (bits & RedirectFlag) > 0;
+            bool isLittleEndian = (bits & BigEndianFlag) == 0;
+            bool isReliable = (bits & ReliableFlag) > 0;
+            SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
+
+            //remove flag bits to reveal channel type
+            bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
+
+            if (bits < 0 || bits >= (uint)ChannelType.LAST)
+            {
+                NetworkMessage[] msgFailList = new NetworkMessage[1];
+                msgFailList[0] = (NetworkMessage)channel.CreateMessage(ChannelType.Invalid);
+                return msgFailList;
+            }
+
+            uint msgCount = packet.ReadByte();
+            NetworkMessage[] msg = new NetworkMessage[msgCount];
+            for (int i=0; i<msgCount; i++)
+            {
+                msg[i] = ReadHeader(packet);
+            }
+            return msg;
         }
         
 
