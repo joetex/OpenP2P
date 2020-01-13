@@ -15,7 +15,7 @@ namespace OpenP2P
         {
             //encoded into packet
             public bool isReliable = false;
-            public bool isLittleEndian = true;
+            public bool isStream = false;
             public bool isRedirect = false;
             public SendType sendType = 0;
             public ChannelType channelType = ChannelType.Invalid;
@@ -39,5 +39,8 @@ namespace OpenP2P
         public virtual void WriteResponse(NetworkPacket packet) { }
         public virtual void ReadMessage(NetworkPacket packet) { }
         public virtual void ReadResponse(NetworkPacket packet) { }
+
+        public virtual void StreamMessage(NetworkPacket packet) {}
+
     }
 }

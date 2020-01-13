@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     public class NetworkConfig
     {
-        public const int MAXCLIENTS = 2;
+        public const int MAXCLIENTS = 20;
         public const int MAXSEND = 6000;
 
         public const int MAX_SEND_THREADS = 1;
@@ -22,7 +22,7 @@ namespace OpenP2P
         public const int MessagePoolInitialCount = 1000;
 
         public const int BufferPoolStartCount = 10;
-        public const int BufferMaxLength = 1420;
+        public const int BufferMaxLength = 1300;
         public const int SocketBufferCount = 1500;
         public const int SocketSendRate = 1000;
         public const int SocketReceiveTimeout = 0;
@@ -38,7 +38,7 @@ namespace OpenP2P
         public static long SocketReliableRetryDelay = 200;
         public static long SocketReliableRetryAttempts = 2;
 
-        public static long NetworkSendRate = 50;
+        public static long NetworkSendRate = 200;
 
         public static Stopwatch profiler = new Stopwatch();
         public static Dictionary<string, long> profileTimes = new Dictionary<string, long>();

@@ -20,12 +20,17 @@ namespace OpenP2P
         }
         public unsafe void Write(byte[] val)
         {
-            if (BitConverter.IsLittleEndian)
-            {
+            //if (BitConverter.IsLittleEndian)
+            //{
                 //Array.Reverse(val, 0, val.Length);
-            }
+            //}
             Array.Copy(val, 0, ByteBuffer, byteLength, val.Length);
             byteLength += val.Length;
+        }
+        public unsafe void Write(byte[] val, int start, int length)
+        {
+            Array.Copy(val, start, ByteBuffer, byteLength, length);
+            byteLength += length;
         }
 
         public unsafe void Write(int val)
@@ -155,6 +160,18 @@ namespace OpenP2P
         public byte ReadByte()
         {
             return ByteBuffer[bytePos++];
+        }
+
+        public byte[] ReadBytes(int len)
+        {
+            byte[] result = new byte[len];
+            int startPos = bytePos;
+            int endPos = bytePos + len;
+            for (int i = startPos; i < endPos; i++)
+            {
+                result[i - startPos] = ByteBuffer[bytePos++];
+            }
+            return result;
         }
 
         public byte[] ReadBytes()

@@ -1,11 +1,6 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenP2P
 {
@@ -23,7 +18,7 @@ namespace OpenP2P
     public class NetworkProtocol : NetworkProtocolBase
     {
         const uint RedirectFlag = (1 << 8); //bit 8
-        const uint BigEndianFlag = (1 << 7); //bit 7
+        const uint StreamFlag = (1 << 7); //bit 7
         const uint ReliableFlag = (1 << 6);  //bit 6
         const uint SendTypeFlag = (1 << 5); //bit 5
         
@@ -59,7 +54,7 @@ namespace OpenP2P
             AttachSocketListener(socket);
             
             AttachNetworkIdentity();
-
+            
             if (isServer)
             {
                 ident.RegisterServer(socket.sendSocket.LocalEndPoint);
@@ -102,6 +97,38 @@ namespace OpenP2P
             return packet;
         }
 
+        public NetworkPacket[] SendStream(EndPoint ep, NetworkMessage message)
+        {
+            IPEndPoint ip = GetIPv6(ep);
+
+            MsgDataContent msg = (MsgDataContent)message;
+
+            int packetCount = msg.packetCount;
+            NetworkPacket[] packets = new NetworkPacket[packetCount];
+
+            message.header.channelType = channel.GetChannelType(message);
+            message.header.isReliable = true;
+            message.header.isStream = true;
+            message.header.sendType = SendType.Message;
+            
+
+            message.header.id = ident.local.id;
+            for (int i=0; i<packetCount; i++)
+            {
+                NetworkPacket packet = socket.Prepare(ep);
+                packets[i] = packet;
+                packet.messages.Add(message);// = message;
+
+                message.header.sequence = ident.local.NextSequence(message);
+
+                WriteHeader(packet, message);
+                message.WriteMessage(packet); 
+
+                socket.Send(packet);
+            }
+            
+            return packets;
+        }
 
         public NetworkPacket SendMessage(EndPoint ep, NetworkMessage message)
         {
@@ -145,7 +172,6 @@ namespace OpenP2P
         public void Send(NetworkPacket packet, NetworkMessage message)
         {
             packet.messages.Add(message);// = message;
-
             WriteHeader(packet, message);
             switch(message.header.sendType)
             {
@@ -176,18 +202,22 @@ namespace OpenP2P
                 }
 
             }
+
+            if (message.header.isStream)
+            {
+
+            }
+
             switch (message.header.sendType)
             {
                 case SendType.Message: message.ReadMessage(packet); break;
                 case SendType.Response: message.ReadResponse(packet); break;
             }
-
-            NetworkChannelEvent channel = GetChannelEvent(message.header.channelType);
-            channel.InvokeEvent(packet, message);
-
             
-            
+            NetworkChannelEvent channelEvent = GetChannelEvent(message.header.channelType);
+            channelEvent.InvokeEvent(packet, message);
         }
+        
 
 
         public override void OnSend(object sender, NetworkPacket packet)
@@ -246,13 +276,13 @@ namespace OpenP2P
                 msgBits |= ReliableFlag;
            
             //add little endian to bit 8
-            if (!BitConverter.IsLittleEndian)
-                msgBits |= BigEndianFlag;
+            if ( message.header.isStream )
+                msgBits |= StreamFlag;
 
             if( message.header.isRedirect )
                 msgBits |= RedirectFlag;
                 
-            message.header.isLittleEndian = BitConverter.IsLittleEndian;
+            message.header.isStream = BitConverter.IsLittleEndian;
 
             packet.Write((byte)msgBits);
             packet.Write(message.header.sequence);
@@ -274,19 +304,19 @@ namespace OpenP2P
             uint bits = packet.ReadByte();
 
             bool isRedirect = (bits & RedirectFlag) > 0;
-            bool isLittleEndian = (bits & BigEndianFlag) == 0;
+            bool isStream = (bits & StreamFlag) > 0;
             bool isReliable = (bits & ReliableFlag) > 0;
             SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
            
             //remove flag bits to reveal channel type
-            bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
+            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
                 return (NetworkMessage)channel.CreateMessage(ChannelType.Invalid);
 
             NetworkMessage message = (NetworkMessage)channel.CreateMessage(bits);
             message.header.isReliable = isReliable;
-            message.header.isLittleEndian = isLittleEndian;
+            message.header.isStream = isStream;
             message.header.sendType = sendType;
             message.header.channelType = (ChannelType)bits;
             message.header.sequence = packet.ReadUShort();
@@ -304,14 +334,8 @@ namespace OpenP2P
         public override NetworkMessage[] ReadHeaders(NetworkPacket packet)
         {
             uint bits = packet.ReadByte();
-
-            bool isRedirect = (bits & RedirectFlag) > 0;
-            bool isLittleEndian = (bits & BigEndianFlag) == 0;
-            bool isReliable = (bits & ReliableFlag) > 0;
-            SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
-
             //remove flag bits to reveal channel type
-            bits = bits & ~(BigEndianFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
+            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
             {

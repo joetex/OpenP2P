@@ -27,8 +27,10 @@ namespace OpenP2P
         {
             protocol = new NetworkProtocol(localPort, false);
             protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachMessageListener(ChannelType.DataContent, OnMessageDataContent);
             protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
+
+           // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             
             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
@@ -36,6 +38,11 @@ namespace OpenP2P
             server.AddEndpoint(serverHost);
 
             
+        }
+
+        private void OnMessageDataContent(object sender, NetworkMessage e)
+        {
+
         }
 
         private void OnMessageConnectToServer(object sender, NetworkMessage e)

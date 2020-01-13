@@ -12,7 +12,7 @@ namespace OpenP2P
 
         public event EventHandler<NetworkMessage> OnChannelMessage = null;
         public event EventHandler<NetworkMessage> OnChannelResponse = null;
-
+        public event EventHandler<NetworkMessage> OnChannelStream = null;
         public NetworkChannelEvent()
         {
         }
@@ -22,8 +22,16 @@ namespace OpenP2P
             switch (message.header.sendType)
             {
                 case SendType.Message:
-                    if (OnChannelMessage != null)
-                        OnChannelMessage.Invoke(packet, message);
+                    if (message.header.isStream)
+                    {
+                        if (OnChannelMessage != null)
+                            OnChannelStream.Invoke(packet, message);
+                    }
+                    else
+                    {
+                        if (OnChannelMessage != null)
+                            OnChannelMessage.Invoke(packet, message);
+                    }
                     break;
                 case SendType.Response:
                     if (OnChannelResponse != null)

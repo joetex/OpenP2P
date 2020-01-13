@@ -23,7 +23,10 @@ namespace OpenP2P
         public virtual void OnReceive(object sender, NetworkPacket packet) { }
         public virtual void OnSend(object sender, NetworkPacket packet) { }
         public virtual void OnError(object sender, NetworkPacket packet) { }
-        
+
+        //public Dictionary<string, byte[]> cachedStreams = new Dictionary<string, byte[]>();
+        public List<byte[]> cachedStreams = new List<byte[]>();
+
         public virtual IPEndPoint GetIPv6(EndPoint ep)
         {
             IPEndPoint ip = (IPEndPoint)ep;
@@ -47,6 +50,11 @@ namespace OpenP2P
             socket.OnReceive += OnReceive;
             socket.OnSend += OnSend;
             socket.OnError += OnError;
+        }
+
+        public virtual void AttachStreamListener(ChannelType msgType, EventHandler<NetworkMessage> func)
+        {
+            GetChannelEvent((uint)msgType).OnChannelMessage += func;
         }
 
         public virtual void AttachMessageListener(ChannelType msgType, EventHandler<NetworkMessage> func)

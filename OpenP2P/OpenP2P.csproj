@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MsgDataContent.cs" />
     <Compile Include="NetworkChannel.cs" />
     <Compile Include="NetworkChannelEvent.cs" />
     <Compile Include="NetworkClientThread.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="NetworkProtocol.cs" />
     <Compile Include="NetworkProtocolBase.cs" />
     <Compile Include="NetworkProtocolTypes.cs" />
+    <Compile Include="NetworkRSAEncryption.cs" />
     <Compile Include="NetworkServer.cs" />
     <Compile Include="NetworkSocket.cs" />
     <Compile Include="NetworkPacket.cs" />

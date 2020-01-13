@@ -38,7 +38,7 @@ namespace OpenP2P
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
 
-
+            /*
             if (isServer)
             {
                 RunServer();
@@ -47,7 +47,10 @@ namespace OpenP2P
             {
                 RunClient();
             }
+            */
 
+            NetworkRSAEncryption enc = new NetworkRSAEncryption();
+            enc.Test();
             //RunServer();
             //RunClient();
             //Thread t = new Thread(Test1);
@@ -55,7 +58,7 @@ namespace OpenP2P
             //t = new Thread(Test2);
             //t.Start();
 
-            Thread.Sleep(3000);
+            Thread.Sleep(10000);
         }
         
         public static void RunServer()

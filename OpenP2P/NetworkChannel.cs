@@ -19,6 +19,7 @@ namespace OpenP2P
         //interest mapping data sent to server
         //Peers will be connected together at higher priorities based on the 
         // "interest" mapping to a QuadTree (x, y, width, height) 
+        DataContent, //used for large data transfer
         Heartbeat,
         Raw,
         Event,
@@ -37,6 +38,7 @@ namespace OpenP2P
             {(uint)ChannelType.DisconnectFromServer, Create<MsgInvalid>},
             {(uint)ChannelType.DisconnectFromPeer, Create<MsgInvalid>},
             {(uint)ChannelType.MultiPacket, Create<MsgInvalid>},
+            {(uint)ChannelType.DataContent, Create<MsgInvalid> },
             {(uint)ChannelType.Heartbeat, Create<MsgHeartbeat>},
             {(uint)ChannelType.Raw, Create<MsgInvalid>},
             {(uint)ChannelType.Event, Create<MsgInvalid>},
