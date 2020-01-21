@@ -47,7 +47,11 @@ namespace OpenP2P
             Console.WriteLine("Command: " + stream.command);
             string result = Encoding.UTF8.GetString(stream.byteData);
 
+            latency = NetworkTime.Milliseconds() - latencyStartTime;
+            Console.WriteLine("Stream took " + (latency) + " ms");
+
             Console.WriteLine("Text: " + result);
+
         }
 
         private void OnMessageConnectToServer(object sender, NetworkMessage e)
@@ -90,6 +94,8 @@ namespace OpenP2P
 
             latency = NetworkTime.Milliseconds() - latencyStartTime;
             Console.WriteLine("Ping = " + (latency) + " ms");
+
+            latencyStartTime = NetworkTime.Milliseconds();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 

@@ -101,11 +101,7 @@ namespace OpenP2P
         public List<NetworkPacket> SendStream(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
-
             NetworkMessageStream stream = (NetworkMessageStream)message;
-
-            //int packetCount = msg.partsCount;
-            //NetworkPacket[] packets = new NetworkPacket[packetCount];
             List<NetworkPacket> packets = new List<NetworkPacket>();
 
             stream.header.channelType = channel.GetChannelType(stream);
@@ -115,22 +111,15 @@ namespace OpenP2P
             stream.header.sequence = ident.local.NextSequence(stream);
             stream.header.id = ident.local.id;
 
-            while (stream.startPos == 0 || stream.segmentLen > 0 )
+            while (stream.segmentLen > 0 && stream.startPos < stream.byteData.Length )
             {
                 NetworkPacket packet = socket.Prepare(ep);
-                //packets[i] = packet;
-                packet.messages.Add(stream);// = message;
+                packet.messages.Add(stream);
                 
                 WriteHeader(packet, stream);
                 WriteMessage(packet, stream);
 
-                /*if ( i == 0 )
-                {
-                    uint streamID = ((uint)message.header.id << 8) | (uint)msg.recvStreamIndex;
-                    cachedStreams.Add(streamID, msg);
-                }*/
                 socket.Send(packet);
-                //i = (int)stream.startPos;
                 Console.WriteLine("Sent " + (stream.segmentLen) + " bytes");
             }
             

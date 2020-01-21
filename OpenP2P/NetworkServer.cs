@@ -59,7 +59,8 @@ namespace OpenP2P
             PerformanceTest();
             
             NetworkPacket packet = (NetworkPacket)sender;
-            var path = Path.Combine(@"D:\GitHub\OpenP2P\OpenP2P\ipsum.txt");
+            string path = Directory.GetCurrentDirectory();
+            path = Path.Combine(path + "/../../ipsum.txt");
             string text = File.ReadAllText(path);
             byte[] bytes = Encoding.ASCII.GetBytes(text);
 

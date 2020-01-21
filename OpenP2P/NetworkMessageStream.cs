@@ -6,32 +6,37 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
+
+    /// <summary>
+    /// Network Message Stream
+    /// Packet format:
+    /// |-------------------------------------|
+    /// |  Start Pos (4 bytes)                |
+    /// |-------------------------------------|
+    /// |  Full Length (4 bytes) 1st only     |
+    /// |-------------------------------------|
+    /// |  Command String (X bytes) 1st only  |
+    /// |-------------------------------------|
+    /// |  Segment Length (4 bytes)           |
+    /// |-------------------------------------|
+    /// |  Segment Byte Data (Y bytes)        |
+    /// |-------------------------------------|
+    ///
+    /// 
+    /// </summary>
     public class NetworkMessageStream : NetworkMessage
     {
-        //public ushort partsCount = 0;
-        //public string byteDataCRC = null;
         public string command = "stream";
         public byte[] byteData = null;
 
         public uint startPos = 0;
-        public uint segmentLen = 0;
-        //public string[] sentCRC = null;
-        //public ushort sentPartIndex = 0;
-        
-        //public int recvSize = 0;
-       // public SortedList<uint, string> recvCRC = new SortedList<uint, string>();
-       // public ushort recvPartIndex = 0;
-        //public SortedList<uint, byte[]> recvData = new SortedList<uint, byte[]>();
-
-        //public ushort responsePartIndex = 0;
-        //public string responseCRC = "";
-
-        //public static byte streamIndex = 0;
-        //public byte recvStreamIndex = 0;
+        public uint segmentLen = 1;
 
         public NetworkMessageStream()
         {
             Crc16();
+            startPos = 0;
+            segmentLen = 1;
         }
 
         public byte[] GetBuffer()
@@ -41,7 +46,6 @@ namespace OpenP2P
         public void SetBuffer(byte[] bytes)
         {
             byteData = bytes;
-            //partsCount = (ushort)Math.Ceiling((float)byteData.Length / (float)NetworkConfig.BufferMaxLength);
         }
 
         public void SetBuffer(byte[] bytes, uint start)
@@ -49,31 +53,20 @@ namespace OpenP2P
             Array.Copy(bytes, 0, byteData, start, bytes.Length);
         }
 
-        public override void StreamMessage(NetworkPacket packet)
-        {
-           
-        }
 
         public override void WriteMessage(NetworkPacket packet)
         {
-            //uint packetCount = (ushort)Math.Ceiling((float)byteData.Length / (float)NetworkConfig.BufferMaxLength);
-
             packet.Write(startPos);
 
 
+            //first stream segment
             if (startPos == 0)
             {
-                
-                //streamIndex++;
-
-                //sentCRC = new string[packetCount];
-                //byteDataCRC = ComputeChecksum(byteData, 0, byteData.Length).ToString("x2");
-                
-                //packet.Write(byteDataCRC);
                 packet.Write((uint)byteData.Length);
                 packet.Write(command);
             }
 
+            //all stream segments
             int headerSize = packet.byteLength + 4;
             segmentLen = (uint)byteData.Length - startPos;
             uint remaining = segmentLen;
@@ -81,31 +74,24 @@ namespace OpenP2P
             if (remaining > maxLen)
                 segmentLen = (uint)maxLen;
 
-            
             packet.Write(segmentLen);
             packet.Write(byteData, startPos, segmentLen);
-            
-            //sentCRC[sentPartIndex++] = ComputeChecksum(byteData, sentBytePos, len).ToString("x2");
             startPos += segmentLen;
         }
 
+
         public override void ReadMessage(NetworkPacket packet)
         {
-            //uint dataLen = packet.ReadUInt();
             segmentLen = 0;
             startPos = packet.ReadUInt();
 
+            //first stream segment
             if (startPos == 0 )
             {
-                //recvData = new byte[dataLen];
-                //byteDataCRC = packet.ReadString();
                 uint totalBytes = packet.ReadUInt();
                 command = packet.ReadString();
                 byteData = new byte[totalBytes];
-                //int maxPartCount = (int)Math.Ceiling((float)byteData.Length / (float)NetworkConfig.BufferMaxLength);
-                //recvData = new SortedList<uint,byte[]>(maxPartCount);
-                //recvCRC = new SortedList<uint, string>(byteData.Length);
-                segmentLen = packet.ReadUShort();
+                segmentLen = packet.ReadUInt();
                 
                 byte[] bytes = packet.ReadBytes((int)segmentLen);
                 SetBuffer(bytes, 0);
@@ -113,19 +99,9 @@ namespace OpenP2P
                 return;
             }
 
-
+            //subsequent stream segments
             segmentLen = packet.ReadUInt();
             byteData = packet.ReadBytes((int)segmentLen);
-
-            //recvPartIndex = header.sequence
-
-
-            //recvData.Add(recvPartIndex, bytes);
-            //recvCRC.Add(recvPartIndex, ComputeChecksum(bytes).ToString("x2"));
-
-            //Array.Copy(bytes, 0, byteData, recvSize, bytes.Length);
-
-            //recvSize += bytes.Length;
         }
 
 
@@ -133,60 +109,15 @@ namespace OpenP2P
         {
             packet.Write(startPos);
             packet.Write(segmentLen);
-            //responseCRC = recvCRC[recvCRC.Count - 1].Substring(0, 6);
-
-            //packet.Write(responsePartIndex);
-            //packet.Write(responseCRC);
-
-            //packet.Write(responseTimestamp);
         }
+
+
         public override void ReadResponse(NetworkPacket packet)
         {
             startPos = packet.ReadUShort();
             segmentLen = packet.ReadUShort();
-            //responsePartIndex = packet.ReadUShort();
-            //responseCRC = packet.ReadString();
-            //responseTimestamp = packet.ReadLong();
         }
 
-        public void Complete()
-        {
-            /*int currentSize = 0;
-            for (int i = 0; i < recvData.Count; i++)
-            {
-                byte[] bytes = recvData[i];
-                if (bytes == null)
-                    continue;
-                Array.Copy(bytes, 0, byteData, currentSize, bytes.Length);
-                currentSize += bytes.Length;
-            }*/
-        }
-
-        public bool VerifyPart()
-        {
-            /*if (responseCRC.Length == 0)
-                return false;
-
-            if (responsePartIndex >= sentCRC.Length)
-                return false;
-
-            if (sentCRC[responsePartIndex] != responseCRC)
-                return false;
-                */
-            return true;
-        }
-
-        public bool VerifyData()
-        {
-            /*if (recvSize != byteData.Length)
-                return false;
-
-            string receivedCRC = ComputeChecksum(byteData, 0, byteData.Length).ToString("x2");
-            if (byteDataCRC != receivedCRC)
-                return false;
-                */
-            return true;
-        }
 
 
         const ushort polynomial = 0xA001;
