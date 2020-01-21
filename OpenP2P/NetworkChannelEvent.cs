@@ -24,7 +24,7 @@ namespace OpenP2P
                 case SendType.Message:
                     if (message.header.isStream)
                     {
-                        if (OnChannelMessage != null)
+                        if (OnChannelStream != null)
                             OnChannelStream.Invoke(packet, message);
                     }
                     else

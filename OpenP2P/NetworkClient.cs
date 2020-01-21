@@ -26,10 +26,10 @@ namespace OpenP2P
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             protocol = new NetworkProtocol(localPort, false);
-            protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachMessageListener(ChannelType.DataContent, OnMessageDataContent);
+            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
             protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
-
+            protocol.AttachStreamListener(ChannelType.DataContent, OnStreamDataContent);
            // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
             
@@ -40,9 +40,14 @@ namespace OpenP2P
             
         }
 
-        private void OnMessageDataContent(object sender, NetworkMessage e)
+        private void OnStreamDataContent(object sender, NetworkMessage e)
         {
+            NetworkMessageStream stream = (NetworkMessageStream)e;
 
+            Console.WriteLine("Command: " + stream.command);
+            string result = Encoding.UTF8.GetString(stream.byteData);
+
+            Console.WriteLine("Text: " + result);
         }
 
         private void OnMessageConnectToServer(object sender, NetworkMessage e)
@@ -70,6 +75,8 @@ namespace OpenP2P
             message.msgBool = true;
 
             protocol.SendReliableMessage(server.GetEndpoint(), message);
+
+            latencyStartTime = NetworkTime.Milliseconds();
         }
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
@@ -78,8 +85,11 @@ namespace OpenP2P
             //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
-            mainThread = new Thread(MainThread);
-            mainThread.Start();
+            //mainThread = new Thread(MainThread);
+            //mainThread.Start();
+
+            latency = NetworkTime.Milliseconds() - latencyStartTime;
+            Console.WriteLine("Ping = " + (latency) + " ms");
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
         }
 

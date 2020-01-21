@@ -32,7 +32,7 @@ namespace OpenP2P
                 {
                     if( i < args.Length - 1 )
                     {
-                        connectToAddress = args[++i];
+                        //connectToAddress = args[++i];
                     }
                 }
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
@@ -48,11 +48,13 @@ namespace OpenP2P
                 RunClient();
             }
             */
+            
+        
+            //NetworkRSAEncryption enc = new NetworkRSAEncryption();
+            //enc.Test();
 
-            NetworkRSAEncryption enc = new NetworkRSAEncryption();
-            enc.Test();
-            //RunServer();
-            //RunClient();
+            RunServer();
+            RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
             //t = new Thread(Test2);

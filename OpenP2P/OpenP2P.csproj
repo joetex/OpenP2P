@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkMessageStream.cs" />
     <Compile Include="MsgDataContent.cs" />
     <Compile Include="NetworkChannel.cs" />
     <Compile Include="NetworkChannelEvent.cs" />
@@ -82,6 +83,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Protocol\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ipsum.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

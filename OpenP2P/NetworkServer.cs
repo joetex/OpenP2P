@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 using static OpenP2P.NetworkIdentity;
 
 namespace OpenP2P
@@ -57,6 +59,15 @@ namespace OpenP2P
             PerformanceTest();
             
             NetworkPacket packet = (NetworkPacket)sender;
+            var path = Path.Combine(@"D:\GitHub\OpenP2P\OpenP2P\ipsum.txt");
+            string text = File.ReadAllText(path);
+            byte[] bytes = Encoding.ASCII.GetBytes(text);
+
+            MsgDataContent dataStream = protocol.CreateMessage<MsgDataContent>();
+            dataStream.SetBuffer(bytes);
+
+            Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);
+            protocol.SendStream(message.header.source, dataStream);
         }
 
 

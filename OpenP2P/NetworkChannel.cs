@@ -38,7 +38,7 @@ namespace OpenP2P
             {(uint)ChannelType.DisconnectFromServer, Create<MsgInvalid>},
             {(uint)ChannelType.DisconnectFromPeer, Create<MsgInvalid>},
             {(uint)ChannelType.MultiPacket, Create<MsgInvalid>},
-            {(uint)ChannelType.DataContent, Create<MsgInvalid> },
+            {(uint)ChannelType.DataContent, Create<MsgDataContent> },
             {(uint)ChannelType.Heartbeat, Create<MsgHeartbeat>},
             {(uint)ChannelType.Raw, Create<MsgInvalid>},
             {(uint)ChannelType.Event, Create<MsgInvalid>},

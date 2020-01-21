@@ -33,6 +33,12 @@ namespace OpenP2P
             byteLength += length;
         }
 
+        public unsafe void Write(byte[] val, uint start, uint length)
+        {
+            Array.Copy(val, start, ByteBuffer, byteLength, length);
+            byteLength += (int)length;
+        }
+
         public unsafe void Write(int val)
         {
             fixed (byte* b = &ByteBuffer[byteLength])
@@ -162,6 +168,17 @@ namespace OpenP2P
             return ByteBuffer[bytePos++];
         }
 
+        /*public byte[] ReadBytes(int len)
+        {
+            byte[] result = new byte[len];
+            uint startPos = bytePos;
+            uint endPos = bytePos + len;
+            for (int i = startPos; i < endPos; i++)
+            {
+                result[i - startPos] = ByteBuffer[bytePos++];
+            }
+            return result;
+        }*/
         public byte[] ReadBytes(int len)
         {
             byte[] result = new byte[len];

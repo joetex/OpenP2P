@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Net;
+using System.Collections.Generic;
 
 namespace OpenP2P
 {
@@ -97,34 +98,40 @@ namespace OpenP2P
             return packet;
         }
 
-        public NetworkPacket[] SendStream(EndPoint ep, NetworkMessage message)
+        public List<NetworkPacket> SendStream(EndPoint ep, NetworkMessage message)
         {
             IPEndPoint ip = GetIPv6(ep);
 
-            MsgDataContent msg = (MsgDataContent)message;
+            NetworkMessageStream stream = (NetworkMessageStream)message;
 
-            int packetCount = msg.packetCount;
-            NetworkPacket[] packets = new NetworkPacket[packetCount];
+            //int packetCount = msg.partsCount;
+            //NetworkPacket[] packets = new NetworkPacket[packetCount];
+            List<NetworkPacket> packets = new List<NetworkPacket>();
 
-            message.header.channelType = channel.GetChannelType(message);
-            message.header.isReliable = true;
-            message.header.isStream = true;
-            message.header.sendType = SendType.Message;
-            
+            stream.header.channelType = channel.GetChannelType(stream);
+            stream.header.isReliable = true;
+            stream.header.isStream = true;
+            stream.header.sendType = SendType.Message;
+            stream.header.sequence = ident.local.NextSequence(stream);
+            stream.header.id = ident.local.id;
 
-            message.header.id = ident.local.id;
-            for (int i=0; i<packetCount; i++)
+            while (stream.startPos == 0 || stream.segmentLen > 0 )
             {
                 NetworkPacket packet = socket.Prepare(ep);
-                packets[i] = packet;
-                packet.messages.Add(message);// = message;
+                //packets[i] = packet;
+                packet.messages.Add(stream);// = message;
+                
+                WriteHeader(packet, stream);
+                WriteMessage(packet, stream);
 
-                message.header.sequence = ident.local.NextSequence(message);
-
-                WriteHeader(packet, message);
-                message.WriteMessage(packet); 
-
+                /*if ( i == 0 )
+                {
+                    uint streamID = ((uint)message.header.id << 8) | (uint)msg.recvStreamIndex;
+                    cachedStreams.Add(streamID, msg);
+                }*/
                 socket.Send(packet);
+                //i = (int)stream.startPos;
+                Console.WriteLine("Sent " + (stream.segmentLen) + " bytes");
             }
             
             return packets;
@@ -175,8 +182,8 @@ namespace OpenP2P
             WriteHeader(packet, message);
             switch(message.header.sendType)
             {
-                case SendType.Message: message.WriteMessage(packet); break;
-                case SendType.Response: message.WriteResponse(packet); break;
+                case SendType.Message: WriteMessage(packet, message); break;
+                case SendType.Response: WriteResponse(packet, message); break;
             }
             
             socket.Send(packet);
@@ -186,26 +193,82 @@ namespace OpenP2P
         public override void OnReceive(object sender, NetworkPacket packet)
         {
             NetworkMessage message = ReadHeader(packet);
-
+            
             packet.messages.Add(message);
             message.header.source = packet.remoteEndPoint;
+            
+            if( message.header.isStream )
+            {
+                
+                HandleReceiveStream(message, packet);
+            }
+            else
+            {
+                HandleReceiveMessage(message, packet);
+            }
 
+            
+        }
+
+        public void HandleReceiveStream(NetworkMessage message, NetworkPacket packet) 
+        {
+            NetworkMessageStream stream = (NetworkMessageStream)message;
+            uint streamID = ((uint)stream.header.id << 8) | (uint)stream.header.sequence;
+            
+            NetworkMessageStream response = (NetworkMessageStream)channel.CreateMessage(stream.header.channelType);
+
+            if (message.header.sendType == SendType.Response )
+            {
+                if( message.header.isReliable)
+                {
+                    lock (socket.thread.ACKNOWLEDGED)
+                    {
+                        if (!socket.thread.ACKNOWLEDGED.ContainsKey(message.header.ackkey))
+                            socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
+                    }
+                }
+
+                message.ReadResponse(packet);
+                NetworkChannelEvent channelEvent = GetChannelEvent(message.header.channelType);
+                channelEvent.InvokeEvent(packet, message);
+            }
+            else if( message.header.sendType == SendType.Message )
+            {
+                //send acknowledgement
+
+                NetworkMessageStream first = stream;
+                if(cachedStreams.ContainsKey(streamID))
+                {
+                    first = cachedStreams[streamID];
+                }
+                else
+                {
+                    cachedStreams.Add(streamID, first);
+                }
+
+                stream.ReadMessage(packet);
+
+                first.SetBuffer(stream.byteData, stream.startPos);
+
+                if(stream.startPos > 0
+                    && first.byteData.Length == (stream.startPos + stream.byteData.Length))
+                {
+                    NetworkChannelEvent channelEvent = GetChannelEvent(first.header.channelType);
+                    channelEvent.InvokeEvent(packet, first);
+                }
+            }
+        }
+
+        public void HandleReceiveMessage(NetworkMessage message, NetworkPacket packet)
+        {
             if (message.header.sendType == SendType.Response
                 && message.header.isReliable)
             {
                 lock (socket.thread.ACKNOWLEDGED)
                 {
                     if (!socket.thread.ACKNOWLEDGED.ContainsKey(message.header.ackkey))
-                    {
                         socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
-                    }
                 }
-
-            }
-
-            if (message.header.isStream)
-            {
-
             }
 
             switch (message.header.sendType)
@@ -213,7 +276,7 @@ namespace OpenP2P
                 case SendType.Message: message.ReadMessage(packet); break;
                 case SendType.Response: message.ReadResponse(packet); break;
             }
-            
+
             NetworkChannelEvent channelEvent = GetChannelEvent(message.header.channelType);
             channelEvent.InvokeEvent(packet, message);
         }
@@ -352,7 +415,17 @@ namespace OpenP2P
             }
             return msg;
         }
-        
+
+        public override void WriteMessage(NetworkPacket packet, NetworkMessage message)
+        {
+            message.WriteMessage(packet);
+        }
+
+        public override void WriteResponse(NetworkPacket packet, NetworkMessage message)
+        {
+            message.WriteResponse(packet);
+        }
+
 
         public uint GenerateAckKey(NetworkPacket packet, NetworkMessage message)
         {
