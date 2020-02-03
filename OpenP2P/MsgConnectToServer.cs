@@ -24,7 +24,16 @@ namespace OpenP2P
             {
                 //msgUsername = msgUsername.Substring(0, MAX_NAME_LENGTH);
             }
-            
+
+            double test = 5.1234;
+            float test2 = 5.4321f;
+
+            Console.WriteLine("Sending double: " + test);
+            Console.WriteLine("Sending float: " + test2);
+
+            packet.Write(test);
+            packet.Write(test2);
+
             packet.Write(msgUsername);
             packet.Write(msgNumber);
             packet.Write(msgShort);
@@ -34,6 +43,11 @@ namespace OpenP2P
 
         public override void ReadMessage(NetworkPacket packet)
         {
+            double test = packet.ReadDouble();
+            double test2 = packet.ReadFloat();
+
+            Console.WriteLine("Recv double: " + test);
+            Console.WriteLine("Recv float: " + test2);
             msgUsername = packet.ReadString();
             msgNumber = packet.ReadInt();
             msgShort = packet.ReadShort();

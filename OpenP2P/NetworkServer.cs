@@ -57,6 +57,9 @@ namespace OpenP2P
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
+
+            MsgConnectToServer msgConnect = (MsgConnectToServer)message;
+            Console.WriteLine("Int: " + msgConnect.msgNumber);
             
             NetworkPacket packet = (NetworkPacket)sender;
             string path = Directory.GetCurrentDirectory();
