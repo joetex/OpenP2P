@@ -108,7 +108,7 @@ namespace OpenP2P
     public class STUNClient
     {
         public IPEndPoint stunHost = null;
-        public string stunDefaultAddress = "stun.l.google.com:19302";
+        public string stunDefaultAddress = "stun.ideasip.com";
         public string stunAddress = "";
         public int stunPort = 0;
         public const int stunDefaultPort = 3478;
@@ -198,10 +198,6 @@ namespace OpenP2P
                 return;
             
             changedAddress = message.GetString(STUNAttribute.ChangedAddress);
-            if( changedAddress.Length == 0 )
-            {
-                changedAddress = "stun4.l.google.com:19302";
-            }
             mappedAddress = message.GetString(STUNAttribute.MappedAddress);
             sourceAddress = message.GetString(STUNAttribute.SourceAddress);
 
