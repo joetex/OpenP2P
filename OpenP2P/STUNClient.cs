@@ -108,7 +108,7 @@ namespace OpenP2P
     public class STUNClient
     {
         public IPEndPoint stunHost = null;
-        public string stunDefaultAddress = "stun.ideasip.com";
+        public string stunDefaultAddress = "stun.l.google.com:19302";
         public string stunAddress = "";
         public int stunPort = 0;
         public const int stunDefaultPort = 3478;
@@ -198,23 +198,34 @@ namespace OpenP2P
                 return;
             
             changedAddress = message.GetString(STUNAttribute.ChangedAddress);
+            if( changedAddress.Length == 0 )
+            {
+                changedAddress = "stun4.l.google.com:19302";
+            }
             mappedAddress = message.GetString(STUNAttribute.MappedAddress);
             sourceAddress = message.GetString(STUNAttribute.SourceAddress);
 
-            CheckTests(true);
+            
 
-            //Console.WriteLine("STUN Test #" + testId);
+            Console.WriteLine("STUN Test #" + testId);
             //Console.WriteLine("STUN Host: " + packet.remoteEndPoint.ToString());
             //Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), message.method));
             //Console.WriteLine("STUN Response Length: " + methodLength);
 
-            //Console.WriteLine("STUN Attributes: " + GetAttributeKeys(message));
+            Console.WriteLine("STUN Attributes: " + GetAttributeKeys(message));
             //Console.WriteLine("MappedAddress: " + mappedAddress);
             //Console.WriteLine("XorMappedAddress: " + message.Get(STUNAttribute.XorMappedAddress).ToString());
             //Console.WriteLine("SourceAddress: " + sourceAddress);
             //Console.WriteLine("ChangedAddress: " + changedAddress);
+
+            CheckTests(true);
         }
 
+
+        //
+        //STUN Test Flow (RFC 3489 and RFC 5389):
+        //https://github.com/ccding/go-stun/blob/master/stun/discover.go#L25
+        //
         public void CheckTests(bool hadResponse)
         {
             
