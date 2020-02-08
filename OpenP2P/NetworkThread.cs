@@ -171,13 +171,17 @@ namespace OpenP2P
                 }
 
                 difftime = curtime - message.header.sentTime;
-                if (difftime > NetworkConfig.SocketReliableRetryDelay)
+                if (difftime > packet.retryDelay)
                 {
                     if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
                     {
-                        if (message.header.channelType == ChannelType.ConnectToServer)
+                        if (message.header.channelType == ChannelType.Server)
                         {
                             packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
+                        }
+                        else if( message.header.channelType == ChannelType.STUN)
+                        {
+                            packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
                         }
 
                         failedReliableCount++;

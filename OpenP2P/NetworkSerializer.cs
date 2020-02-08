@@ -6,8 +6,32 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public partial class NetworkPacket
+    public class NetworkSerializer
     {
+        public byte[] buffer;
+        public byte[] ByteBuffer { get { return buffer; } }
+        public int byteLength = 0; //total size of data 
+        public int bytePos = 0; //current read position
+        public int byteSent = 0;
+
+        public NetworkSerializer(int initBufferSize)
+        {
+            buffer = new byte[initBufferSize];
+        }
+
+        public void SetBufferLength(int length)
+        {
+            byteLength = length;
+            bytePos = 0;
+        }
+
+        public byte[] ToArray()
+        {
+            byte[] arr = new byte[byteLength];
+            Array.Copy(ByteBuffer, 0, arr, 0, byteLength);
+            return arr;
+        }
+
         public unsafe void WriteTimestamp()
         {
             long time = System.DateTime.Now.Ticks;
@@ -27,6 +51,12 @@ namespace OpenP2P
             Array.Copy(val, 0, ByteBuffer, byteLength, val.Length);
             byteLength += val.Length;
         }
+
+        public unsafe void Overwrite(byte[] val, int start)
+        {
+            Array.Copy(val, 0, ByteBuffer, start, val.Length); 
+        }
+
         public unsafe void Write(byte[] val, int start, int length)
         {
             Array.Copy(val, start, ByteBuffer, byteLength, length);

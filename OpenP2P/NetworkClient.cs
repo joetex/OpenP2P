@@ -18,7 +18,9 @@ namespace OpenP2P
         public IPEndPoint serverHost = null;
         public NetworkPeer server = null;
         public Thread mainThread = null;
+
         
+        public STUNClient stun = null;
 
         public int receiveCnt = 0;
         Stopwatch timer;
@@ -26,13 +28,16 @@ namespace OpenP2P
         public NetworkClient(string remoteHost, int remotePort, int localPort)
         {
             protocol = new NetworkProtocol(localPort, false);
-            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
             //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
             protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
-            protocol.AttachStreamListener(ChannelType.DataContent, OnStreamDataContent);
+            protocol.AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
            // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
+
             
+            stun = new STUNClient(protocol);
+           
             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(protocol);
             server.AddEndpoint(serverHost);
@@ -73,7 +78,7 @@ namespace OpenP2P
 
         public void ConnectToServer(string userName)
         {
-            MsgConnectToServer message = protocol.ConnectToServer(userName);
+            MessageServer message = protocol.ConnectToServer(userName);
             message.msgNumber = 10;
             message.msgShort = 20;
             message.msgBool = true;
@@ -82,6 +87,14 @@ namespace OpenP2P
 
             latencyStartTime = NetworkTime.Milliseconds();
         }
+
+        public void ConnectToSTUN()
+        {
+            stun.ConnectToSTUN();
+        }
+
+        
+
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
@@ -105,7 +118,7 @@ namespace OpenP2P
 
         public void SendHeartbeat()
         {
-            MsgHeartbeat msg = protocol.CreateMessage<MsgHeartbeat>();
+            MessageHeartbeat msg = protocol.CreateMessage<MessageHeartbeat>();
             latencyStartTime = NetworkTime.Milliseconds();
             msg.timestamp = latencyStartTime;
             protocol.SendReliableMessage(server.GetEndpoint(), msg);
@@ -113,7 +126,7 @@ namespace OpenP2P
         
         public void OnResponseHeartbeat(object sender, NetworkMessage message)
         {
-            MsgHeartbeat msg = (MsgHeartbeat)message;
+            MessageHeartbeat msg = (MessageHeartbeat)message;
 
             latency = NetworkTime.Milliseconds() - msg.responseTimestamp;
             Console.WriteLine("SentTime ["+msg.header.sequence+"] Ping = " + (latency) + " ms");

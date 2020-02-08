@@ -42,6 +42,15 @@ namespace OpenP2P
             IPAddress address = null;
             if (IPAddress.TryParse(ip, out address))
                 return new IPEndPoint(address, port);
+            IPAddress[] ips = Dns.GetHostAddresses(ip);
+            for(int i=0; i<ips.Length; i++)
+            {
+                if (ips[i].AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+                    continue;
+                address = ips[i];
+                return new IPEndPoint(address, port);
+            }
+       
             return null;
         }
 
@@ -90,6 +99,11 @@ namespace OpenP2P
         public T Create<T>() where T : INetworkMessage, new()
         {
             return (T)channel.CreateMessage<T>();
+        }
+
+        public INetworkMessage Create(ChannelType ct) 
+        {
+            return channel.CreateMessage(ct);
         }
 
 

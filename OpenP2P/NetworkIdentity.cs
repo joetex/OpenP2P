@@ -24,8 +24,8 @@ namespace OpenP2P
             protocol = p;
             protocol.OnReadHeader += OnReadHeader;
             protocol.OnWriteHeader += OnWriteHeader;
-            protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
+            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
             //local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
@@ -57,7 +57,7 @@ namespace OpenP2P
             local.userName = userName;
 
             //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
-            MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
+            MessageServer msg = protocol.Create<MessageServer>();
             msg.msgUsername = userName;
             return msg;
         }
@@ -84,7 +84,7 @@ namespace OpenP2P
                 protocol.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
                 return;
             }
-            MsgConnectToServer incoming = (MsgConnectToServer)message;
+            MessageServer incoming = (MessageServer)message;
             if( !hasConnected )
             {
                 hasConnected = true;
@@ -93,7 +93,7 @@ namespace OpenP2P
 
             }
 
-            MsgConnectToServer response = protocol.Create<MsgConnectToServer>();// message;
+            MessageServer response = protocol.Create<MessageServer>();// message;
             response.responseConnected = true;
             response.responsePeerId = peer.id;
             
@@ -104,7 +104,7 @@ namespace OpenP2P
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
-            MsgConnectToServer connectMsg = (MsgConnectToServer)message;
+            MessageServer connectMsg = (MessageServer)message;
 
             if( local.id == 0 )
                 RegisterLocal(connectMsg.responsePeerId, protocol.socket.sendSocket.LocalEndPoint);

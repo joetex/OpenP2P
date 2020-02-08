@@ -10,7 +10,7 @@ namespace OpenP2P
     /// 
     /// Single Byte Format:
     ///     0 0 0 0 0000
-    ///     Bit 8    => Redirect Flag
+    ///     Bit 8    => ProtocolType Flag
     ///     Bit 7    => Big Endian Flag
     ///     Bit 6    => Reliable Flag
     ///     Bit 5    => SendType Flag
@@ -18,7 +18,7 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
-        const uint RedirectFlag = (1 << 8); //bit 8
+        const uint ProtocolTypeFlag = (1 << 8); //bit 8
         const uint StreamFlag = (1 << 7); //bit 7
         const uint ReliableFlag = (1 << 6);  //bit 6
         const uint SendTypeFlag = (1 << 5); //bit 5
@@ -27,7 +27,7 @@ namespace OpenP2P
         public event EventHandler<NetworkMessage> OnReadHeader = null;
         public event EventHandler<NetworkPacket> OnErrorConnectToServer;
         public event EventHandler<NetworkPacket> OnErrorReliableFailed;
-
+        public event EventHandler<NetworkPacket> OnErrorSTUNFailed;
         Random random = new Random();
 
         public bool isClient = false;
@@ -52,6 +52,7 @@ namespace OpenP2P
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             channel = new NetworkChannel();
             socket = new NetworkSocket(localIP, localPort);
+            Console.WriteLine("Binded to: " + socket.socket4.LocalEndPoint.ToString());
             AttachSocketListener(socket);
             
             AttachNetworkIdentity();
@@ -73,9 +74,9 @@ namespace OpenP2P
         }
         
 
-        public MsgConnectToServer ConnectToServer(string userName)
+        public MessageServer ConnectToServer(string userName)
         {
-            return (MsgConnectToServer)ident.ConnectToServer(userName);
+            return (MessageServer)ident.ConnectToServer(userName);
         }
 
 
@@ -124,6 +125,23 @@ namespace OpenP2P
             }
             
             return packets;
+        }
+
+        public NetworkPacket SendSTUN(EndPoint ep, NetworkMessage message, long delay)
+        {
+            IPEndPoint ip = GetIPv6(ep);
+            NetworkPacket packet = socket.Prepare(ep);
+            packet.retryDelay = delay;
+
+            message.header.channelType = channel.GetChannelType(message);
+            message.header.isReliable = true;
+            message.header.isSTUN = true;
+            message.header.sendType = SendType.Message;
+            message.header.id = ident.local.id;
+
+            Send(packet, message);
+
+            return packet;
         }
 
         public NetworkPacket SendMessage(EndPoint ep, NetworkMessage message)
@@ -250,7 +268,13 @@ namespace OpenP2P
 
         public void HandleReceiveMessage(NetworkMessage message, NetworkPacket packet)
         {
-            if (message.header.sendType == SendType.Response
+            switch (message.header.sendType)
+            {
+                case SendType.Message: message.ReadMessage(packet); break;
+                case SendType.Response: message.ReadResponse(packet); break;
+            }
+
+            if ((message.header.sendType == SendType.Response)
                 && message.header.isReliable)
             {
                 lock (socket.thread.ACKNOWLEDGED)
@@ -258,12 +282,6 @@ namespace OpenP2P
                     if (!socket.thread.ACKNOWLEDGED.ContainsKey(message.header.ackkey))
                         socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
                 }
-            }
-
-            switch (message.header.sendType)
-            {
-                case SendType.Message: message.ReadMessage(packet); break;
-                case SendType.Response: message.ReadResponse(packet); break;
             }
 
             NetworkChannelEvent channelEvent = GetChannelEvent(message.header.channelType);
@@ -290,6 +308,10 @@ namespace OpenP2P
                     if( OnErrorReliableFailed != null )
                         OnErrorReliableFailed.Invoke(this, packet);
                     break;
+                case NetworkErrorType.ErrorNoResponseSTUN:
+                    if (OnErrorSTUNFailed != null)
+                        OnErrorSTUNFailed.Invoke(this, packet);
+                    break;
             }
         }
 
@@ -304,6 +326,9 @@ namespace OpenP2P
                 case NetworkErrorType.ErrorReliableFailed:
                     OnErrorReliableFailed += func;
                     break;
+                case NetworkErrorType.ErrorNoResponseSTUN:
+                    OnErrorSTUNFailed += func;
+                    break;
             }
         }
 
@@ -312,9 +337,12 @@ namespace OpenP2P
         // bits 5 => Send Type
         // bits 6 => Reliable Flag
         // bits 7 => Endian Flag
-        // bits 8 => Redirect Flag
+        // bits 8 => ProtocolType Flag
         public override void WriteHeader(NetworkPacket packet, NetworkMessage message)
         {
+            if (message.header.isSTUN)
+                return;
+
             uint msgBits = (uint)message.header.channelType;
             if (msgBits < 0 || msgBits >= (uint)ChannelType.LAST)
                 msgBits = 0;
@@ -331,8 +359,7 @@ namespace OpenP2P
             if ( message.header.isStream )
                 msgBits |= StreamFlag;
 
-            if( message.header.isRedirect )
-                msgBits |= RedirectFlag;
+            msgBits |= ProtocolTypeFlag;
                 
             message.header.isStream = BitConverter.IsLittleEndian;
 
@@ -355,13 +382,23 @@ namespace OpenP2P
         {
             uint bits = packet.ReadByte();
 
-            bool isRedirect = (bits & RedirectFlag) > 0;
+            bool isSTUN = (bits & ProtocolTypeFlag) == 0;
+            if( isSTUN )
+            {
+                packet.bytePos = 0;
+                NetworkMessage msg = (NetworkMessage)channel.CreateMessage(ChannelType.STUN);
+                msg.header.isSTUN = true;
+                msg.header.isReliable = true;
+                msg.header.sendType = SendType.Response;
+                return msg;
+            }
+
             bool isStream = (bits & StreamFlag) > 0;
             bool isReliable = (bits & ReliableFlag) > 0;
             SendType sendType = (SendType)((bits & SendTypeFlag) > 0 ? 1 : 0);
            
             //remove flag bits to reveal channel type
-            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
+            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | ProtocolTypeFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
                 return (NetworkMessage)channel.CreateMessage(ChannelType.Invalid);
@@ -387,7 +424,7 @@ namespace OpenP2P
         {
             uint bits = packet.ReadByte();
             //remove flag bits to reveal channel type
-            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | RedirectFlag);
+            bits = bits & ~(StreamFlag | SendTypeFlag | ReliableFlag | ProtocolTypeFlag);
 
             if (bits < 0 || bits >= (uint)ChannelType.LAST)
             {

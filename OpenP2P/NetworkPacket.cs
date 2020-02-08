@@ -14,8 +14,9 @@ namespace OpenP2P
      * Read/Write directly to the socket's byte buffer for sending and receiving pipeline.
      * Extensions may be made to support more types.
      */
-    public partial class NetworkPacket
+    public class NetworkPacket : NetworkSerializer
     {
+        //public NetworkPacketSerializer serializer = new NetworkPacketSerializer();
         public NetworkSocket socket = null;
         public EndPoint remoteEndPoint;
         public String remoteEndPointStr;
@@ -30,31 +31,17 @@ namespace OpenP2P
         }
 
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
-
         public List<NetworkMessage> messages = new List<NetworkMessage>();
-       
-        public byte[] buffer;
-        public byte[] ByteBuffer { get { return buffer; } }
-        public int byteLength = 0; //total size of data 
-        public int bytePos = 0; //current read position
-        public int byteSent = 0;
+
+        public long retryDelay = NetworkConfig.SocketReliableRetryDelay;
 
         public NetworkErrorType lastErrorType = NetworkErrorType.None;
         public string lastErrorMessage = "";
 
-        
-        public NetworkPacket(int initBufferSize)
+        public NetworkPacket(int initBufferSize) : base(initBufferSize)
         {
-            buffer = new byte[initBufferSize];
-        }
-        
-        public void SetBufferLength(int length)
-        {
-            byteLength = length;
-            bytePos = 0;
         }
 
-       
         public void Complete()
         {
             SetBufferLength(byteLength);

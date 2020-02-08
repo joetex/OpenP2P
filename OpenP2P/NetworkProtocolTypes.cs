@@ -19,6 +19,7 @@ namespace OpenP2P
         None,
         ErrorReliableFailed,
         ErrorConnectToServer,
+        ErrorNoResponseSTUN,
         ErrorMaxIdentitiesReached,
     }
 

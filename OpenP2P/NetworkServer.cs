@@ -17,8 +17,8 @@ namespace OpenP2P
         public NetworkServer(String localIP, int localPort)
         {
             protocol = new NetworkProtocol(localIP, localPort, true);
-            protocol.AttachMessageListener(ChannelType.ConnectToServer, OnMessageConnectToServer);
-            protocol.AttachResponseListener(ChannelType.ConnectToServer, OnResponseConnectToServer);
+            protocol.AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
+            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
 
             protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
@@ -27,8 +27,8 @@ namespace OpenP2P
 
         public void OnMessageHeartbeat(object sender, NetworkMessage message)
         {
-            MsgHeartbeat heartbeat = (MsgHeartbeat)message;
-            MsgHeartbeat response = protocol.CreateMessage<MsgHeartbeat>();
+            MessageHeartbeat heartbeat = (MessageHeartbeat)message;
+            MessageHeartbeat response = protocol.CreateMessage<MessageHeartbeat>();
             response.responseTimestamp = heartbeat.timestamp;
             protocol.SendResponse(heartbeat, response);
             Console.WriteLine("Received Heartbeat from ("+ heartbeat.header.peer.id +") :");
@@ -58,7 +58,7 @@ namespace OpenP2P
         {
             PerformanceTest();
 
-            MsgConnectToServer msgConnect = (MsgConnectToServer)message;
+            MessageServer msgConnect = (MessageServer)message;
             Console.WriteLine("Int: " + msgConnect.msgNumber);
             
             NetworkPacket packet = (NetworkPacket)sender;
@@ -67,7 +67,7 @@ namespace OpenP2P
             string text = File.ReadAllText(path);
             byte[] bytes = Encoding.ASCII.GetBytes(text);
 
-            MsgDataContent dataStream = protocol.CreateMessage<MsgDataContent>();
+            MessageStream dataStream = protocol.CreateMessage<MessageStream>();
             dataStream.SetBuffer(bytes);
 
             Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);

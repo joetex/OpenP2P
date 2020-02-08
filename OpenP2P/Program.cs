@@ -53,7 +53,7 @@ namespace OpenP2P
             //NetworkRSAEncryption enc = new NetworkRSAEncryption();
             //enc.Test();
 
-            RunServer();
+            //RunServer();
             RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
@@ -81,7 +81,9 @@ namespace OpenP2P
                 client = new NetworkClient(connectToAddress, 9000, 0);
 
                 clients.Add(client);
-                client.ConnectToServer("JoeOfTexas" + i);
+                //client.ConnectToServer("JoeOfTexas" + i);
+
+                client.ConnectToSTUN();
             }
 
 

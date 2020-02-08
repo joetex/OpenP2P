@@ -16,7 +16,7 @@ namespace OpenP2P
             //encoded into packet
             public bool isReliable = false;
             public bool isStream = false;
-            public bool isRedirect = false;
+            public bool isSTUN = false;
             public SendType sendType = 0;
             public ChannelType channelType = ChannelType.Invalid;
             public ushort sequence = 0;

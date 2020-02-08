@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class MsgDataContent : NetworkMessageStream
+    public class MessageStream : NetworkMessageStream
     {
-        public MsgDataContent() : base()
+        public MessageStream() : base()
         {
             command = "data";
         }
