@@ -30,6 +30,14 @@ namespace OpenP2P
             return value;
         }
 
+        public string GetString(STUNAttribute attr)
+        {
+            object obj = Get(attr);
+            if (obj == null)
+                return "";
+            return obj.ToString();
+        }
+
         public override void WriteMessage(NetworkPacket packet)
         {
             

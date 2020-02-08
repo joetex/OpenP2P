@@ -108,16 +108,24 @@ namespace OpenP2P
     public class STUNClient
     {
         public IPEndPoint stunHost = null;
-        public string stunDefaultAddress = "stun.voipbuster.com";
-        public string stunAddress = "stun.voipbuster.com";
-        public int stunPort = 3478;
+        public string stunDefaultAddress = "stun.ideasip.com";
+        public string stunAddress = "";
+        public int stunPort = 0;
         public const int stunDefaultPort = 3478;
 
         NetworkProtocol protocol = null;
 
         public byte[] transactionID = null;
 
+        string mappedAddress = "";
+        string changedAddress = "";
+        string sourceAddress = "";
+        string localAddress = "";
+        string originalMappedAddress = "";
+
         public int testId = 0;
+
+        public STUNNat nat = STUNNat.Unspecified;
 
         public STUNClient(NetworkProtocol p)
         {
@@ -175,20 +183,11 @@ namespace OpenP2P
         }
 
         
-        
         public void OnErrorSTUN(object sender, NetworkPacket packet)
         {
-            //Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
-
             CheckTests(false);
         }
-
-        string mappedAddress = "";
-        string changedAddress = "";
-        string sourceAddress = "";
-        string localAddress = "";
-
-        string originalMappedAddress = "";
+        
 
         public void OnResponseSTUN(object sender, NetworkMessage msg)
         {
@@ -198,23 +197,22 @@ namespace OpenP2P
             if (message.method != STUNMethod.BindingResponse)
                 return;
             
+            changedAddress = message.GetString(STUNAttribute.ChangedAddress);
+            mappedAddress = message.GetString(STUNAttribute.MappedAddress);
+            sourceAddress = message.GetString(STUNAttribute.SourceAddress);
+
+            CheckTests(true);
+
             //Console.WriteLine("STUN Test #" + testId);
             //Console.WriteLine("STUN Host: " + packet.remoteEndPoint.ToString());
             //Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), message.method));
             //Console.WriteLine("STUN Response Length: " + methodLength);
-
-            changedAddress = message.Get(STUNAttribute.ChangedAddress).ToString();
-            mappedAddress = message.Get(STUNAttribute.MappedAddress).ToString();
-            sourceAddress = message.Get(STUNAttribute.SourceAddress).ToString();
 
             //Console.WriteLine("STUN Attributes: " + GetAttributeKeys(message));
             //Console.WriteLine("MappedAddress: " + mappedAddress);
             //Console.WriteLine("XorMappedAddress: " + message.Get(STUNAttribute.XorMappedAddress).ToString());
             //Console.WriteLine("SourceAddress: " + sourceAddress);
             //Console.WriteLine("ChangedAddress: " + changedAddress);
-
-            CheckTests(true);
-
         }
 
         public void CheckTests(bool hadResponse)
@@ -230,7 +228,7 @@ namespace OpenP2P
                         return;
                     }
 
-                    originalMappedAddress = "" + mappedAddress;
+                    originalMappedAddress = mappedAddress;
 
                     if ( localAddress.Equals(mappedAddress) )
                         test2a(stunDefaultAddress);
@@ -243,6 +241,7 @@ namespace OpenP2P
                     if( !originalMappedAddress.Equals(mappedAddress) )
                     {
                         Console.WriteLine("NAT Type: Symmetric Nat");
+                        nat = STUNNat.Symmetric;
                         return;
                     }
 
@@ -253,10 +252,12 @@ namespace OpenP2P
                     if( !hadResponse )
                     {
                         Console.WriteLine("NAT Type: Symmetric UDP Firewall");
+                        nat = STUNNat.SymmetricUDPFirewall;
                         return;
                     }
 
                     Console.WriteLine("Open Internet");
+                    nat = STUNNat.OpenInternet;
                     break;
                 case 3: //test2b
 
@@ -267,16 +268,19 @@ namespace OpenP2P
                     }
 
                     Console.WriteLine("Nat Type: Full Cone");
+                    nat = STUNNat.FullCone;
                     break;
                 case 4: //test3
 
                     if(!hadResponse)
                     {
                         Console.WriteLine("NAT Type: Port Restricted");
+                        nat = STUNNat.PortRestricted;
                         return;
                     }
 
                     Console.WriteLine("NAT Type: Restricted");
+                    nat = STUNNat.Restricted;
                     break;
             }
         }
