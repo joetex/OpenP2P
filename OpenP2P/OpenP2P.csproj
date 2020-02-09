@@ -79,6 +79,7 @@
     <Compile Include="MessageServer.cs" />
     <Compile Include="MessageHeartbeat.cs" />
     <Compile Include="STUNClient.cs" />
+    <Compile Include="TURNClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

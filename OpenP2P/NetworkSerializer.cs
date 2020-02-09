@@ -135,12 +135,19 @@ namespace OpenP2P
                 Array.Reverse(ByteBuffer, byteLength, 8);
             byteLength += 8;
         }
-        public unsafe void Write(string val)
+        public unsafe void WriteASCII(string val)
         {
             Write((ushort)val.Length);
             Write(Encoding.ASCII.GetBytes(val));
         }
+        public unsafe void Write(string val)
+        {
+            byte[] utfBytes = Encoding.UTF8.GetBytes(val);
+            int padCount = utfBytes.Length % 4;
+            Write((ushort)utfBytes.Length);
+            Write(utfBytes);
 
+        }
 
         public long ReadTimestamp()
         {
@@ -222,10 +229,24 @@ namespace OpenP2P
             return val;
         }
 
-        public string ReadString()
+        public string ReadStringASCII()
         {
             int cnt = ReadUShort();
             string result = Encoding.ASCII.GetString(ByteBuffer, bytePos, cnt);
+            bytePos += cnt;
+            return result;
+        }
+
+        public string ReadString()
+        {
+            int cnt = ReadUShort();
+            string result = Encoding.UTF8.GetString(ByteBuffer, bytePos, cnt);
+            bytePos += cnt;
+            return result;
+        }
+        public string ReadString(int cnt)
+        {
+            string result = Encoding.UTF8.GetString(ByteBuffer, bytePos, cnt);
             bytePos += cnt;
             return result;
         }

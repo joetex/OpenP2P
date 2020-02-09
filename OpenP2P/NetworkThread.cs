@@ -193,7 +193,7 @@ namespace OpenP2P
                     }
 
                     shouldResend = true;
-                    Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
+                    //Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
                     packet.socket.Send(packet);
                     return;
                 }

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenP2P
 {
@@ -13,17 +10,41 @@ namespace OpenP2P
     public enum STUNMethod
     {
         None = 0x0,
+
+        //STUN
         BindingRequest = 0x0001,
         BindingResponse = 0x0101,
         BindingErrorResponse = 0x0111,
         SharedSecretRequest = 0x0002,
         SharedSecretResponse = 0x0102,
-        SharedSecretErrorResponse = 0x0112
+        SharedSecretErrorResponse = 0x0112,
+
+        //TURN
+        AllocateRequest = 0x0003,
+        AllocateResponse = 0x0103,
+        AllocateError = 0x0113,
+        RefreshRequest = 0x0004,
+        RefreshResponse = 0x0104,
+        RefereshError = 0x0114,
+        SendRequest = 0x0006,
+        SendResponse = 0x0106,
+        SendError = 0x0116,
+        DataRequest = 0x0007,
+        DataResponse = 0x0107,
+        DataError = 0x0117,
+        CreatePermissionRequest = 0x0008,
+        CreatePermissionResponse = 0x0108,
+        CreatePermissionError = 0x0118,
+        ChannelBindRequest = 0x0009,
+        ChannelBindResponse = 0x0109,
+        ChannelBindError = 0x0119
     }
 
     public enum STUNAttribute
     {
         None = 0x0,
+
+        //STUN standard attributes
         MappedAddress = 0x0001,
         ResponseAddress = 0x0002,
         ChangeRequest = 0x0003,
@@ -37,7 +58,25 @@ namespace OpenP2P
         ReflectedFrom = 0x000B,
         XorMappedAddress = 0x8020,
         XorOnly = 0x0021,
-        ServerName = 0x8022
+        ServerName = 0x8022,
+        OtherAddress = 0x802C,
+
+        //TURN extras
+        ChannelNumber = 0x000C,
+        Lifetime = 0x000D,
+        AlternateServer = 0x000E,
+        Bandwidth = 0x0010,
+        DestinationAddress = 0x0011,
+        XorPeerAddress = 0x0012,
+        Data = 0x0013,
+        Nonce = 0x0014,
+        Realm = 0x0015,
+        XorRelayedAddress = 0x0016,
+        EvenPort = 0x0018,
+        RequestedTransport = 0x0019,
+        DontFragment = 0x001A,
+        TimerVal = 0x0021,
+        ReservationToken = 0x0022
     }
 
     public enum STUNNat
@@ -92,38 +131,47 @@ namespace OpenP2P
             //ipv4
             if (family == 1)
                 return address[0] + "." + address[1] + "." + address[2] + "." + address[3] + ":" + port;
-           
+
             //ipv6
             string ipv6 = "";
-            for(int i=0; i<address.Length; i+=2 )
-            {
-                ushort part = BitConverter.ToUInt16(address, i);
-                ipv6 += part + ":";
-            }
+            for (int i = 0; i < address.Length; i += 2)
+                ipv6 += BitConverter.ToUInt16(address, i) + ":";
             ipv6 += port;
             return ipv6;
         }
     }
 
+    /// <summary>
+    /// STUN Client based on RFC5389 and RFC3489
+    /// https://tools.ietf.org/html/rfc5389
+    /// https://tools.ietf.org/html/rfc3489
+    /// </summary>
     public class STUNClient
     {
         public IPEndPoint stunHost = null;
-        public string stunDefaultAddress = "stun.ideasip.com";
+        public string[] stunAddresses = new string[] { "stun2.l.google.com:19302", "stun3.l.google.com:19302" };
+        public string stunDefaultAddress = "34.70.87.145:3478";
         public string stunAddress = "";
         public int stunPort = 0;
         public const int stunDefaultPort = 3478;
 
-        NetworkProtocol protocol = null;
+        public IPEndPoint turnHost = null;
+        public string turnDefaultAddress = "34.70.87.145";
+        public string turnAddress = "";
+        public int turnPort = 0;
+        public const int turnDefaultPort = 3479;
+
+        private NetworkProtocol protocol = null;
 
         public byte[] transactionID = null;
 
-        string mappedAddress = "";
-        string changedAddress = "";
-        string sourceAddress = "";
-        string localAddress = "";
-        string originalMappedAddress = "";
+        private string mappedAddress = "";
+        private string changedAddress = "";
+        private string sourceAddress = "";
+        private string localAddress = "";
+        private string originalMappedAddress = "";
 
-        public int testId = 0;
+        public int testId = -1;
 
         public STUNNat nat = STUNNat.Unspecified;
 
@@ -135,88 +183,129 @@ namespace OpenP2P
 
             transactionID = GenerateTransactionID();
         }
-        
 
-        public void ConnectToSTUN()
+        public void ConnectSTUN(bool isTest)
         {
             localAddress = protocol.socket.socket4.LocalEndPoint.ToString();
-            test1a(stunDefaultAddress);
+            if (isTest)
+                test1a(stunDefaultAddress);
+            else
+            {
+                testId = -1;
+                ConnectSTUN(stunDefaultAddress, false, false);
+            }
         }
-        
-        public void ConnectToSTUN(string address, bool changeIP, bool changePort)
+
+        public void ConnectSTUN(string address, bool changeIP, bool changePort)
         {
-            GenerateHostAddressAndPort(address);
+            stunHost = protocol.GenerateHostAddressAndPort(address, stunDefaultPort);
 
             MessageSTUN message = protocol.Create<MessageSTUN>();
             message.method = STUNMethod.BindingRequest;
             message.transactionID = transactionID;
             message.WriteChangeRequest(changeIP, changePort);
+            //message.WriteString(STUNAttribute.Username, "joelruiz2@gmail.com");
+            //message.WriteString(STUNAttribute.Password, "Housedoor10??");
 
             Console.WriteLine("Sending STUN Request to: " + stunHost.ToString());
-            protocol.SendSTUN(stunHost, message, NetworkConfig.SocketReliableRetryDelay*3);
+            protocol.SendSTUN(stunHost, message, NetworkConfig.SocketReliableRetryDelay);
         }
 
-        public void test1a(string address)
+        public void ConnectTURN(string address)
         {
-            testId = 0;
-            ConnectToSTUN(address, false, false);
-        }
-        public void test1b(string address)
-        {
-            testId = 1;
-            ConnectToSTUN(address, false, false);
-        }
-        public void test2a(string address)
-        {
-            testId = 2;
-            ConnectToSTUN(address, true, true);
-        }
-        public void test2b(string address)
-        {
-            testId = 3;
-            ConnectToSTUN(address, true, true);
-        }
-        public void test3(string address)
-        {
-            testId = 4;
-            ConnectToSTUN(address, false, true);
+            if (address == null || address.Length == 0)
+                address = turnDefaultAddress;
+
+            turnHost = protocol.GenerateHostAddressAndPort(address, turnDefaultPort);
+
+            MessageSTUN message = protocol.Create<MessageSTUN>();
+            message.method = STUNMethod.AllocateRequest;
+            message.transactionID = transactionID;
+            message.WriteString(STUNAttribute.Username, "joe");
+            message.WriteString(STUNAttribute.Password, "test");
+            message.WriteString(STUNAttribute.Realm, "test");
+            message.WriteEmpty(STUNAttribute.DontFragment);
+            //message.WriteString(STUNAttribute.ServerName, "OpenP2P");
+            message.WriteUInt(STUNAttribute.Lifetime, 300);
+            message.WriteUInt(STUNAttribute.RequestedTransport, (uint)(17 << 24));
+
+            message.WriteMessageIntegrity();
+            protocol.SendSTUN(turnHost, message, NetworkConfig.SocketReliableRetryDelay);
+
+            Console.WriteLine("TURN Method: " + Enum.GetName(typeof(STUNMethod), message.method) + " (" + ((int)message.method).ToString("X") + ")");
+            Console.WriteLine("TURN Request sent to: " + turnHost.ToString());
         }
 
-        
         public void OnErrorSTUN(object sender, NetworkPacket packet)
         {
-            CheckTests(false);
+            MessageSTUN message = (MessageSTUN)packet.messages[0];
+
+            if (message.method == STUNMethod.BindingRequest && testId > -1)
+                CheckTests(false);
         }
-        
 
         public void OnResponseSTUN(object sender, NetworkMessage msg)
         {
             NetworkPacket packet = (NetworkPacket)sender;
             MessageSTUN message = (MessageSTUN)msg;
 
-            if (message.method != STUNMethod.BindingResponse)
-                return;
-            
-            changedAddress = message.GetString(STUNAttribute.ChangedAddress);
-            mappedAddress = message.GetString(STUNAttribute.MappedAddress);
-            sourceAddress = message.GetString(STUNAttribute.SourceAddress);
-
-            
-
-            Console.WriteLine("STUN Test #" + testId);
-            //Console.WriteLine("STUN Host: " + packet.remoteEndPoint.ToString());
-            //Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), message.method));
+            Console.WriteLine("STUN Host: " + packet.remoteEndPoint.ToString());
+            Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), message.method));
             //Console.WriteLine("STUN Response Length: " + methodLength);
 
-            Console.WriteLine("STUN Attributes: " + GetAttributeKeys(message));
+            Console.WriteLine("STUN Attributes: \n" + GetAttributeKeys(message));
             //Console.WriteLine("MappedAddress: " + mappedAddress);
             //Console.WriteLine("XorMappedAddress: " + message.Get(STUNAttribute.XorMappedAddress).ToString());
             //Console.WriteLine("SourceAddress: " + sourceAddress);
             //Console.WriteLine("ChangedAddress: " + changedAddress);
+            if (message.method == STUNMethod.BindingResponse)
+            {
+                if (testId > -1)
+                {
+                    Console.WriteLine("STUN Test #" + testId);
 
-            CheckTests(true);
+                    changedAddress = message.GetString(STUNAttribute.ChangedAddress);
+                    mappedAddress = message.GetString(STUNAttribute.MappedAddress);
+                    sourceAddress = message.GetString(STUNAttribute.SourceAddress);
+
+                    CheckTests(true);
+                }
+                else
+                {
+                    ConnectTURN("");
+                }
+            }
         }
 
+        public void test1a(string address)
+        {
+            testId = 0;
+            ConnectSTUN(address, false, false);
+        }
+
+        public void test1b(string address)
+        {
+            testId = 1;
+            ConnectSTUN(address, false, false);
+        }
+
+        public void test2a(string address)
+        {
+            testId = 2;
+            ConnectSTUN(address, true, true);
+        }
+
+        public void test2b(string address)
+        {
+            testId = 3;
+            ConnectSTUN(address, true, true);
+        }
+
+        public void test3(string address)
+        {
+            testId = 4;
+            ConnectSTUN(address, false, true);
+        }
 
         //
         //STUN Test Flow (RFC 3489 and RFC 5389):
@@ -224,12 +313,11 @@ namespace OpenP2P
         //
         public void CheckTests(bool hadResponse)
         {
-            
             switch (testId)
             {
                 case 0: //test1a
-                    
-                    if( !hadResponse )
+
+                    if (!hadResponse)
                     {
                         Console.WriteLine("UDP Blocked");
                         return;
@@ -237,15 +325,16 @@ namespace OpenP2P
 
                     originalMappedAddress = mappedAddress;
 
-                    if ( localAddress.Equals(mappedAddress) )
+                    if (localAddress.Equals(mappedAddress))
                         test2a(stunDefaultAddress);
                     else
                         test2b(stunDefaultAddress);
-                   
+
                     break;
+
                 case 1: //test1b
 
-                    if( !originalMappedAddress.Equals(mappedAddress) )
+                    if (!originalMappedAddress.Equals(mappedAddress))
                     {
                         Console.WriteLine("NAT Type: Symmetric Nat");
                         nat = STUNNat.Symmetric;
@@ -254,9 +343,10 @@ namespace OpenP2P
 
                     test3(changedAddress);
                     break;
+
                 case 2: //test2a
-                    
-                    if( !hadResponse )
+
+                    if (!hadResponse)
                     {
                         Console.WriteLine("NAT Type: Symmetric UDP Firewall");
                         nat = STUNNat.SymmetricUDPFirewall;
@@ -266,9 +356,10 @@ namespace OpenP2P
                     Console.WriteLine("Open Internet");
                     nat = STUNNat.OpenInternet;
                     break;
+
                 case 3: //test2b
 
-                    if( !hadResponse )
+                    if (!hadResponse)
                     {
                         test1b(changedAddress);
                         return;
@@ -277,9 +368,10 @@ namespace OpenP2P
                     Console.WriteLine("Nat Type: Full Cone");
                     nat = STUNNat.FullCone;
                     break;
+
                 case 4: //test3
 
-                    if(!hadResponse)
+                    if (!hadResponse)
                     {
                         Console.WriteLine("NAT Type: Port Restricted");
                         nat = STUNNat.PortRestricted;
@@ -292,7 +384,6 @@ namespace OpenP2P
             }
         }
 
-
         public void Reset()
         {
             testId = 0;
@@ -304,9 +395,10 @@ namespace OpenP2P
             foreach (KeyValuePair<STUNAttribute, object> entry in message.response)
             {
                 string key = Enum.GetName(typeof(STUNAttribute), entry.Key);
+                int id = (int)entry.Key;
                 if (attrKeys.Length > 0)
-                    attrKeys += ", ";
-                attrKeys += key;
+                    attrKeys += "\n";
+                attrKeys += key + "(" + id.ToString("X") + ") = " + entry.Value.ToString();
             }
             return attrKeys;
         }
@@ -315,23 +407,6 @@ namespace OpenP2P
         {
             Guid guid = Guid.NewGuid();
             return guid.ToByteArray();
-        }
-
-        public void GenerateHostAddressAndPort(string address)
-        {
-            int stunAddressColonPos = address.IndexOf(':');
-            if (stunAddressColonPos > -1)
-            {
-                stunPort = int.Parse(address.Substring(stunAddressColonPos + 1));
-                stunAddress = address.Substring(0, stunAddressColonPos);
-            }
-            else
-            {
-                stunAddress = address;
-                stunPort = stunDefaultPort;
-            }
-
-            stunHost = protocol.GetEndPoint(stunAddress, stunPort);
         }
     }
 }

@@ -21,6 +21,7 @@ namespace OpenP2P
 
         
         public STUNClient stun = null;
+        //public TURNClient turn = null;
 
         public int receiveCnt = 0;
         Stopwatch timer;
@@ -37,8 +38,9 @@ namespace OpenP2P
 
             
             stun = new STUNClient(protocol);
-           
-            IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
+            //turn = new TURNClient(protocol);
+
+             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(protocol);
             server.AddEndpoint(serverHost);
 
@@ -73,7 +75,7 @@ namespace OpenP2P
 
         public void OnErrorReliableFailed(object sender, NetworkPacket packet)
         {
-            Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
+            //Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
         }
 
         public void ConnectToServer(string userName)
@@ -90,7 +92,8 @@ namespace OpenP2P
 
         public void ConnectToSTUN()
         {
-            stun.ConnectToSTUN();
+            //stun.ConnectSTUN(false);
+            stun.ConnectTURN(null);
         }
 
         

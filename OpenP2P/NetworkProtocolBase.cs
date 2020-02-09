@@ -54,6 +54,23 @@ namespace OpenP2P
             return null;
         }
 
+        public virtual IPEndPoint GenerateHostAddressAndPort(string address, int defaultPort)
+        {
+            int port = 0;
+            int colonPos = address.IndexOf(':');
+            if (colonPos > -1)
+            {
+                port = int.Parse(address.Substring(colonPos + 1));
+                address = address.Substring(0, colonPos);
+            }
+            else
+            {
+                port = defaultPort;
+            }
+            
+            return GetEndPoint(address, port);
+        }
+
         public virtual void AttachSocketListener(NetworkSocket _socket)
         {
             socket = _socket;

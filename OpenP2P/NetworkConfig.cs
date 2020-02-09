@@ -36,7 +36,7 @@ namespace OpenP2P
         public const int ThreadRecvProcessSleepTime = 1;
 
         public static long SocketReliableRetryDelay = 200;
-        public static long SocketReliableRetryAttempts = 3;
+        public static long SocketReliableRetryAttempts = 2;
 
         public static long NetworkSendRate = 200;
 
