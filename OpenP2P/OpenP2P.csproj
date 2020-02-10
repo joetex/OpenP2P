@@ -50,45 +50,65 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageSTUN.cs" />
-    <Compile Include="NetworkMessageStream.cs" />
-    <Compile Include="MessageStream.cs" />
-    <Compile Include="NetworkChannel.cs" />
-    <Compile Include="NetworkChannelEvent.cs" />
-    <Compile Include="NetworkClientThread.cs" />
-    <Compile Include="NetworkConfig.cs" />
-    <Compile Include="NetworkIdentity.cs" />
-    <Compile Include="NetworkMessage.cs" />
-    <Compile Include="MessageInvalid.cs" />
+    <Compile Include="Messages\MessageSTUN.cs" />
+    <Compile Include="Protocol\NetworkMessageStream.cs" />
+    <Compile Include="Messages\MessageStream.cs" />
+    <Compile Include="Protocol\NetworkChannel.cs" />
+    <Compile Include="Protocol\NetworkChannelEvent.cs" />
+    <Compile Include="Protocol\NetworkClientThread.cs" />
+    <Compile Include="Protocol\NetworkConfig.cs" />
+    <Compile Include="Protocol\NetworkIdentity.cs" />
+    <Compile Include="Protocol\NetworkMessage.cs" />
+    <Compile Include="Messages\MessageInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
-    <Compile Include="NetworkMessagePool.cs" />
-    <Compile Include="NetworkPeer.cs" />
-    <Compile Include="NetworkProtocol.cs" />
-    <Compile Include="NetworkProtocolBase.cs" />
-    <Compile Include="NetworkProtocolTypes.cs" />
-    <Compile Include="NetworkRSAEncryption.cs" />
+    <Compile Include="Protocol\NetworkMessagePool.cs" />
+    <Compile Include="Protocol\NetworkPeer.cs" />
+    <Compile Include="Protocol\NetworkProtocol.cs" />
+    <Compile Include="Protocol\NetworkProtocolBase.cs" />
+    <Compile Include="Protocol\NetworkProtocolTypes.cs" />
+    <Compile Include="Protocol\NetworkRSAEncryption.cs" />
     <Compile Include="NetworkServer.cs" />
-    <Compile Include="NetworkSocket.cs" />
-    <Compile Include="NetworkPacket.cs" />
-    <Compile Include="NetworkPacketPool.cs" />
-    <Compile Include="NetworkSerializer.cs" />
-    <Compile Include="NetworkThread.cs" />
-    <Compile Include="NetworkTime.cs" />
+    <Compile Include="Protocol\NetworkSocket.cs" />
+    <Compile Include="Protocol\NetworkPacket.cs" />
+    <Compile Include="Protocol\NetworkPacketPool.cs" />
+    <Compile Include="Protocol\NetworkSerializer.cs" />
+    <Compile Include="Protocol\NetworkThread.cs" />
+    <Compile Include="Protocol\NetworkTime.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MessageServer.cs" />
-    <Compile Include="MessageHeartbeat.cs" />
+    <Compile Include="Messages\MessageServer.cs" />
+    <Compile Include="Messages\MessageHeartbeat.cs" />
+    <Compile Include="Utilities\StringPrep\Nameprep.cs" />
+    <Compile Include="Utilities\StringPrep\Plain.cs" />
+    <Compile Include="Utilities\StringPrep\Profile.cs" />
+    <Compile Include="Utilities\StringPrep\SASLprep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\BidiStep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\MapStep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\NFKCStep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\ProfileStep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\ProhibitStep.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\ResourceLoader.cs" />
+    <Compile Include="Utilities\StringPrep\Steps\RFC3454.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\Combining.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\CombiningData.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\Compose.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\ComposeData.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\Decompose.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\DecomposeData.cs" />
+    <Compile Include="Utilities\StringPrep\Unicode\ResourceLoader.cs" />
+    <Compile Include="Utilities\StringPrep\XmppNode.cs" />
+    <Compile Include="Utilities\StringPrep\XmppResource.cs" />
     <Compile Include="STUNClient.cs" />
-    <Compile Include="TURNClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Protocol\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="ipsum.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Utilities\StringPrep\Unicode\Unicode.resx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

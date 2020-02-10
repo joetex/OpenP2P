@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 
 namespace OpenP2P
 {
@@ -9,35 +10,35 @@ namespace OpenP2P
     /// </summary>
     public enum STUNMethod
     {
-        None = 0x0,
+        None                        = 0x0,
 
         //STUN
-        BindingRequest = 0x0001,
-        BindingResponse = 0x0101,
-        BindingErrorResponse = 0x0111,
-        SharedSecretRequest = 0x0002,
-        SharedSecretResponse = 0x0102,
-        SharedSecretErrorResponse = 0x0112,
+        BindingRequest              = 0x0001,
+        BindingResponse             = 0x0101,
+        BindingErrorResponse        = 0x0111,
+        SharedSecretRequest         = 0x0002,
+        SharedSecretResponse        = 0x0102,
+        SharedSecretErrorResponse   = 0x0112,
 
         //TURN
-        AllocateRequest = 0x0003,
-        AllocateResponse = 0x0103,
-        AllocateError = 0x0113,
-        RefreshRequest = 0x0004,
-        RefreshResponse = 0x0104,
-        RefereshError = 0x0114,
-        SendRequest = 0x0006,
-        SendResponse = 0x0106,
-        SendError = 0x0116,
-        DataRequest = 0x0007,
-        DataResponse = 0x0107,
-        DataError = 0x0117,
-        CreatePermissionRequest = 0x0008,
-        CreatePermissionResponse = 0x0108,
-        CreatePermissionError = 0x0118,
-        ChannelBindRequest = 0x0009,
-        ChannelBindResponse = 0x0109,
-        ChannelBindError = 0x0119
+        AllocateRequest             = 0x0003,
+        AllocateResponse            = 0x0103,
+        AllocateError               = 0x0113,
+        RefreshRequest              = 0x0004,
+        RefreshResponse             = 0x0104,
+        RefereshError               = 0x0114,
+        SendRequest                 = 0x0006,
+        SendResponse                = 0x0106,
+        SendError                   = 0x0116,
+        DataRequest                 = 0x0007,
+        DataResponse                = 0x0107,
+        DataError                   = 0x0117,
+        CreatePermissionRequest     = 0x0008,
+        CreatePermissionResponse    = 0x0108,
+        CreatePermissionError       = 0x0118,
+        ChannelBindRequest          = 0x0009,
+        ChannelBindResponse         = 0x0109,
+        ChannelBindError            = 0x0119
     }
 
     public enum STUNAttribute
@@ -45,38 +46,38 @@ namespace OpenP2P
         None = 0x0,
 
         //STUN standard attributes
-        MappedAddress = 0x0001,
-        ResponseAddress = 0x0002,
-        ChangeRequest = 0x0003,
-        SourceAddress = 0x0004,
-        ChangedAddress = 0x0005,
-        Username = 0x0006,
-        Password = 0x0007,
-        MessageIntegrity = 0x0008,
-        ErrorCode = 0x0009,
-        UnknownAttribute = 0x000A,
-        ReflectedFrom = 0x000B,
-        XorMappedAddress = 0x8020,
-        XorOnly = 0x0021,
-        ServerName = 0x8022,
-        OtherAddress = 0x802C,
+        MappedAddress       = 0x0001,
+        ResponseAddress     = 0x0002,
+        ChangeRequest       = 0x0003,
+        SourceAddress       = 0x0004,
+        ChangedAddress      = 0x0005,
+        Username            = 0x0006,
+        Password            = 0x0007,
+        MessageIntegrity    = 0x0008,
+        ErrorCode           = 0x0009,
+        UnknownAttribute    = 0x000A,
+        ReflectedFrom       = 0x000B,
+        XorMappedAddress    = 0x0020,
+        XorOnly             = 0x0021,
+        ServerName          = 0x8022,
+        OtherAddress        = 0x802C,
 
         //TURN extras
-        ChannelNumber = 0x000C,
-        Lifetime = 0x000D,
-        AlternateServer = 0x000E,
-        Bandwidth = 0x0010,
-        DestinationAddress = 0x0011,
-        XorPeerAddress = 0x0012,
-        Data = 0x0013,
-        Nonce = 0x0014,
-        Realm = 0x0015,
-        XorRelayedAddress = 0x0016,
-        EvenPort = 0x0018,
-        RequestedTransport = 0x0019,
-        DontFragment = 0x001A,
-        TimerVal = 0x0021,
-        ReservationToken = 0x0022
+        ChannelNumber       = 0x000C,
+        Lifetime            = 0x000D,
+        AlternateServer     = 0x000E,
+        Bandwidth           = 0x0010,
+        DestinationAddress  = 0x0011,
+        XorPeerAddress      = 0x0012,
+        Data                = 0x0013,
+        Realm               = 0x0014,
+        Nonce               = 0x0015,
+        XorRelayedAddress   = 0x0016,
+        EvenPort            = 0x0018,
+        RequestedTransport  = 0x0019,
+        DontFragment        = 0x001A,
+        TimerVal            = 0x0021,
+        ReservationToken    = 0x0022
     }
 
     public enum STUNNat
@@ -150,7 +151,7 @@ namespace OpenP2P
     {
         public IPEndPoint stunHost = null;
         public string[] stunAddresses = new string[] { "stun2.l.google.com:19302", "stun3.l.google.com:19302" };
-        public string stunDefaultAddress = "34.70.87.145:3478";
+        public string stunDefaultAddress = "stun.l.google.com:19302";
         public string stunAddress = "";
         public int stunPort = 0;
         public const int stunDefaultPort = 3478;
@@ -159,11 +160,13 @@ namespace OpenP2P
         public string turnDefaultAddress = "34.70.87.145";
         public string turnAddress = "";
         public int turnPort = 0;
-        public const int turnDefaultPort = 3479;
+        public const int turnDefaultPort = 3478;
 
         private NetworkProtocol protocol = null;
 
         public byte[] transactionID = null;
+        public uint magicCookie = 0x2112A442;
+        public byte[] nonce = null;
 
         private string mappedAddress = "";
         private string changedAddress = "";
@@ -178,8 +181,8 @@ namespace OpenP2P
         public STUNClient(NetworkProtocol p)
         {
             protocol = p;
-            protocol.AttachResponseListener(ChannelType.STUN, OnResponseSTUN);
-            protocol.AttachErrorListener(NetworkErrorType.ErrorNoResponseSTUN, OnErrorSTUN);
+            protocol.AttachResponseListener(ChannelType.STUN, OnResponse);
+            protocol.AttachErrorListener(NetworkErrorType.ErrorNoResponseSTUN, OnError);
 
             transactionID = GenerateTransactionID();
         }
@@ -211,8 +214,17 @@ namespace OpenP2P
             protocol.SendSTUN(stunHost, message, NetworkConfig.SocketReliableRetryDelay);
         }
 
-        public void ConnectTURN(string address)
+        public void ConnectTURN(string address, bool isFirst)
         {
+            if(isFirst)
+            {
+                turnAllocateCount = 0;
+            } else
+            {
+                turnAllocateCount++;
+                if (turnAllocateCount > 5)
+                    return;
+            }
             if (address == null || address.Length == 0)
                 address = turnDefaultAddress;
 
@@ -221,22 +233,33 @@ namespace OpenP2P
             MessageSTUN message = protocol.Create<MessageSTUN>();
             message.method = STUNMethod.AllocateRequest;
             message.transactionID = transactionID;
-            message.WriteString(STUNAttribute.Username, "joe");
-            message.WriteString(STUNAttribute.Password, "test");
-            message.WriteString(STUNAttribute.Realm, "test");
-            message.WriteEmpty(STUNAttribute.DontFragment);
+           
             //message.WriteString(STUNAttribute.ServerName, "OpenP2P");
             message.WriteUInt(STUNAttribute.Lifetime, 300);
             message.WriteUInt(STUNAttribute.RequestedTransport, (uint)(17 << 24));
+            message.WriteEmpty(STUNAttribute.DontFragment);
+            
+            message.WriteString(STUNAttribute.Username, message.username);
+            message.WriteString(STUNAttribute.Realm, message.realm);
+            
+
+            if (nonce != null)
+                message.WriteBytes(STUNAttribute.Nonce, nonce);
 
             message.WriteMessageIntegrity();
-            protocol.SendSTUN(turnHost, message, NetworkConfig.SocketReliableRetryDelay);
+            
 
             Console.WriteLine("TURN Method: " + Enum.GetName(typeof(STUNMethod), message.method) + " (" + ((int)message.method).ToString("X") + ")");
             Console.WriteLine("TURN Request sent to: " + turnHost.ToString());
+
+            protocol.SendSTUN(turnHost, message, NetworkConfig.SocketReliableRetryDelay);
+
+            
         }
 
-        public void OnErrorSTUN(object sender, NetworkPacket packet)
+        
+
+        public void OnError(object sender, NetworkPacket packet)
         {
             MessageSTUN message = (MessageSTUN)packet.messages[0];
 
@@ -244,7 +267,9 @@ namespace OpenP2P
                 CheckTests(false);
         }
 
-        public void OnResponseSTUN(object sender, NetworkMessage msg)
+        public int turnAllocateCount = 0;
+
+        public void OnResponse(object sender, NetworkMessage msg)
         {
             NetworkPacket packet = (NetworkPacket)sender;
             MessageSTUN message = (MessageSTUN)msg;
@@ -272,8 +297,14 @@ namespace OpenP2P
                 }
                 else
                 {
-                    ConnectTURN("");
+                   
                 }
+            }
+
+            if( message.method == STUNMethod.AllocateError )
+            {
+                nonce = (byte[])message.Get(STUNAttribute.Nonce);
+                ConnectTURN(null, false);
             }
         }
 
@@ -398,7 +429,15 @@ namespace OpenP2P
                 int id = (int)entry.Key;
                 if (attrKeys.Length > 0)
                     attrKeys += "\n";
-                attrKeys += key + "(" + id.ToString("X") + ") = " + entry.Value.ToString();
+                object value = entry.Value;
+                string valueStr = "";
+                if (value is string v)
+                    valueStr = v;
+                else if (value is byte[] b)
+                    valueStr = NetworkSerializer.ByteArrayToHexString(b);
+                else
+                    valueStr = value.ToString();
+                attrKeys += key + "(" + id.ToString("X") + ") = " + valueStr;
             }
             return attrKeys;
         }
@@ -406,7 +445,12 @@ namespace OpenP2P
         public static byte[] GenerateTransactionID()
         {
             Guid guid = Guid.NewGuid();
-            return guid.ToByteArray();
+            byte[] bytes = guid.ToByteArray();
+            byte[] magicCookie = BitConverter.GetBytes(0x2112A442);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(magicCookie);
+            Array.Copy(magicCookie, 0, bytes, 0, magicCookie.Length);
+            return bytes;
         }
     }
 }

@@ -92,8 +92,8 @@ namespace OpenP2P
 
         public void ConnectToSTUN()
         {
-            //stun.ConnectSTUN(false);
-            stun.ConnectTURN(null);
+            //stun.ConnectSTUN(true);
+            stun.ConnectTURN(null, true);
         }
 
         
