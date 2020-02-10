@@ -219,10 +219,11 @@ namespace OpenP2P
             if(isFirst)
             {
                 turnAllocateCount = 0;
-            } else
+            }
+            else
             {
                 turnAllocateCount++;
-                if (turnAllocateCount > 5)
+                if (turnAllocateCount > 1)
                     return;
             }
             if (address == null || address.Length == 0)
@@ -233,26 +234,29 @@ namespace OpenP2P
             MessageSTUN message = protocol.Create<MessageSTUN>();
             message.method = STUNMethod.AllocateRequest;
             message.transactionID = transactionID;
-           
-            //message.WriteString(STUNAttribute.ServerName, "OpenP2P");
+
+            message.WriteString(STUNAttribute.ServerName, message.realm);
             message.WriteUInt(STUNAttribute.Lifetime, 300);
             message.WriteUInt(STUNAttribute.RequestedTransport, (uint)(17 << 24));
             message.WriteEmpty(STUNAttribute.DontFragment);
-            
-            message.WriteString(STUNAttribute.Username, message.username);
-            message.WriteString(STUNAttribute.Realm, message.realm);
-            
 
+            //if ( !isFirst )
+            {
+                message.WriteString(STUNAttribute.Username, message.username);
+                message.WriteString(STUNAttribute.Realm, message.realm);
+            }
+            
+            
             if (nonce != null)
                 message.WriteBytes(STUNAttribute.Nonce, nonce);
-
-            message.WriteMessageIntegrity();
+            //if (!isFirst)
+                message.WriteMessageIntegrity();
             
 
             Console.WriteLine("TURN Method: " + Enum.GetName(typeof(STUNMethod), message.method) + " (" + ((int)message.method).ToString("X") + ")");
             Console.WriteLine("TURN Request sent to: " + turnHost.ToString());
 
-            protocol.SendSTUN(turnHost, message, NetworkConfig.SocketReliableRetryDelay);
+            protocol.SendSTUN(turnHost, message, 3000);
 
             
         }

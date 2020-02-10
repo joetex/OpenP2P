@@ -26,7 +26,7 @@ namespace OpenP2P
         public List<byte[]> attributeBytes = new List<byte[]>();
         public Dictionary<STUNAttribute, object> response = new Dictionary<STUNAttribute, object>();
 
-        public string username = "joe";
+        public string username = "joel";
         public string password = "test";
         public string realm = "test";
 
@@ -60,56 +60,187 @@ namespace OpenP2P
             packet.Write(transactionID);
 
             //attributes
-            int totalAttrLength = 0;
             for(int i=0; i<attributeBytes.Count; i++)
             {
-                STUNAttribute attr = attributeTypes[i];
-
-                string valueStr = "";
-                if( response.ContainsKey(attr) )
-                {
-                    object value = response[attr];
-
-                    if (value is string v)
-                        valueStr = v;
-                    else if (value is byte[] b)
-                        valueStr = NetworkSerializer.ByteArrayToHexString(b);
-                    else
-                        valueStr = value.ToString();
-                }
-                
-
-                Console.WriteLine("Write Attribute: " + Enum.GetName(typeof(STUNAttribute), attr) + " = " + valueStr);
-                byte[] attrBytes = attributeBytes[i];
-                totalAttrLength += attrBytes.Length;
-                packet.Write(attrBytes);
+                LogAttribute(i);
+                packet.Write(attributeBytes[i]);
             }
 
-            if (integrity)
-                totalAttrLength += 24;
-
-            //update method length
+            //update message length
+            int totalLength = packet.byteLength - 20;
             int lastPos = packet.byteLength;
+            if (integrity)
+                totalLength += 24;
             packet.byteLength = 2;
-            packet.Write((ushort)totalAttrLength);
+            packet.Write((ushort)totalLength);
             packet.byteLength = lastPos;
 
             //method integrity goes here
             if ( integrity )
             {
                 //GenerateMessageIntegrity(packet);
-                AddMessageIntegrity(packet, true);
+                AddMessageIntegrity(packet);
             }
-
             
-
-            //Console.WriteLine("Message Length = " + totalAttrLength);
-            //Console.WriteLine("Total Bytes: " + packet.byteLength);
+            Console.WriteLine("Message Length = " + totalLength);
+            Console.WriteLine("Total Bytes: " + packet.byteLength);
 
             //cleanup
             attributeBytes.Clear();
         }
      
+        public void LogAttribute(int index)
+        {
+            STUNAttribute attr = attributeTypes[index];
+            string valueStr = "";
+            if (response.ContainsKey(attr))
+            {
+                object value = response[attr];
+
+                if (value is string v)
+                    valueStr = v;
+                else if (value is byte[] b)
+                    valueStr = NetworkSerializer.ByteArrayToHexString(b);
+                else
+                    valueStr = value.ToString();
+            }
+            Console.WriteLine("Write Attribute: " + Enum.GetName(typeof(STUNAttribute), attr) + " = " + valueStr);
+        }
+
+        
+
+
+        public void WriteChangeRequest(bool changeIP, bool changePort) {
+            serializer.SetBufferLength(0);
+
+            serializer.Write((ushort)STUNAttribute.ChangeRequest);
+            serializer.Write((ushort)4);
+
+            int flags = (!changeIP ? 0 : (1 << 2)) | (!changePort ? 0 : (1 << 1));
+            serializer.Write(flags);
+
+            attributeTypes.Add(STUNAttribute.ChangeRequest);
+            attributeBytes.Add(serializer.ToArray());
+        }
+
+        public void WriteBytes(STUNAttribute attr, byte[] bytes)
+        {
+            serializer.SetBufferLength(0);
+            serializer.Write((ushort)attr);
+            serializer.Write((ushort)bytes.Length);
+            serializer.Write(bytes);
+
+            int len = bytes.Length;
+            while (((len++) % 4) != 0)
+                serializer.Write((byte)0);
+
+            Console.WriteLine("Attribute: " + Enum.GetName(typeof(STUNAttribute), attr) + " = " + NetworkSerializer.ByteArrayToHexString((byte[])bytes));
+            response.Add(attr, bytes);
+            attributeTypes.Add(attr);
+            attributeBytes.Add(serializer.ToArray());
+
+        }
+
+        public void WriteString(STUNAttribute attr, string text)
+        {
+            serializer.SetBufferLength(0);
+
+            serializer.Write((ushort)attr);
+            int len = Encoding.UTF8.GetByteCount(text);
+            int padding = (len % 4);
+            //serializer.Write((ushort)len);
+
+            int startLen = serializer.byteLength;
+            serializer.Write(text, len);
+            //int textLen = serializer.byteLength - startLen - 2;
+    
+            //pad to multiple of 4
+            while (((len++) % 4) != 0) 
+                serializer.Write((byte)0);
+
+            response.Add(attr, text);
+            attributeTypes.Add(attr);
+            attributeBytes.Add(serializer.ToArray());
+        }
+
+        public void WriteUInt(STUNAttribute attr, uint value)
+        {
+            serializer.SetBufferLength(0);
+
+            serializer.Write((ushort)attr);
+            serializer.Write((ushort)4);
+            serializer.Write(value);
+
+            response.Add(attr, value);
+            attributeTypes.Add(attr);
+            attributeBytes.Add(serializer.ToArray());
+        }
+
+        public void WriteEmpty(STUNAttribute attr)
+        {
+            serializer.SetBufferLength(0);
+
+            serializer.Write((ushort)attr);
+            serializer.Write((ushort)0);
+
+            response.Add(attr, "");
+            attributeTypes.Add(attr);
+            attributeBytes.Add(serializer.ToArray());
+        }
+
+       
+        public void WriteMessageIntegrity()
+        {
+            integrity = true;
+        }
+
+        
+
+        public void AddMessageIntegrity(NetworkPacket packet)
+        {
+            string saslPassword = new SASLprep().Prepare(password);
+            byte[] hmacSha1Key;
+            using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
+            {
+                String valueToHashMD5 = string.Format("{0}:{1}:{2}",username, realm, saslPassword);
+                hmacSha1Key = md5.ComputeHash(Encoding.UTF8.GetBytes(valueToHashMD5));
+            }
+
+
+            byte[] hmacBytes = null;// this.ComputeHMAC(packet, hmacSha1Key);
+            using (HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key))
+            {
+                hmacBytes = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
+            }
+
+            int hmacLen = hmacBytes.Length;
+
+            packet.Write((ushort)STUNAttribute.MessageIntegrity);
+            packet.Write((ushort)hmacBytes.Length);
+            packet.Write(hmacBytes);
+       
+            Console.WriteLine("Write Attribute: MessageIntegrity(2) MD5 = " + NetworkSerializer.ByteArrayToHexString(hmacSha1Key));
+            Console.WriteLine("Write Attribute: MessageIntegrity(2) HMAC = " + NetworkSerializer.ByteArrayToHexString(hmacBytes));
+        }
+
+        /// <summary>
+        /// Computes a HMAC SHA1 based on this StunMessage attributes
+        /// </summary>
+        /// <param name="hmacSha1Key">The key of HMAC SHA1 computation algorithm</param>
+        /// <returns>The HMAC computed value of this StunMessage</returns>
+        private byte[] ComputeHMAC(NetworkPacket packet, byte[] hmacSha1Key)
+        {
+            byte[] hashed = null;
+
+            using (HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key))
+            {
+                hashed = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
+            }
+
+            return hashed;
+        }
+
+
 
         public override void ReadResponse(NetworkPacket packet)
         {
@@ -123,7 +254,7 @@ namespace OpenP2P
             //Console.WriteLine("STUN Response address: " + packet.remoteEndPoint.ToString());
             //Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), method));
             //Console.WriteLine("STUN Response Length: " + methodLength);
-            
+
             while (packet.bytePos < packet.byteLength)
             {
                 STUNAddress address;
@@ -184,190 +315,6 @@ namespace OpenP2P
 
         }
 
-        
-
-
-        public void WriteChangeRequest(bool changeIP, bool changePort) {
-            serializer.SetBufferLength(0);
-
-            serializer.Write((ushort)STUNAttribute.ChangeRequest);
-            serializer.Write((ushort)4);
-
-            int flags = (!changeIP ? 0 : (1 << 2)) | (!changePort ? 0 : (1 << 1));
-            serializer.Write(flags);
-
-            attributeTypes.Add(STUNAttribute.ChangeRequest);
-            attributeBytes.Add(serializer.ToArray());
-        }
-
-        public void WriteBytes(STUNAttribute attr, byte[] bytes)
-        {
-            serializer.SetBufferLength(0);
-            serializer.Write((ushort)attr);
-            serializer.Write((ushort)bytes.Length);
-            serializer.Write(bytes);
-
-            Console.WriteLine("Attribute: " + Enum.GetName(typeof(STUNAttribute), attr) + " = " + NetworkSerializer.ByteArrayToHexString((byte[])bytes));
-            response.Add(attr, bytes);
-            attributeTypes.Add(attr);
-            attributeBytes.Add(serializer.ToArray());
-
-        }
-
-        public void WriteString(STUNAttribute attr, string text)
-        {
-            serializer.SetBufferLength(0);
-
-            serializer.Write((ushort)attr);
-            int len = Encoding.UTF8.GetByteCount(text);
-            serializer.Write((ushort)len);
-
-            int startLen = serializer.byteLength;
-            serializer.Write(text);
-            int textLen = serializer.byteLength - startLen - 2;
-            //pad to multiple of 4
-            int padCount = 0;
-            while (((textLen++) % 4) != 0) padCount++;
-
-            for(int i=0; i<padCount; i++) {
-                serializer.Write((byte)0);
-            }
-            response.Add(attr, text);
-            attributeTypes.Add(attr);
-            attributeBytes.Add(serializer.ToArray());
-        }
-
-        public void WriteUInt(STUNAttribute attr, uint value)
-        {
-            serializer.SetBufferLength(0);
-
-            serializer.Write((ushort)attr);
-            serializer.Write((ushort)4);
-            serializer.Write(value);
-
-            response.Add(attr, value);
-            attributeTypes.Add(attr);
-            attributeBytes.Add(serializer.ToArray());
-        }
-
-        public void WriteEmpty(STUNAttribute attr)
-        {
-            serializer.SetBufferLength(0);
-
-            serializer.Write((ushort)attr);
-            serializer.Write((ushort)0);
-
-            attributeTypes.Add(attr);
-            attributeBytes.Add(serializer.ToArray());
-        }
-
-       
-        public void WriteMessageIntegrity()
-        {
-            integrity = true;
-        }
-
-        public void GenerateMessageIntegrity(NetworkPacket packet)
-        {
-            //generate key
-            string keyStr = username + ":" + realm + ":" + password;
-            byte[] key = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(keyStr));
-
-
-            
-
-            //generate message bytes
-            byte[] msgBytes = new byte[packet.byteLength];
-            Array.Copy(packet.ByteBuffer, 0, msgBytes, 0, packet.byteLength);
-
-            //generate hmac
-            string hmac = Encode(key, msgBytes);
-            byte[] hmacBytes = Encoding.UTF8.GetBytes(hmac);
-            int hmacLen = hmacBytes.Length;
-
-         
-            packet.Write((ushort)STUNAttribute.MessageIntegrity);
-            packet.Write((ushort)hmacBytes.Length);
-            while (((hmacLen++) % 64) != 0)
-            {
-                packet.Write((byte)0);
-            }
-
-            Console.WriteLine("Write Attribute: MessageIntegrity(1) MD5 = " + NetworkSerializer.ByteArrayToHexString(key));
-            Console.WriteLine("Write Attribute: MessageIntegrity(1) HMAC = " + NetworkSerializer.ByteArrayToHexString(hmacBytes));
-        }
-
-        public void AddMessageIntegrity(NetworkPacket packet, bool useLongTermCredentials)
-        {
-            string saslPassword = new SASLprep().Prepare(password);
-
-            byte[] hmacSha1Key;
-
-            if (useLongTermCredentials)
-            {
-                if (username == null)
-                    throw new ArgumentException("USERNAME attribute is mandatory for long-term credentials MESSAGE-INTEGRITY creation", "this.Username");
-
-                if (realm == null)
-                    throw new ArgumentException("REALM attribute is mandatory for long-term credentials MESSAGE-INTEGRITY creation", "this.Realm");
-
-                using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
-                {
-                    String valueToHashMD5 = String.Format("{0}:{1}:{2}",
-                                                          username,
-                                                          realm,
-                                                          saslPassword);
-
-                    hmacSha1Key = md5.ComputeHash(Encoding.UTF8.GetBytes(valueToHashMD5));
-                }
-            }
-            else
-            {
-                hmacSha1Key = Encoding.UTF8.GetBytes(password);
-            }
-
-            packet.Write((ushort)STUNAttribute.MessageIntegrity);
-            packet.Write((ushort)20);
-            packet.Write(new byte[20]);
-
-            byte[] hmacBytes = this.ComputeHMAC(packet, hmacSha1Key);
-            int hmacLen = hmacBytes.Length;
-
-            //packet.Write((ushort)STUNAttribute.MessageIntegrity);
-            //packet.Write((ushort)hmacBytes.Length);
-            packet.byteLength -= 20;
-            packet.Write(hmacBytes);
-            while (((hmacLen++) % 64) != 0)
-            {
-                //packet.Write((byte)0);
-            }
-
-            Console.WriteLine("Write Attribute: MessageIntegrity(2) MD5 = " + NetworkSerializer.ByteArrayToHexString(hmacSha1Key));
-            Console.WriteLine("Write Attribute: MessageIntegrity(2) HMAC = " + NetworkSerializer.ByteArrayToHexString(hmacBytes));
-            //for (int i = 0; i < padCount; i++)
-            //    packet.Write((byte)0);
-
-            //StunAttribute messageIntegrity = new StunAttribute(StunAttributeType.MessageIntegrity,
-            //);
-            //this.SetAttribute(messageIntegrity);
-        }
-
-        /// <summary>
-        /// Computes a HMAC SHA1 based on this StunMessage attributes
-        /// </summary>
-        /// <param name="hmacSha1Key">The key of HMAC SHA1 computation algorithm</param>
-        /// <returns>The HMAC computed value of this StunMessage</returns>
-        private byte[] ComputeHMAC(NetworkPacket packet, byte[] hmacSha1Key)
-        {
-            byte[] hashed = null;
-
-            using (HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key))
-            {
-                hashed = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
-            }
-
-            return hashed;
-        }
 
         public string ReadString(NetworkPacket packet)
         {
@@ -386,7 +333,9 @@ namespace OpenP2P
             uint code = bits & 0xFF;
             uint codeClass = (bits & 0x700) >> 8;
             string phrase = packet.ReadString(attrLength-4);
-            return "Error (" + codeClass + code + "): " + phrase;
+            while ((attrLength++) % 4 != 0)
+                packet.ReadByte();
+            return "Error (" + codeClass + code.ToString("D2") + "): " + phrase;
         }
 
         public uint ReadUInt(NetworkPacket packet)
@@ -497,16 +446,7 @@ namespace OpenP2P
             
             return sa;
         }
-
-
-        public static string Encode(byte[] key, byte[] msgBytes)
-        {
-            HMACSHA1 myhmacsha1 = new HMACSHA1(key);
-            //byte[] byteArray = Encoding.ASCII.GetBytes(input);
-            MemoryStream stream = new MemoryStream(msgBytes);
-            return myhmacsha1.ComputeHash(stream).Aggregate("", (s, e) => s + String.Format("{0:x2}", e), s => s);
-        }
-
+        
         
 
     }

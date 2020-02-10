@@ -143,8 +143,15 @@ namespace OpenP2P
         public unsafe void Write(string val)
         {
             byte[] utfBytes = Encoding.UTF8.GetBytes(val);
-            int padCount = utfBytes.Length % 4;
             Write((ushort)utfBytes.Length);
+            Write(utfBytes);
+
+        }
+
+        public unsafe void Write(string val, int len)
+        {
+            byte[] utfBytes = Encoding.UTF8.GetBytes(val);
+            Write((ushort)len);
             Write(utfBytes);
 
         }
