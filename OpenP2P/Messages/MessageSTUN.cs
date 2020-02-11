@@ -88,7 +88,31 @@ namespace OpenP2P
             //cleanup
             attributeBytes.Clear();
         }
-     
+
+        public void WriteMessageIntegrity()
+        {
+            integrity = true;
+        }
+
+        public void AddMessageIntegrity(NetworkPacket packet)
+        {
+            string saslPassword = new SASLprep().Prepare(password);
+
+            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
+            string valueToHashMD5 = string.Format("{0}:{1}:{2}", username, realm, saslPassword);
+            byte[] hmacSha1Key = md5.ComputeHash(Encoding.UTF8.GetBytes(valueToHashMD5));
+
+            HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key);
+            byte[] hmacBytes = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
+
+            packet.Write((ushort)STUNAttribute.MessageIntegrity);
+            packet.Write((ushort)hmacBytes.Length);
+            packet.Write(hmacBytes);
+
+            Console.WriteLine("Write Attribute: MessageIntegrity(2) MD5 = " + NetworkSerializer.ByteArrayToHexString(hmacSha1Key));
+            Console.WriteLine("Write Attribute: MessageIntegrity(2) HMAC = " + NetworkSerializer.ByteArrayToHexString(hmacBytes));
+        }
+
         public void LogAttribute(int index)
         {
             STUNAttribute attr = attributeTypes[index];
@@ -130,9 +154,8 @@ namespace OpenP2P
             serializer.Write((ushort)bytes.Length);
             serializer.Write(bytes);
 
-            int len = bytes.Length;
-            while (((len++) % 4) != 0)
-                serializer.Write((byte)0);
+            //pad to multiple of 4
+            PadTo32Bits(bytes.Length, serializer);
 
             Console.WriteLine("Attribute: " + Enum.GetName(typeof(STUNAttribute), attr) + " = " + NetworkSerializer.ByteArrayToHexString((byte[])bytes));
             response.Add(attr, bytes);
@@ -141,22 +164,23 @@ namespace OpenP2P
 
         }
 
+        public void PadTo32Bits(int len, NetworkSerializer serializer)
+        {
+            while (((len++) % 4) != 0)
+                serializer.Write((byte)0);
+        }
+
         public void WriteString(STUNAttribute attr, string text)
         {
             serializer.SetBufferLength(0);
 
-            serializer.Write((ushort)attr);
             int len = Encoding.UTF8.GetByteCount(text);
-            int padding = (len % 4);
-            //serializer.Write((ushort)len);
 
-            int startLen = serializer.byteLength;
+            serializer.Write((ushort)attr);
             serializer.Write(text, len);
-            //int textLen = serializer.byteLength - startLen - 2;
-    
+
             //pad to multiple of 4
-            while (((len++) % 4) != 0) 
-                serializer.Write((byte)0);
+            PadTo32Bits(len, serializer);
 
             response.Add(attr, text);
             attributeTypes.Add(attr);
@@ -189,58 +213,7 @@ namespace OpenP2P
         }
 
        
-        public void WriteMessageIntegrity()
-        {
-            integrity = true;
-        }
-
         
-
-        public void AddMessageIntegrity(NetworkPacket packet)
-        {
-            string saslPassword = new SASLprep().Prepare(password);
-            byte[] hmacSha1Key;
-            using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
-            {
-                String valueToHashMD5 = string.Format("{0}:{1}:{2}",username, realm, saslPassword);
-                hmacSha1Key = md5.ComputeHash(Encoding.UTF8.GetBytes(valueToHashMD5));
-            }
-
-
-            byte[] hmacBytes = null;// this.ComputeHMAC(packet, hmacSha1Key);
-            using (HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key))
-            {
-                hmacBytes = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
-            }
-
-            int hmacLen = hmacBytes.Length;
-
-            packet.Write((ushort)STUNAttribute.MessageIntegrity);
-            packet.Write((ushort)hmacBytes.Length);
-            packet.Write(hmacBytes);
-       
-            Console.WriteLine("Write Attribute: MessageIntegrity(2) MD5 = " + NetworkSerializer.ByteArrayToHexString(hmacSha1Key));
-            Console.WriteLine("Write Attribute: MessageIntegrity(2) HMAC = " + NetworkSerializer.ByteArrayToHexString(hmacBytes));
-        }
-
-        /// <summary>
-        /// Computes a HMAC SHA1 based on this StunMessage attributes
-        /// </summary>
-        /// <param name="hmacSha1Key">The key of HMAC SHA1 computation algorithm</param>
-        /// <returns>The HMAC computed value of this StunMessage</returns>
-        private byte[] ComputeHMAC(NetworkPacket packet, byte[] hmacSha1Key)
-        {
-            byte[] hashed = null;
-
-            using (HMACSHA1 hmacSha1 = new HMACSHA1(hmacSha1Key))
-            {
-                hashed = hmacSha1.ComputeHash(packet.ByteBuffer, 0, packet.byteLength);
-            }
-
-            return hashed;
-        }
-
-
 
         public override void ReadResponse(NetworkPacket packet)
         {
@@ -264,36 +237,24 @@ namespace OpenP2P
                 switch (attrType)
                 {
                     case STUNAttribute.MappedAddress:
-                        address = ReadMappedAddress(packet);
-                        response.Add(attrType, address);
-                        //Console.WriteLine("Mapped Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
-                        break;
-                    case STUNAttribute.XorMappedAddress:
-                        address = ReadXorMappedAddress(packet);
-                        response.Add(attrType, address);
-                        //Console.WriteLine("Xor Mapped Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
-                        break;
                     case STUNAttribute.SourceAddress:
-                        address = ReadMappedAddress(packet);
-                        response.Add(attrType, address);
-                        //Console.WriteLine("Source Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
-                        break;
                     case STUNAttribute.ChangedAddress:
                         address = ReadMappedAddress(packet);
                         response.Add(attrType, address);
-                        //Console.WriteLine("Changed Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
+                        break;
+                    case STUNAttribute.XorMappedAddress:
+                    case STUNAttribute.XorRelayedAddress:
+                        address = ReadXorMappedAddress(packet);
+                        response.Add(attrType, address);
                         break;
                     case STUNAttribute.ErrorCode:
                         response.Add(attrType, ReadErrorCode(packet));
-                        //Console.WriteLine("Changed Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
                         break;
                     case STUNAttribute.UnknownAttribute:
                         response.Add(attrType, ReadUnknownAttributes(packet));
-                        //Console.WriteLine("Changed Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
                         break;
                     case STUNAttribute.ServerName:
                         response.Add(attrType, ReadString(packet));
-                        //Console.WriteLine("Changed Address: " + address.address[0] + "." + address.address[1] + "." + address.address[2] + "." + address.address[3] + ":" + address.port);
                         break;
                     case STUNAttribute.Realm:
                         response.Add(attrType, ReadString(packet));
@@ -305,10 +266,8 @@ namespace OpenP2P
                         ushort attrLen = packet.ReadUShort();
                         byte[] bytes = packet.ReadBytes(attrLen);
                         response.Add(attrType, bytes);
-
                         while (((attrLen++) % 4) != 0)
                             packet.ReadByte();
-
                         break;
                 }
             }
@@ -322,7 +281,6 @@ namespace OpenP2P
             int len = Encoding.UTF8.GetByteCount(value);
             while( ((len++) % 4) != 0 )
                 packet.ReadByte();
-            
             return value;
         }
 
@@ -374,9 +332,8 @@ namespace OpenP2P
 
         public STUNAddress ReadMappedAddress(NetworkPacket packet)
         {
-            ushort attrLength = packet.ReadUShort();
-
             STUNAddress sa = new STUNAddress();
+            ushort attrLength = packet.ReadUShort();
             byte empty = packet.ReadByte();
             sa.family = packet.ReadByte();
             sa.port = packet.ReadUShort();
@@ -385,7 +342,6 @@ namespace OpenP2P
             {
                 case 1:
                     sa.address = new byte[4];
-                    
                     break;
                 case 2:
                     sa.address = new byte[16];
@@ -393,27 +349,19 @@ namespace OpenP2P
             }
 
             for (int i = 0; i < sa.address.Length; i++)
-            {
                 sa.address[i] = packet.ReadByte();
-            }
             return sa;
         }
 
         public STUNAddress ReadXorMappedAddress(NetworkPacket packet)
         {
-            ushort attrLength = packet.ReadUShort();
-
             STUNAddress sa = new STUNAddress();
-            
+            ushort attrLength = packet.ReadUShort();
             ushort xorFlag16 = (ushort)(magicCookie >> 16);
             byte empty = packet.ReadByte();
             sa.family = packet.ReadByte();
             sa.port = (ushort)(packet.ReadUShort() ^ xorFlag16);
 
-            Console.WriteLine("XorMappedAddress - family: " + sa.family);
-            Console.WriteLine("XorMappedAddress - port: " + sa.port );
-
-            //sa.port = (ushort)(sa.port ^ xorFlag);
             switch (sa.family)
             {
                 case 1:
@@ -432,22 +380,13 @@ namespace OpenP2P
                 case 2:
                     sa.address = new byte[16];
                     byte[] xorFlags = new byte[16];
-
-                    //byte[] cookieBytes = BitConverter.GetBytes(magicCookie);
-                    //Array.Copy(cookieBytes, 0, xorFlags, 0, cookieBytes.Length);
                     Array.Copy(transactionID, 0, xorFlags, xorFlags.Length, transactionID.Length);
-
                     for (int i = 0; i < sa.address.Length; i++)
-                    {
                         sa.address[i] = (byte)(packet.ReadByte() ^ xorFlags[i]);
-                    }
                     break;
             }
             
             return sa;
         }
-        
-        
-
     }
 }

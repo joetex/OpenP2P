@@ -157,7 +157,8 @@ namespace OpenP2P
         public const int stunDefaultPort = 3478;
 
         public IPEndPoint turnHost = null;
-        public string turnDefaultAddress = "34.70.87.145";
+        //public string turnDefaultAddress = "34.70.87.145";
+        public string turnDefaultAddress = "127.0.0.1";
         public string turnAddress = "";
         public int turnPort = 0;
         public const int turnDefaultPort = 3478;
@@ -173,6 +174,8 @@ namespace OpenP2P
         private string sourceAddress = "";
         private string localAddress = "";
         private string originalMappedAddress = "";
+
+        public int turnAllocateCount = 0;
 
         public int testId = -1;
 
@@ -207,8 +210,6 @@ namespace OpenP2P
             message.method = STUNMethod.BindingRequest;
             message.transactionID = transactionID;
             message.WriteChangeRequest(changeIP, changePort);
-            //message.WriteString(STUNAttribute.Username, "joelruiz2@gmail.com");
-            //message.WriteString(STUNAttribute.Password, "Housedoor10??");
 
             Console.WriteLine("Sending STUN Request to: " + stunHost.ToString());
             protocol.SendSTUN(stunHost, message, NetworkConfig.SocketReliableRetryDelay);
@@ -216,16 +217,6 @@ namespace OpenP2P
 
         public void ConnectTURN(string address, bool isFirst)
         {
-            if(isFirst)
-            {
-                turnAllocateCount = 0;
-            }
-            else
-            {
-                turnAllocateCount++;
-                if (turnAllocateCount > 1)
-                    return;
-            }
             if (address == null || address.Length == 0)
                 address = turnDefaultAddress;
 
@@ -235,23 +226,19 @@ namespace OpenP2P
             message.method = STUNMethod.AllocateRequest;
             message.transactionID = transactionID;
 
-            message.WriteString(STUNAttribute.ServerName, message.realm);
+            //message.WriteString(STUNAttribute.ServerName, "Coturn-4.5.1.1 'dan Eider'");
             message.WriteUInt(STUNAttribute.Lifetime, 300);
             message.WriteUInt(STUNAttribute.RequestedTransport, (uint)(17 << 24));
             message.WriteEmpty(STUNAttribute.DontFragment);
-
-            //if ( !isFirst )
-            {
-                message.WriteString(STUNAttribute.Username, message.username);
-                message.WriteString(STUNAttribute.Realm, message.realm);
-            }
-            
+            message.WriteString(STUNAttribute.Username, message.username);
+            message.WriteString(STUNAttribute.Realm, message.realm);
             
             if (nonce != null)
+            {
                 message.WriteBytes(STUNAttribute.Nonce, nonce);
-            //if (!isFirst)
                 message.WriteMessageIntegrity();
-            
+            }
+                
 
             Console.WriteLine("TURN Method: " + Enum.GetName(typeof(STUNMethod), message.method) + " (" + ((int)message.method).ToString("X") + ")");
             Console.WriteLine("TURN Request sent to: " + turnHost.ToString());
@@ -262,16 +249,13 @@ namespace OpenP2P
         }
 
         
-
         public void OnError(object sender, NetworkPacket packet)
         {
             MessageSTUN message = (MessageSTUN)packet.messages[0];
 
-            if (message.method == STUNMethod.BindingRequest && testId > -1)
-                CheckTests(false);
+            if (message.method == STUNMethod.BindingRequest)
+                OnErrorBindingRequest();
         }
-
-        public int turnAllocateCount = 0;
 
         public void OnResponse(object sender, NetworkMessage msg)
         {
@@ -281,36 +265,51 @@ namespace OpenP2P
             Console.WriteLine("STUN Host: " + packet.remoteEndPoint.ToString());
             Console.WriteLine("STUN Response Method: " + Enum.GetName(typeof(STUNMethod), message.method));
             //Console.WriteLine("STUN Response Length: " + methodLength);
-
             Console.WriteLine("STUN Attributes: \n" + GetAttributeKeys(message));
-            //Console.WriteLine("MappedAddress: " + mappedAddress);
-            //Console.WriteLine("XorMappedAddress: " + message.Get(STUNAttribute.XorMappedAddress).ToString());
-            //Console.WriteLine("SourceAddress: " + sourceAddress);
-            //Console.WriteLine("ChangedAddress: " + changedAddress);
-            if (message.method == STUNMethod.BindingResponse)
+
+            switch (message.method)
             {
-                if (testId > -1)
-                {
-                    Console.WriteLine("STUN Test #" + testId);
-
-                    changedAddress = message.GetString(STUNAttribute.ChangedAddress);
-                    mappedAddress = message.GetString(STUNAttribute.MappedAddress);
-                    sourceAddress = message.GetString(STUNAttribute.SourceAddress);
-
-                    CheckTests(true);
-                }
-                else
-                {
-                   
-                }
-            }
-
-            if( message.method == STUNMethod.AllocateError )
-            {
-                nonce = (byte[])message.Get(STUNAttribute.Nonce);
-                ConnectTURN(null, false);
+                case STUNMethod.BindingResponse:
+                    OnBindingResponse(packet, message);
+                    break;
+                case STUNMethod.AllocateError:
+                    OnAllocateError(packet, message);
+                    break;
             }
         }
+
+        
+
+        public void OnErrorBindingRequest()
+        {
+            if (testId > -1)
+                CheckTests(false);
+        }
+
+        public void OnBindingResponse(NetworkPacket packet, MessageSTUN message)
+        {
+            if (testId > -1)
+            {
+                Console.WriteLine("STUN Test #" + testId);
+
+                changedAddress = message.GetString(STUNAttribute.ChangedAddress);
+                mappedAddress = message.GetString(STUNAttribute.MappedAddress);
+                sourceAddress = message.GetString(STUNAttribute.SourceAddress);
+
+                CheckTests(true);
+            }
+            else
+            {
+
+            }
+        }
+
+        public void OnAllocateError(NetworkPacket packet, MessageSTUN message)
+        {
+            nonce = (byte[])message.Get(STUNAttribute.Nonce);
+            ConnectTURN(null, false);
+        }
+        
 
         public void test1a(string address)
         {
