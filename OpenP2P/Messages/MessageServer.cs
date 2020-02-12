@@ -6,6 +6,17 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
+    /// <summary>
+    /// MessageServer Packet format:
+    /// |------------------------------------------------------------|
+    /// |  Command Type (1 byte)                                     |
+    /// |------------------------------------------------------------|
+    /// |  Command Length (2 bytes)                                  |
+    /// |------------------------------------------------------------|
+    /// |  Command Data (X bytes)                                    |
+    /// |------------------------------------------------------------|
+    ///
+    /// </summary>
     public class MessageServer : NetworkMessage
     {
         public const int MAX_NAME_LENGTH = 32;

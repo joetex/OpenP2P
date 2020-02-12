@@ -6,7 +6,20 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class MessageHeartbeat : NetworkMessage
+    /// <summary>
+    /// MessagePeer Packet format:
+    /// |------------------------------------------------------------|
+    /// |  Static Input (X bytes)                                    |
+    /// |------------------------------------------------------------|
+    /// |  Static State (Y bytes)                                    |
+    /// |------------------------------------------------------------|
+    /// |  Static Animation (Z bytes)                                |
+    /// |------------------------------------------------------------|
+    /// |  Dynamic Extras (W bytes)                                  |
+    /// |------------------------------------------------------------|
+    ///
+    /// </summary>
+    public class MessagePeer : NetworkMessage
     {
         public long timestamp = 0;
 
@@ -15,12 +28,12 @@ namespace OpenP2P
         public override void WriteMessage(NetworkPacket packet)
         {
             packet.Write(timestamp);
-            
+
         }
         public override void ReadMessage(NetworkPacket packet)
         {
             timestamp = packet.ReadLong();
-            
+
         }
 
 

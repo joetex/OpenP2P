@@ -31,7 +31,7 @@ namespace OpenP2P
             protocol = new NetworkProtocol(localPort, false);
             protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
             //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
-            protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
+            //protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
             protocol.AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
            // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
             protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
@@ -118,7 +118,7 @@ namespace OpenP2P
 
         public long latencyStartTime = 0;
         public long latency = 0;
-
+        /*
         public void SendHeartbeat()
         {
             MessageHeartbeat msg = protocol.CreateMessage<MessageHeartbeat>();
@@ -147,7 +147,7 @@ namespace OpenP2P
                 }
             }
         }
-        
+        */
         public void PerformanceTest()
         {
             if (receiveCnt == 0)

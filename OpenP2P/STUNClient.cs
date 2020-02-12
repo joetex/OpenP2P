@@ -157,8 +157,8 @@ namespace OpenP2P
         public const int stunDefaultPort = 3478;
 
         public IPEndPoint turnHost = null;
-        //public string turnDefaultAddress = "34.70.87.145";
-        public string turnDefaultAddress = "127.0.0.1";
+        public string turnDefaultAddress = "35.225.63.226";
+        //public string turnDefaultAddress = "127.0.0.1";
         public string turnAddress = "";
         public int turnPort = 0;
         public const int turnDefaultPort = 3478;

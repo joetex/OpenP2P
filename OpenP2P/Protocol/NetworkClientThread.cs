@@ -31,7 +31,7 @@ namespace OpenP2P
 
         public void NetworkFrame()
         {
-            SendHeartbeat();
+            //SendHeartbeat();
         }
     }
 }

@@ -360,8 +360,6 @@ namespace OpenP2P
                 msgBits |= StreamFlag;
 
             msgBits |= ProtocolTypeFlag;
-                
-            message.header.isStream = BitConverter.IsLittleEndian;
 
             packet.Write((byte)msgBits);
             packet.Write(message.header.sequence);

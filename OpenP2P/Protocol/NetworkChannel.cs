@@ -12,17 +12,12 @@ namespace OpenP2P
         Invalid,
 
         Server,
-        ConnectToPeer,
-        DisconnectFromServer,
-        DisconnectFromPeer,
-        MultiPacket, //multiple packets packed into one packet
+        Peer,
         //interest mapping data sent to server
         //Peers will be connected together at higher priorities based on the 
         // "interest" mapping to a QuadTree (x, y, width, height) 
         Stream, //used for large data transfer
         STUN,
-        Heartbeat,
-        Raw,
         Event,
         RPC,
         LAST
@@ -31,22 +26,17 @@ namespace OpenP2P
     
     public class NetworkChannel
     {
-        public Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
-        {
+        public Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>();
+       /* {
             {(uint)ChannelType.Invalid, Create<MessageInvalid> },
             {(uint)ChannelType.Server, Create<MessageServer>},
-            {(uint)ChannelType.ConnectToPeer, Create<MessageInvalid>},
-            {(uint)ChannelType.DisconnectFromServer, Create<MessageInvalid>},
-            {(uint)ChannelType.DisconnectFromPeer, Create<MessageInvalid>},
-            {(uint)ChannelType.MultiPacket, Create<MessageInvalid>},
+            {(uint)ChannelType.Peer, Create<MessageInvalid> },
             {(uint)ChannelType.Stream, Create<MessageStream> },
             {(uint)ChannelType.STUN, Create<MessageSTUN> },
-            {(uint)ChannelType.Heartbeat, Create<MessageHeartbeat>},
-            {(uint)ChannelType.Raw, Create<MessageInvalid>},
             {(uint)ChannelType.Event, Create<MessageInvalid>},
             {(uint)ChannelType.RPC, Create<MessageInvalid>},
             {(uint)ChannelType.LAST, Create<MessageInvalid>}
-        };
+        };*/
 
         public NetworkMessagePool MESSAGEPOOL = null;
 
@@ -79,6 +69,7 @@ namespace OpenP2P
                     //these are used to map message object types to channel types
                     enumName = Enum.GetName(typeof(ChannelType), (ChannelType)i);
                     NetworkMessage message = (NetworkMessage)GetInstance("OpenP2P.Message" + enumName);
+                    Type t = message.GetType();
                     messageToChannelType.Add(message.GetType(), (ChannelType)i);
                     channelTypeToMessage.Add((ChannelType)i, message.GetType());
                 }
@@ -92,7 +83,8 @@ namespace OpenP2P
 
         public NetworkMessage InstantiateMessage(ChannelType type)
         {
-            return constructors[(uint)type]();
+            return (NetworkMessage)Activator.CreateInstance(channelTypeToMessage[type]);
+            //return constructors[(uint)type]();
         }
 
         public INetworkMessage CreateMessage(ChannelType type)
@@ -147,5 +139,6 @@ namespace OpenP2P
             INetworkMessage obj = New<T>.Instance();
             return (NetworkMessage)obj;
         }
+
     }
 }

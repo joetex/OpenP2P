@@ -20,11 +20,11 @@ namespace OpenP2P
             protocol.AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
             protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
 
-            protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
+            //protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
 
         
-
+        /*
         public void OnMessageHeartbeat(object sender, NetworkMessage message)
         {
             MessageHeartbeat heartbeat = (MessageHeartbeat)message;
@@ -34,18 +34,8 @@ namespace OpenP2P
             Console.WriteLine("Received Heartbeat from ("+ heartbeat.header.peer.id +") :");
             //Console.WriteLine(heartbeat.timestamp);
 
-            /*for (int i = 0; i < NetworkConfig.MAXSEND; i++)
-            {
-                //username += "JoeOfTex" + r.Next(1000, 100000) + r.Next(1000, 100000) + r.Next(1000, 100000);
-                MsgConnectToServer tmp = protocol.Create<MsgConnectToServer>();
-                tmp.msgUsername = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
-                tmp.msgNumber = 10;
-                tmp.msgShort = 20;
-                tmp.msgBool = true;
-
-                protocol.SendReliableMessage(message.header.source, tmp);
-            }*/
-        }
+           
+        }*/
 
         private void OnResponseConnectToServer(object sender, NetworkMessage e)
         {
