@@ -26,8 +26,8 @@ namespace OpenP2P
     
     public class NetworkChannel
     {
-        public Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>();
-       /* {
+        public Dictionary<uint, Func<NetworkMessage>> constructors = new Dictionary<uint, Func<NetworkMessage>>()
+        {
             {(uint)ChannelType.Invalid, Create<MessageInvalid> },
             {(uint)ChannelType.Server, Create<MessageServer>},
             {(uint)ChannelType.Peer, Create<MessageInvalid> },
@@ -36,7 +36,7 @@ namespace OpenP2P
             {(uint)ChannelType.Event, Create<MessageInvalid>},
             {(uint)ChannelType.RPC, Create<MessageInvalid>},
             {(uint)ChannelType.LAST, Create<MessageInvalid>}
-        };*/
+        };
 
         public NetworkMessagePool MESSAGEPOOL = null;
 
@@ -83,8 +83,8 @@ namespace OpenP2P
 
         public NetworkMessage InstantiateMessage(ChannelType type)
         {
-            return (NetworkMessage)Activator.CreateInstance(channelTypeToMessage[type]);
-            //return constructors[(uint)type]();
+            //return (NetworkMessage)Activator.CreateInstance(channelTypeToMessage[type]);
+            return constructors[(uint)type]();
         }
 
         public INetworkMessage CreateMessage(ChannelType type)

@@ -53,7 +53,7 @@ namespace OpenP2P
             //NetworkRSAEncryption enc = new NetworkRSAEncryption();
             //enc.Test();
 
-            //RunServer();
+            RunServer();
             RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
@@ -68,7 +68,7 @@ namespace OpenP2P
             //string localIP = NetworkConfig.GetPublicIP();
             //Console.WriteLine("IPAddress = " + localIP);
             
-            NetworkServer server = new NetworkServer("127.0.0.1", 9000);
+            NetworkServer server = new NetworkServer(9000, true);
         }
 
         public static void RunClient()
@@ -78,27 +78,30 @@ namespace OpenP2P
             NetworkConfig.ProfileEnable();
             for (int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
-                client = new NetworkClient(connectToAddress, 9000, 0);
+                client = new NetworkClient();
 
                 clients.Add(client);
-                //client.ConnectToServer("JoeOfTexas" + i);
+                
 
-                client.ConnectToSTUN();
+                //client.ConnectToSTUN();
             }
 
-
+            for(int i=0; i< NetworkConfig.MAXSEND; i++)
+            {
+                clients[0].Connect("127.0.0.1", 9000, "JoeOfTexas" + i);
+            }
             
             
             
-           /*
+           
             Thread.Sleep(4000);
             for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             {
-                Console.WriteLine("Client PacketPool Count = " + clients[i].protocol.socket.thread.PACKETPOOL.packetCount);
+                Console.WriteLine("Client PacketPool Count = " + clients[i].socket.thread.PACKETPOOL.packetCount);
                 //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
                 Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
-                Console.WriteLine("Client bandwidth sent: " + clients[i].protocol.socket.thread.sentBufferSize);
-            }*/
+                Console.WriteLine("Client bandwidth sent: " + clients[i].socket.thread.sentBufferSize);
+            }
             
         }
 

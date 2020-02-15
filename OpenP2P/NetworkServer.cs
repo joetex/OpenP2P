@@ -7,18 +7,18 @@ using static OpenP2P.NetworkIdentity;
 
 namespace OpenP2P
 {
-    public class NetworkServer
+    public class NetworkServer : NetworkProtocol
     {
-        public NetworkProtocol protocol = null;
+        //public NetworkProtocol protocol = null;
         public Dictionary<string, string> connections = new Dictionary<string, string>();
         public int receiveCnt = 0;
         static Stopwatch recieveTimer;
 
-        public NetworkServer(String localIP, int localPort)
+        public NetworkServer(int localPort, bool _isServer) : base(localPort, true)
         {
-            protocol = new NetworkProtocol(localIP, localPort, true);
-            protocol.AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
-            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
+            //protocol = new NetworkProtocol(localIP, localPort, true);
+            AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
+            AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
 
             //protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
@@ -49,19 +49,24 @@ namespace OpenP2P
             PerformanceTest();
 
             MessageServer msgConnect = (MessageServer)message;
-            Console.WriteLine("Int: " + msgConnect.msgNumber);
+            //Console.WriteLine("Int: " + msgConnect.msgNumber);
+
+            //NetworkPacket packet = (NetworkPacket)sender;
+            //string path = Directory.GetCurrentDirectory();
+            //path = Path.Combine(path + "/../../ipsum.txt");
+            //string text = File.ReadAllText(path);
+            //byte[] bytes = Encoding.ASCII.GetBytes(text);
+
+            //MessageStream dataStream = protocol.CreateMessage<MessageStream>();
+            //dataStream.SetBuffer(bytes);
+
+            //Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);
+            //SendStream(message.header.source, dataStream);
+
+            MessageServer msgResponse = CreateMessage<MessageServer>();
+            msgResponse.responseConnected = true;
+           
             
-            NetworkPacket packet = (NetworkPacket)sender;
-            string path = Directory.GetCurrentDirectory();
-            path = Path.Combine(path + "/../../ipsum.txt");
-            string text = File.ReadAllText(path);
-            byte[] bytes = Encoding.ASCII.GetBytes(text);
-
-            MessageStream dataStream = protocol.CreateMessage<MessageStream>();
-            dataStream.SetBuffer(bytes);
-
-            Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);
-            protocol.SendStream(message.header.source, dataStream);
         }
 
 
@@ -72,7 +77,7 @@ namespace OpenP2P
 
             receiveCnt++;
 
-            if (receiveCnt % 500 == 0 || receiveCnt == NetworkConfig.MAXSEND)
+            if (receiveCnt % 1000 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
                 //recieveTimer.Stop();
                 Console.WriteLine("SERVER Finished in " + receiveCnt + " packets in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");

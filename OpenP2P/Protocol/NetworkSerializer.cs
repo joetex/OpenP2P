@@ -122,7 +122,7 @@ namespace OpenP2P
         {
             fixed (byte* b = &ByteBuffer[byteLength])
                 *((float*)b) = val;
-            Console.WriteLine("Write Float bytes: " + ByteBuffer[byteLength + 0] + " " + ByteBuffer[byteLength + 1] + " " + ByteBuffer[byteLength + 2] + " " + ByteBuffer[byteLength + 3] + " "  );
+            //Console.WriteLine("Write Float bytes: " + ByteBuffer[byteLength + 0] + " " + ByteBuffer[byteLength + 1] + " " + ByteBuffer[byteLength + 2] + " " + ByteBuffer[byteLength + 3] + " "  );
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(ByteBuffer, byteLength, 4);
             byteLength += 4;
@@ -220,7 +220,7 @@ namespace OpenP2P
         {
             if (BitConverter.IsLittleEndian)
                 Array.Reverse(ByteBuffer, bytePos, 4);
-            Console.WriteLine("Read Float bytes: " + ByteBuffer[bytePos + 0] + " " + ByteBuffer[bytePos + 1] + " " + ByteBuffer[bytePos + 2] + " " + ByteBuffer[bytePos + 3]  );
+            //Console.WriteLine("Read Float bytes: " + ByteBuffer[bytePos + 0] + " " + ByteBuffer[bytePos + 1] + " " + ByteBuffer[bytePos + 2] + " " + ByteBuffer[bytePos + 3]  );
 
 
             float val = BitConverter.ToSingle(ByteBuffer, bytePos);

@@ -18,10 +18,10 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
-        const uint ProtocolTypeFlag = (1 << 8); //bit 8
-        const uint StreamFlag = (1 << 7); //bit 7
-        const uint ReliableFlag = (1 << 6);  //bit 6
-        const uint SendTypeFlag = (1 << 5); //bit 5
+        const uint ProtocolTypeFlag = (1 << 7); //bit 8
+        const uint StreamFlag = (1 << 6); //bit 7
+        const uint ReliableFlag = (1 << 5);  //bit 6
+        const uint SendTypeFlag = (1 << 4); //bit 5
         
         public event EventHandler<NetworkMessage> OnWriteHeader = null;
         public event EventHandler<NetworkMessage> OnReadHeader = null;
@@ -34,21 +34,20 @@ namespace OpenP2P
         public bool isServer = false;
 
 
-        public NetworkProtocol(string localIP, int localPort, bool _isServer)
+        public NetworkProtocol(bool _isServer)
         {
-            Setup(localIP, localPort, _isServer);
+            Setup(0, _isServer);
         }
-
 
         public NetworkProtocol(int localPort, bool _isServer)
         {
-            string localIP = "127.0.0.1";
-            Setup(localIP, localPort, _isServer);
+            Setup(localPort, _isServer);
         }
 
 
-        public void Setup(string localIP, int localPort, bool _isServer)
+        public void Setup(int localPort, bool _isServer)
         {
+            string localIP = "127.0.0.1";
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             channel = new NetworkChannel();
             socket = new NetworkSocket(localIP, localPort);

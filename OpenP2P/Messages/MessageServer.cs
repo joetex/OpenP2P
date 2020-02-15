@@ -39,8 +39,8 @@ namespace OpenP2P
             double test = 5.1234;
             float test2 = 5.4321f;
 
-            Console.WriteLine("Sending double: " + test);
-            Console.WriteLine("Sending float: " + test2);
+            //Console.WriteLine("Sending double: " + test);
+            //Console.WriteLine("Sending float: " + test2);
 
             packet.Write(test);
             packet.Write(test2);
@@ -57,8 +57,8 @@ namespace OpenP2P
             double test = packet.ReadDouble();
             double test2 = packet.ReadFloat();
 
-            Console.WriteLine("Recv double: " + test);
-            Console.WriteLine("Recv float: " + test2);
+            //Console.WriteLine("Recv double: " + test);
+            //Console.WriteLine("Recv float: " + test2);
             msgUsername = packet.ReadString();
             msgNumber = packet.ReadInt();
             msgShort = packet.ReadShort();

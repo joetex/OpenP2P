@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public partial class NetworkClient
+    public partial class NetworkClient : NetworkProtocol
     {
-        public NetworkProtocol protocol = null;
+        //public NetworkProtocol protocol = null;
 
         public IPEndPoint serverHost = null;
         public NetworkPeer server = null;
@@ -26,23 +26,19 @@ namespace OpenP2P
         public int receiveCnt = 0;
         Stopwatch timer;
         Dictionary<uint, Stopwatch> recieveTimer = new Dictionary<uint, Stopwatch>();
-        public NetworkClient(string remoteHost, int remotePort, int localPort)
+        public NetworkClient() : base(false)
         {
-            protocol = new NetworkProtocol(localPort, false);
-            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
+            //protocol = new NetworkProtocol(localPort, false);
+            AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
             //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
             //protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
-            protocol.AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
+            AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
            // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
-            protocol.AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
+            AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
 
             
-            stun = new STUNClient(protocol);
+            stun = new STUNClient(this);
             //turn = new TURNClient(protocol);
-
-             IPEndPoint serverHost = protocol.GetEndPoint(remoteHost, remotePort);
-            server = new NetworkPeer(protocol);
-            server.AddEndpoint(serverHost);
 
             
         }
@@ -53,12 +49,9 @@ namespace OpenP2P
 
             Console.WriteLine("Command: " + stream.command);
             string result = Encoding.UTF8.GetString(stream.byteData);
-
             latency = NetworkTime.Milliseconds() - latencyStartTime;
             Console.WriteLine("Stream took " + (latency) + " ms");
-
             Console.WriteLine("Text: " + result);
-
         }
 
         private void OnMessageConnectToServer(object sender, NetworkMessage e)
@@ -78,22 +71,26 @@ namespace OpenP2P
             //Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
         }
 
-        public void ConnectToServer(string userName)
+        public void Connect(string remoteHost, int remotePort, string userName)
         {
-            MessageServer message = protocol.ConnectToServer(userName);
+            IPEndPoint serverHost = GetEndPoint(remoteHost, remotePort);
+            server = new NetworkPeer(this);
+            server.AddEndpoint(serverHost);
+
+            MessageServer message = base.ConnectToServer(userName);
             message.msgNumber = 10;
             message.msgShort = 20;
             message.msgBool = true;
 
-            protocol.SendReliableMessage(server.GetEndpoint(), message);
+            SendReliableMessage(server.GetEndpoint(), message);
 
             latencyStartTime = NetworkTime.Milliseconds();
         }
 
         public void ConnectToSTUN()
         {
-            //stun.ConnectSTUN(true);
-            stun.ConnectTURN(null, true);
+            stun.ConnectSTUN(true);
+            //stun.ConnectTURN(null, true);
         }
 
         
@@ -109,7 +106,7 @@ namespace OpenP2P
             //mainThread.Start();
 
             latency = NetworkTime.Milliseconds() - latencyStartTime;
-            Console.WriteLine("Ping = " + (latency) + " ms");
+            //Console.WriteLine("Ping = " + (latency) + " ms");
 
             latencyStartTime = NetworkTime.Milliseconds();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
@@ -156,7 +153,7 @@ namespace OpenP2P
             //Interlocked.Increment(ref receiveCnt);
             receiveCnt++;
 
-            if (receiveCnt % 500 == 0 || receiveCnt == NetworkConfig.MAXSEND)
+            if (receiveCnt % 1000 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
                 //timer.Stop();
                 Console.WriteLine("CLIENT Finished " + receiveCnt + " packets in " + ((float)timer.ElapsedMilliseconds / 1000f) + " seconds");

@@ -151,7 +151,7 @@ namespace OpenP2P
     {
         public IPEndPoint stunHost = null;
         public string[] stunAddresses = new string[] { "stun2.l.google.com:19302", "stun3.l.google.com:19302" };
-        public string stunDefaultAddress = "stun.l.google.com:19302";
+        public string stunDefaultAddress = "stun.sipgate.net";
         public string stunAddress = "";
         public int stunPort = 0;
         public const int stunDefaultPort = 3478;
