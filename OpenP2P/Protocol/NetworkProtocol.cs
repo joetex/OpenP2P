@@ -18,6 +18,7 @@ namespace OpenP2P
     /// </summary>
     public class NetworkProtocol : NetworkProtocolBase
     {
+        //const uint S
         const uint ProtocolTypeFlag = (1 << 7); //bit 8
         const uint StreamFlag = (1 << 6); //bit 7
         const uint ReliableFlag = (1 << 5);  //bit 6
@@ -54,24 +55,29 @@ namespace OpenP2P
             Console.WriteLine("Binded to: " + socket.socket4.LocalEndPoint.ToString());
             AttachSocketListener(socket);
             
-            AttachNetworkIdentity();
-            
-            if (isServer)
-            {
-                ident.RegisterServer(socket.sendSocket.LocalEndPoint);
-            }
-           
             isClient = !isServer;
             isServer = _isServer;
+
+            AttachNetworkIdentity();
         }
         
 
         public void AttachNetworkIdentity()
         {
-            ident = new NetworkIdentity();
-            ident.AttachToProtocol(this);
+            AttachNetworkIdentity(new NetworkIdentity());
         }
-        
+
+        public void AttachNetworkIdentity(NetworkIdentity ni)
+        {
+            ident = ni;
+            ident.AttachToProtocol(this);
+
+            if (isServer)
+            {
+                ident.RegisterServer(socket.sendSocket.LocalEndPoint);
+            }
+        }
+
 
         public MessageServer ConnectToServer(string userName)
         {

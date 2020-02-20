@@ -239,7 +239,11 @@ namespace OpenP2P
                     packet.messages[i].header.sentTime = NetworkTime.Milliseconds();
                     packet.messages[i].header.retryCount++;
                     
-                    thread.RELIABLEQUEUE.Enqueue(packet);
+                    lock(thread.RELIABLEQUEUE)
+                    {
+                        thread.RELIABLEQUEUE.Enqueue(packet);
+                    }
+                    
 
                     hasReliable = true;
                 }

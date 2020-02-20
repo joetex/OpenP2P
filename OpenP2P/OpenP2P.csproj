@@ -58,7 +58,7 @@
     <Compile Include="Protocol\NetworkChannel.cs" />
     <Compile Include="Protocol\NetworkChannelEvent.cs" />
     <Compile Include="Protocol\NetworkClientThread.cs" />
-    <Compile Include="Protocol\NetworkConfig.cs" />
+    <Compile Include="NetworkConfig.cs" />
     <Compile Include="Protocol\NetworkIdentity.cs" />
     <Compile Include="Protocol\NetworkMessage.cs" />
     <Compile Include="Messages\MessageInvalid.cs" />

@@ -153,7 +153,7 @@ namespace OpenP2P
             //Interlocked.Increment(ref receiveCnt);
             receiveCnt++;
 
-            if (receiveCnt % 1000 == 0 || receiveCnt == NetworkConfig.MAXSEND)
+            if (receiveCnt % 10000 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
                 //timer.Stop();
                 Console.WriteLine("CLIENT Finished " + receiveCnt + " packets in " + ((float)timer.ElapsedMilliseconds / 1000f) + " seconds");
