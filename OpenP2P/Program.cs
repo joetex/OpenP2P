@@ -53,22 +53,30 @@ namespace OpenP2P
             //NetworkRSAEncryption enc = new NetworkRSAEncryption();
             //enc.Test();
 
-            RunServer();
+            NetworkServer server = RunServer();
             RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
             //t = new Thread(Test2);
             //t.Start();
+            Thread.Sleep(3000);
 
+            Console.WriteLine("Server PacketPool Count = " + server.socket.thread.PACKETPOOL.packetCount);
+            //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
+            Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+            Console.WriteLine("Server bandwidth sent: " + server.socket.thread.sentBufferSize);
             Thread.Sleep(10000);
         }
         
-        public static void RunServer()
+        public static NetworkServer RunServer()
         {
             //string localIP = NetworkConfig.GetPublicIP();
             //Console.WriteLine("IPAddress = " + localIP);
             
             NetworkServer server = new NetworkServer(9000, true);
+
+
+            return server;
         }
 
         public static void RunClient()
@@ -94,14 +102,14 @@ namespace OpenP2P
             
             
            
-            Thread.Sleep(4000);
-            for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
-            {
-                Console.WriteLine("Client PacketPool Count = " + clients[i].socket.thread.PACKETPOOL.packetCount);
-                //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
-                Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
-                Console.WriteLine("Client bandwidth sent: " + clients[i].socket.thread.sentBufferSize);
-            }
+            //Thread.Sleep(4000);
+            //for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
+            //{
+            //    Console.WriteLine("Client PacketPool Count = " + clients[i].socket.thread.PACKETPOOL.packetCount);
+            //    //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
+            //    Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
+            //    Console.WriteLine("Client bandwidth sent: " + clients[i].socket.thread.sentBufferSize);
+            //}
             
         }
 

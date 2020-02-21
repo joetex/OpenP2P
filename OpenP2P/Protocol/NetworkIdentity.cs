@@ -97,7 +97,7 @@ namespace OpenP2P
             response.responseConnected = true;
             response.responsePeerId = peer.id;
             
-            protocol.SendResponse(message, response);
+            //protocol.SendResponse(message, response);
         }
 
         //Client receives response from server
