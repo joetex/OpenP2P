@@ -32,12 +32,17 @@ namespace OpenP2P
         public void New()
         {
             NetworkPacket packet = new NetworkPacket(initialBufferSize);
-            //lock(available)
+            lock(available)
             {
                 packetCount++;
                 available.Enqueue(packet);
             }
                
+        }
+
+        public NetworkPacket _New()
+        {
+            return new NetworkPacket(initialBufferSize);
         }
 
         /**
@@ -52,18 +57,15 @@ namespace OpenP2P
             lock(available)
             {
                 count = available.Count;
-            //}
+                //}
 
+                //lock (available)
+                //{
                 if (count == 0)
-                    New();
-
-            //lock (available)
-            //{
-                packet = available.Dequeue();
+                    packet = _New();
+                else
+                    packet = available.Dequeue();
             }
-
-            if (packet == null)
-                return Reserve();
             
             packet.messages.Clear();
 

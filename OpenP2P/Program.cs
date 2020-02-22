@@ -94,9 +94,11 @@ namespace OpenP2P
                 //client.ConnectToSTUN();
             }
 
+            clients[0].AddServer("127.0.0.1", 9000);
+
             for(int i=0; i< NetworkConfig.MAXSEND; i++)
             {
-                clients[0].Connect("127.0.0.1", 9000, "JoeOfTexas" + i);
+                clients[0].ConnectToServer("JoeOfTexas" + i);
             }
             
             

@@ -71,13 +71,16 @@ namespace OpenP2P
             //Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
         }
 
-        public void Connect(string remoteHost, int remotePort, string userName)
+        public void AddServer(string remoteHost, int remotePort)
         {
             IPEndPoint serverHost = GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(this);
             server.AddEndpoint(serverHost);
+        }
 
-            MessageServer message = base.ConnectToServer(userName);
+        public void ConnectToServer(string userName)
+        {
+            MessageServer message = base.CreateServerConnectMessage(userName);
             message.msgNumber = 10;
             message.msgShort = 20;
             message.msgBool = true;

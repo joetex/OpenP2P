@@ -14,6 +14,8 @@ namespace OpenP2P
         public Random random = new Random();
         public const int MAX_IDENTITIES = 65534;
 
+        public bool hasConnected = false;
+
         public NetworkIdentity() { }
     
        
@@ -45,14 +47,9 @@ namespace OpenP2P
             message.header.peer = FindPeer(message.header.id);
         }
 
-        public NetworkPeer FindPeer(ushort id)
-        {
-            if (peersById.ContainsKey(id))
-                return peersById[id];
-            return null;
-        }
+        
 
-        public NetworkMessage ConnectToServer(string userName)
+        public NetworkMessage CreateServerConnectMessage(string userName)
         {
             local.userName = userName;
 
@@ -62,7 +59,7 @@ namespace OpenP2P
             return msg;
         }
 
-        public bool hasConnected = false;
+        
         //Server receives message from client
         //Create the peer and send response
         public void OnMessageConnectToServer(object sender, NetworkMessage message)
@@ -113,6 +110,13 @@ namespace OpenP2P
         public void OnErrorConnectToServer(object sender, NetworkPacket packet)
         {
 
+        }
+
+        public NetworkPeer FindPeer(ushort id)
+        {
+            if (peersById.ContainsKey(id))
+                return peersById[id];
+            return null;
         }
 
         public NetworkPeer RegisterLocal(ushort id, EndPoint ep)

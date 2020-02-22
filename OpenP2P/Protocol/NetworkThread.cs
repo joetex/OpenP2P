@@ -107,7 +107,12 @@ namespace OpenP2P
             Process p = Process.GetCurrentProcess();
             foreach (ProcessThread pt in p.Threads)
             {
-                pt.IdealProcessor = 0;
+                for(int i=0; i<SENDTHREADS.Count; i++)
+                {
+                    //Thread sendThread = SENDTHREADS[i];
+                    //if( p)
+                }
+                pt.IdealProcessor = 1;
                 pt.ProcessorAffinity = (IntPtr)1;
             }
         }
