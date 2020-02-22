@@ -21,7 +21,7 @@ namespace OpenP2P
 
         public bool integrity = false;
 
-        public NetworkSerializer serializer = new NetworkSerializer(NetworkConfig.BufferMaxLength);
+        public NetworkSerializer serializer = new NetworkSerializer(NetworkConfig.PacketPoolBufferMaxLength);
         public List<STUNAttribute> attributeTypes = new List<STUNAttribute>();
         public List<byte[]> attributeBytes = new List<byte[]>();
         public Dictionary<STUNAttribute, object> response = new Dictionary<STUNAttribute, object>();

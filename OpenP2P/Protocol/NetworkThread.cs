@@ -13,10 +13,10 @@ namespace OpenP2P
     {
         public NetworkProtocol protocol = null;
 
-        public NetworkPacketPool PACKETPOOL = new NetworkPacketPool(NetworkConfig.BufferPoolStartCount, NetworkConfig.BufferMaxLength);
-        public Queue<NetworkPacket> SENDQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-        public Queue<NetworkPacket> RECVQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
-        public Queue<NetworkPacket> RELIABLEQUEUE = new Queue<NetworkPacket>(NetworkConfig.BufferPoolStartCount);
+        public NetworkPacketPool PACKETPOOL = new NetworkPacketPool(NetworkConfig.PacketPoolBufferInitialCount, NetworkConfig.PacketPoolBufferMaxLength);
+        public Queue<NetworkPacket> SENDQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
+        public Queue<NetworkPacket> RECVQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
+        public Queue<NetworkPacket> RELIABLEQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
         public Dictionary<uint, NetworkPacket> ACKNOWLEDGED = new Dictionary<uint, NetworkPacket>();
         
         public List<Thread> SENDTHREADS = new List<Thread>();
@@ -35,6 +35,7 @@ namespace OpenP2P
                 Thread t = new Thread(new ParameterizedThreadStart(SendThread));
                 SENDTHREADS.Add(t);
                 SENDTHREADS[i].Start(i);
+                t.Priority = ThreadPriority.Highest;
             }
             for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
@@ -49,7 +50,7 @@ namespace OpenP2P
                 //RELIABLETHREADS[i].Start();
             }
 
-            
+            //UpdatePriority();
         }
 
        
@@ -104,15 +105,19 @@ namespace OpenP2P
 
         public void UpdatePriority()
         {
+
             Process p = Process.GetCurrentProcess();
             foreach (ProcessThread pt in p.Threads)
             {
                 for(int i=0; i<SENDTHREADS.Count; i++)
                 {
-                    //Thread sendThread = SENDTHREADS[i];
-                    //if( p)
+                    Thread sendThread = SENDTHREADS[i];
+                
+
+                    
                 }
-                pt.IdealProcessor = 1;
+
+                pt.IdealProcessor = 0;
                 pt.ProcessorAffinity = (IntPtr)1;
             }
         }

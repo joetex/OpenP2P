@@ -49,7 +49,7 @@ namespace OpenP2P
 
         
 
-        public NetworkMessage CreateServerConnectMessage(string userName)
+        public NetworkMessage ConnectToServer(string userName)
         {
             local.userName = userName;
 

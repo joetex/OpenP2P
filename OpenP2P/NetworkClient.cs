@@ -62,8 +62,8 @@ namespace OpenP2P
             //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
 
-            mainThread = new Thread(MainThread);
-            mainThread.Start();
+            //mainThread = new Thread(MainThread);
+            //mainThread.Start();
         }
 
         public void OnErrorReliableFailed(object sender, NetworkPacket packet)
@@ -80,7 +80,7 @@ namespace OpenP2P
 
         public void ConnectToServer(string userName)
         {
-            MessageServer message = base.CreateServerConnectMessage(userName);
+            MessageServer message = base.ConnectToServer(userName);
             message.msgNumber = 10;
             message.msgShort = 20;
             message.msgBool = true;

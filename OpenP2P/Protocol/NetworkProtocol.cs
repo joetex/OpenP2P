@@ -49,13 +49,13 @@ namespace OpenP2P
         public void Setup(int localPort, bool _isServer)
         {
             string localIP = "127.0.0.1";
-
+           
             channel = new NetworkChannel();
             socket = new NetworkSocket(localIP, localPort);
 
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             Console.WriteLine("Binded to: " + socket.socket4.LocalEndPoint.ToString());
-
+            
             isClient = !isServer;
             isServer = _isServer;
 
@@ -81,9 +81,9 @@ namespace OpenP2P
         }
 
 
-        public MessageServer CreateServerConnectMessage(string userName)
+        public MessageServer ConnectToServer(string userName)
         {
-            return (MessageServer)ident.CreateServerConnectMessage(userName);
+            return (MessageServer)ident.ConnectToServer(userName);
         }
 
 
