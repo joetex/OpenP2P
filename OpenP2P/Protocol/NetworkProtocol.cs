@@ -52,6 +52,7 @@ namespace OpenP2P
            
             channel = new NetworkChannel();
             socket = new NetworkSocket(localIP, localPort);
+            socket.SetChannel(channel);
 
             Console.WriteLine("Binding Socket to: " + localIP + ":" + localPort);
             Console.WriteLine("Binded to: " + socket.socket4.LocalEndPoint.ToString());

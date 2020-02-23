@@ -268,6 +268,7 @@ namespace OpenP2P
             
             if( !hasReliable )
             {
+                channel.FreeMessage(packet.messages[0]);
                 Free(packet);
             }
             
@@ -294,6 +295,13 @@ namespace OpenP2P
         public void Free(NetworkPacket packet)
         {
             thread.PACKETPOOL.Free(packet);
+        }
+
+
+        public NetworkChannel channel = null;
+        public void SetChannel(NetworkChannel _channel)
+        {
+            channel = _channel;
         }
 
         /**
