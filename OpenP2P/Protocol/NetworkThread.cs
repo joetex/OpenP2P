@@ -35,12 +35,12 @@ namespace OpenP2P
                 Thread t = new Thread(new ParameterizedThreadStart(SendThread));
                 SENDTHREADS.Add(t);
                 SENDTHREADS[i].Start(i);
-                t.Priority = ThreadPriority.Highest;
+                //t.Priority = ThreadPriority.Highest;
             }
             //for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
                 Thread t = new Thread(RecvProcessThread);
-                t.Priority = ThreadPriority.Highest;
+                //t.Priority = ThreadPriority.Highest;
                 RECVTHREADS.Add(t);
                 t.Start();
             }
