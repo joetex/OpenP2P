@@ -101,19 +101,19 @@ namespace OpenP2P
             {
                 clients[0].ConnectToServer("JoeOfTexas" + i);
             }
-            
-            
-            
-           
-            //Thread.Sleep(4000);
+
+
+
+
+            Thread.Sleep(10000);
             //for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             //{
-            //    Console.WriteLine("Client PacketPool Count = " + clients[i].socket.thread.PACKETPOOL.packetCount);
-            //    //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
-            //    Console.WriteLine("Client Receive Cnt: " + clients[i].receiveCnt);
-            //    Console.WriteLine("Client bandwidth sent: " + clients[i].socket.thread.sentBufferSize);
+            Console.WriteLine("Client PacketPool Count = " + clients[0].socket.thread.PACKETPOOL.packetCount);
+            //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
+            Console.WriteLine("Client Send Cnt: " + clients[0].socket.packetSendCount);
+            Console.WriteLine("Client bandwidth sent: " + clients[0].socket.thread.sentBufferSize);
             //}
-            
+
         }
 
         static void Test1()

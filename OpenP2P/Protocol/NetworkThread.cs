@@ -86,14 +86,14 @@ namespace OpenP2P
                 sentBufferSize += packet.byteSent;
                 sentCount += (uint)packet.byteSent;
                 packetsPerFrame++;
-                if( packetsPerFrame > NetworkConfig.ThreadSendSleepPacketsPerFrame )
+                if( packetsPerFrame > NetworkConfig.ThreadSendSleepPacketsPerFrame / SENDTHREADS.Count )
                 {
                     packetsPerFrame = 0;
                     sentCount = 0;
                     Thread.Sleep(NetworkConfig.ThreadWaitingSleepTime);
                     continue;
                 }
-                if( sentCount > NetworkConfig.ThreadSendSleepPacketSizePerFrame)
+                if( sentCount > NetworkConfig.ThreadSendSleepPacketSizePerFrame / SENDTHREADS.Count)
                 {
                     sentCount = 0;
                     packetsPerFrame = 0;
@@ -139,6 +139,7 @@ namespace OpenP2P
         public void RecvThread(object opacket)
         {
             NetworkPacket packet = (NetworkPacket)opacket;
+            packet = packet.socket.Reserve();
          
             while (true)
             {

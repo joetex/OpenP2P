@@ -219,8 +219,8 @@ namespace OpenP2P
         }
 
 
-        int packetSendCount = 0;
-        int packetRecvCount = 0;
+        public int packetSendCount = 0;
+        public int packetRecvCount = 0;
         NetworkMessage tempSendMessage = null;
         /**
          * Send Internal
@@ -231,11 +231,15 @@ namespace OpenP2P
             try
             {
                 packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
-                packetSendCount++;
-                if (packetSendCount % 20000 == 0)
+                lock(this)
                 {
-                    Console.WriteLine("Sent Packets: " + packetSendCount);
+                    packetSendCount++;
+                    if (packetSendCount % 500 == 0)
+                    {
+                        Console.WriteLine("Sent Packets: " + packetSendCount);
+                    }
                 }
+                
                 //if (packet.networkIPType == NetworkIPType.IPv4)
                 //    packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
                 //else
