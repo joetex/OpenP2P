@@ -75,7 +75,7 @@ namespace OpenP2P
         {
             socket = _socket;
             socket.OnReceive += OnReceive;
-            socket.OnSend += OnSend;
+            //socket.OnSend += OnSend;
             socket.OnError += OnError;
         }
 

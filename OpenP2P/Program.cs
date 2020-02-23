@@ -59,9 +59,10 @@ namespace OpenP2P
             //t.Start();
             //t = new Thread(Test2);
             //t.Start();
-            Thread.Sleep(3000);
+            Thread.Sleep(6000);
 
             Console.WriteLine("Server PacketPool Count = " + server.socket.thread.PACKETPOOL.packetCount);
+            Console.WriteLine("Server Message Count = " + server.channel.MESSAGEPOOL.messageCount);
             //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
             Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             Console.WriteLine("Server bandwidth sent: " + server.socket.thread.sentBufferSize);

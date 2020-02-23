@@ -90,9 +90,9 @@ namespace OpenP2P
 
             }
 
-            MessageServer response = protocol.Create<MessageServer>();// message;
-            response.responseConnected = true;
-            response.responsePeerId = peer.id;
+            //MessageServer response = protocol.Create<MessageServer>();// message;
+            //response.responseConnected = true;
+            //response.responsePeerId = peer.id;
             
             //protocol.SendResponse(message, response);
         }

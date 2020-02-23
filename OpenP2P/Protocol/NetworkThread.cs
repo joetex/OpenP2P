@@ -37,17 +37,17 @@ namespace OpenP2P
                 SENDTHREADS[i].Start(i);
                 t.Priority = ThreadPriority.Highest;
             }
-            for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
+            //for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
             {
                 Thread t = new Thread(RecvProcessThread);
                 t.Priority = ThreadPriority.Highest;
                 RECVTHREADS.Add(t);
-                RECVTHREADS[i].Start();
+                t.Start();
             }
             for (int i = 0; i < NetworkConfig.MAX_RELIABLE_THREADS; i++)
             {
-                //RELIABLETHREADS.Add(new Thread(ReliableThread));
-                //RELIABLETHREADS[i].Start();
+                RELIABLETHREADS.Add(new Thread(ReliableThread));
+                RELIABLETHREADS[i].Start();
             }
 
             //UpdatePriority();
@@ -64,8 +64,8 @@ namespace OpenP2P
             bool isFirstThread = (int)id == 0;
             while (true)
             {
-                if(isFirstThread) 
-                    ReliableThread();
+                //if(isFirstThread) 
+                //    ReliableThread();
 
                 lock (SENDQUEUE)
                 {
@@ -125,10 +125,14 @@ namespace OpenP2P
 
         public void BeginRecvThread(NetworkPacket packet)
         {
-            Thread t = new Thread(RecvThread);
-            t.Priority = ThreadPriority.Highest;
-            RECVTHREADS.Add(t);
-            RECVTHREADS[RECVTHREADS.Count-1].Start(packet);
+           
+            for (int i = 0; i < NetworkConfig.MAX_RECV_THREADS; i++)
+            {
+                Thread t = new Thread(RecvThread);
+                t.Priority = ThreadPriority.Highest;
+                RECVTHREADS.Add(t);
+                t.Start(packet);
+            }
         }
         
 
@@ -152,90 +156,99 @@ namespace OpenP2P
        
         public void ReliableThread()
         {
-            int queueCount = 0;
-            lock(RELIABLEQUEUE)
-            {
-                queueCount = RELIABLEQUEUE.Count;
-            }
-            
-            if (queueCount == 0)
-                return;
-
             NetworkPacket packet = null;
-            lock (RELIABLEQUEUE)
-            {
-                packet = RELIABLEQUEUE.Dequeue();
-            }
-
+            int queueCount = 0;
             long difftime;
             bool isAcknowledged;
             long curtime = NetworkTime.Milliseconds();
             bool hasFailed = false;
             bool shouldResend = false;
             NetworkMessage message;
-
-            for(int i=0; i<packet.messages.Count; i++)
+            while (true)
             {
-                message = packet.messages[i];
 
-                lock (ACKNOWLEDGED)
+
+                lock (RELIABLEQUEUE)
                 {
-                    isAcknowledged = ACKNOWLEDGED.Remove(message.header.ackkey);
+                    queueCount = RELIABLEQUEUE.Count;
+                    
+                    if( queueCount > 0)
+                    packet = RELIABLEQUEUE.Dequeue();
                 }
 
-                if (isAcknowledged)
+                if (queueCount == 0)
                 {
-                    packet.socket.Free(packet);
-                    return;
+                    Thread.Sleep(NetworkConfig.ThreadReliableSleepTime);
+                    continue;
                 }
-
-                difftime = curtime - message.header.sentTime;
-                if (difftime > packet.retryDelay)
-                {
-                    if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
-                    {
-                        if (message.header.channelType == ChannelType.Server)
-                        {
-                            packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
-                        }
-                        else if( message.header.channelType == ChannelType.STUN)
-                        {
-                            packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
-                        }
-
-                        failedReliableCount++;
-                        packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
-
-                        hasFailed = true;
-                        packet.socket.Free(packet);
-                        return;
-                    }
-
-                    shouldResend = true;
-                    Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
-                    packet.socket.Send(packet);
-                    return;
-                }
-            }
                     
 
-            if( hasFailed )
-            {
-                
+                curtime = NetworkTime.Milliseconds();
+                hasFailed = false;
+                shouldResend = false;
+
+                //for (int i = 0; i < packet.messages.Count; i++)
+                {
+                    message = packet.messages[0];
+
+                    lock (ACKNOWLEDGED)
+                    {
+                        isAcknowledged = ACKNOWLEDGED.Remove(message.header.ackkey);
+                    }
+
+                    if (isAcknowledged)
+                    {
+                        packet.socket.Free(packet);
+                        continue;
+                    }
+
+                    difftime = curtime - message.header.sentTime;
+                    if (difftime > packet.retryDelay)
+                    {
+                        if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
+                        {
+                            if (message.header.channelType == ChannelType.Server)
+                            {
+                                packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
+                            }
+                            else if (message.header.channelType == ChannelType.STUN)
+                            {
+                                packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
+                            }
+
+                            failedReliableCount++;
+                            packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
+
+                            hasFailed = true;
+                            packet.socket.Free(packet);
+                            continue;
+                        }
+
+                        shouldResend = true;
+                        Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
+                        packet.socket.Send(packet);
+                        continue;
+                    }
+                }
+
+
+                if (hasFailed)
+                {
+
+                }
+                else if (shouldResend)
+                {
+
+                }
+
+                lock (RELIABLEQUEUE)
+                {
+                    RELIABLEQUEUE.Enqueue(packet);
+                }
+
+
+                //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
             }
-            else if( shouldResend )
-            {
-                
-            }
-            
-            lock(RELIABLEQUEUE)
-            {
-                RELIABLEQUEUE.Enqueue(packet);
-            }
-            
-        
-            //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
-            return;
         }
 
 

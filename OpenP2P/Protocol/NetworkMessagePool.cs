@@ -70,11 +70,7 @@ namespace OpenP2P
 
                 message = queue.Dequeue();
             }
-                
 
-            if (message == null)
-                return Reserve(channelType);
-            
             return message;
         }
 

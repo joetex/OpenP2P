@@ -221,6 +221,7 @@ namespace OpenP2P
                 HandleReceiveMessage(message, packet);
             }
 
+
             
         }
 
@@ -269,6 +270,13 @@ namespace OpenP2P
                 {
                     NetworkChannelEvent channelEvent = GetChannelEvent(first.header.channelType);
                     channelEvent.InvokeEvent(packet, first);
+
+                    channel.FreeMessage(first);
+                }
+
+                if (first != stream)
+                {
+                    channel.FreeMessage(stream);
                 }
             }
         }
@@ -293,6 +301,8 @@ namespace OpenP2P
 
             NetworkChannelEvent channelEvent = GetChannelEvent(message.header.channelType);
             channelEvent.InvokeEvent(packet, message);
+
+            channel.FreeMessage(message);
         }
         
 

@@ -26,7 +26,7 @@ namespace OpenP2P
         }
         
         public event EventHandler<NetworkPacket> OnReceive;
-        public event EventHandler<NetworkPacket> OnSend;
+        //public event EventHandler<NetworkPacket> OnSend;
         public event EventHandler<NetworkPacket> OnError;
 
         public static bool supportsIpv6 = false;
@@ -166,12 +166,18 @@ namespace OpenP2P
         {
             try
             {
-                Socket socket = socket4;
-                if(packet.networkIPType == NetworkIPType.IPv6)
-                    socket = socket6;
+                //Socket socket = socket4;
+                //if(packet.networkIPType == NetworkIPType.IPv6)
+               //     socket = socket6;
                
-                int bytesReceived = socket.ReceiveFrom(packet.ByteBuffer, ref packet.remoteEndPoint);
+                int bytesReceived = socket4.ReceiveFrom(packet.ByteBuffer, ref packet.remoteEndPoint);
                 packet.SetBufferLength(bytesReceived);
+
+                //packetRecvCount++;
+                //if (packetRecvCount % 20000 == 0)
+                //{
+                //    Console.WriteLine("Recv Packets: " + packetRecvCount);
+                //}
             }
             catch (Exception e)
             {
@@ -212,6 +218,10 @@ namespace OpenP2P
             }
         }
 
+
+        int packetSendCount = 0;
+        int packetRecvCount = 0;
+        NetworkMessage tempSendMessage = null;
         /**
          * Send Internal
          * Thread triggers send to remote point
@@ -220,34 +230,40 @@ namespace OpenP2P
         {
             try
             {
-                if (packet.networkIPType == NetworkIPType.IPv4)
-                    packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
-                else
-                    packet.byteSent = socket6.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
+                packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
+                //packetSendCount++;
+                //if( packetSendCount % 20000 == 0 )
+                //{
+                //    Console.WriteLine("Sent Packets: " + packetSendCount);
+                //}
+                //if (packet.networkIPType == NetworkIPType.IPv4)
+                //    packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
+                //else
+                //    packet.byteSent = socket6.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
 
+            
             bool hasReliable = false;
             for(int i=0; i<packet.messages.Count; i++)
             {
-                if (packet.messages[i].header.sendType == SendType.Message 
-                    && packet.messages[i].header.isReliable)
+                tempSendMessage = packet.messages[i];
+                if (tempSendMessage.header.sendType == SendType.Message 
+                    && tempSendMessage.header.isReliable)
                 {
-                    packet.messages[i].header.sentTime = NetworkTime.Milliseconds();
-                    packet.messages[i].header.retryCount++;
+                    tempSendMessage.header.sentTime = NetworkTime.Milliseconds();
+                    tempSendMessage.header.retryCount++;
                     
                     lock(thread.RELIABLEQUEUE)
                     {
                         thread.RELIABLEQUEUE.Enqueue(packet);
                     }
                     
-
                     hasReliable = true;
                 }
-
             }
             
             if( !hasReliable )
@@ -255,8 +271,8 @@ namespace OpenP2P
                 Free(packet);
             }
             
-            if (OnSend != null) //notify any event listeners
-                OnSend.Invoke(this, packet);
+            //if (OnSend != null) //notify any event listeners
+            //    OnSend.Invoke(this, packet);
         }
 
         /**
