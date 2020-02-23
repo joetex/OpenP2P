@@ -173,11 +173,11 @@ namespace OpenP2P
                 int bytesReceived = socket4.ReceiveFrom(packet.ByteBuffer, ref packet.remoteEndPoint);
                 packet.SetBufferLength(bytesReceived);
 
-                //packetRecvCount++;
-                //if (packetRecvCount % 20000 == 0)
-                //{
-                //    Console.WriteLine("Recv Packets: " + packetRecvCount);
-                //}
+                packetRecvCount++;
+                if (packetRecvCount % 20000 == 0)
+                {
+                    Console.WriteLine("Recv Packets: " + packetRecvCount);
+                }
             }
             catch (Exception e)
             {
@@ -231,11 +231,11 @@ namespace OpenP2P
             try
             {
                 packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
-                //packetSendCount++;
-                //if( packetSendCount % 20000 == 0 )
-                //{
-                //    Console.WriteLine("Sent Packets: " + packetSendCount);
-                //}
+                packetSendCount++;
+                if (packetSendCount % 20000 == 0)
+                {
+                    Console.WriteLine("Sent Packets: " + packetSendCount);
+                }
                 //if (packet.networkIPType == NetworkIPType.IPv4)
                 //    packet.byteSent = socket4.SendTo(packet.ByteBuffer, packet.byteLength, SocketFlags.None, packet.remoteEndPoint);
                 //else
