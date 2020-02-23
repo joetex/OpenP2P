@@ -38,7 +38,7 @@ namespace OpenP2P
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
 
-            /*
+            
             if (isServer)
             {
                 RunServer();
@@ -47,25 +47,25 @@ namespace OpenP2P
             {
                 RunClient();
             }
-            */
+            
             
         
             //NetworkRSAEncryption enc = new NetworkRSAEncryption();
             //enc.Test();
 
-            NetworkServer server = RunServer();
-            RunClient();
+            //NetworkServer server = RunServer();
+            //RunClient();
             //Thread t = new Thread(Test1);
             //t.Start();
             //t = new Thread(Test2);
             //t.Start();
-            Thread.Sleep(6000);
+            //Thread.Sleep(6000);
 
-            Console.WriteLine("Server PacketPool Count = " + server.socket.thread.PACKETPOOL.packetCount);
-            Console.WriteLine("Server Message Count = " + server.channel.MESSAGEPOOL.messageCount);
-            //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
-            Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
-            Console.WriteLine("Server bandwidth sent: " + server.socket.thread.sentBufferSize);
+            //Console.WriteLine("Server PacketPool Count = " + server.socket.thread.PACKETPOOL.packetCount);
+            //Console.WriteLine("Server Message Count = " + server.channel.MESSAGEPOOL.messageCount);
+            ////Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
+            //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
+            //Console.WriteLine("Server bandwidth sent: " + server.socket.thread.sentBufferSize);
             Thread.Sleep(10000);
         }
         
@@ -95,7 +95,7 @@ namespace OpenP2P
                 //client.ConnectToSTUN();
             }
 
-            clients[0].AddServer("127.0.0.1", 9000);
+            clients[0].AddServer("104.197.212.5", 9000);
 
             for(int i=0; i< NetworkConfig.MAXSEND; i++)
             {
