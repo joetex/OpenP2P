@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InterfaceTrafficWatch.cs" />
     <Compile Include="Messages\MessageRPC.cs" />
     <Compile Include="Messages\MessagePeer.cs" />
     <Compile Include="Messages\MessageSTUN.cs" />
