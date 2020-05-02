@@ -38,19 +38,19 @@ namespace OpenP2P
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
 
-            InterfaceTrafficWatch.TestNetwork();
-            
-            //if (isServer)
-            //{
-            //    RunServer();
-            //}
-            //else
-            //{
-            //    RunClient();
-            //}
-            
-            
-        
+            //InterfaceTrafficWatch.TestNetwork();
+
+            if (isServer)
+            {
+                RunServer();
+            }
+            else
+            {
+                RunClient();
+            }
+
+
+
             //NetworkRSAEncryption enc = new NetworkRSAEncryption();
             //enc.Test();
 
@@ -67,7 +67,8 @@ namespace OpenP2P
             ////Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
             //Console.WriteLine("Server Receive Cnt: " + server.receiveCnt);
             //Console.WriteLine("Server bandwidth sent: " + server.socket.thread.sentBufferSize);
-            Thread.Sleep(10000);
+            Console.WriteLine("Press enter to close...");
+            Console.ReadLine();
         }
         
         public static NetworkServer RunServer()
