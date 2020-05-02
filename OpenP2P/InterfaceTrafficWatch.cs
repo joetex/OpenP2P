@@ -23,9 +23,9 @@ namespace OpenP2P
                 IPv4InterfaceStatistics stats = adapter.GetIPv4Statistics();
                 Console.WriteLine(adapter.Description);
                 Console.WriteLine("     Speed .................................: {0}",
-                    adapter.Speed / 1000 / 1000);
+                    adapter.Speed);
                 Console.WriteLine("     Output queue length....................: {0}",
-                    stats.OutputQueueLength / 1000 / 1000);
+                    stats.OutputQueueLength);
             }
         }
     }
