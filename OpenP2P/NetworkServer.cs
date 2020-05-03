@@ -66,6 +66,7 @@ namespace OpenP2P
             MessageServer response = CreateMessage<MessageServer>();
             response.responseConnected = true;
             response.responseSendRate = NetworkConfig.ThreadSendSleepPacketSizePerFrame;
+            Console.WriteLine("Setting send rate: {0}", response.responseSendRate);
             SendResponse(msgConnect, response);
             
         }

@@ -75,16 +75,13 @@ namespace OpenP2P
             packet.Write((byte)1);
             packet.Write(responseSendRate);
         }
-
         
-
         public override void ReadResponse(NetworkPacket packet)
         {
             responseConnected = packet.ReadByte() != 0;
             responseSendRate = packet.ReadInt();
+            Console.WriteLine("Setting server send rate: {0}", responseSendRate);
             NetworkConfig.ThreadSendSleepPacketSizePerFrame = responseSendRate;
-
-
         }
     }
 }
