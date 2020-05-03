@@ -10,7 +10,7 @@ namespace OpenP2P
     {
         public ChannelType channelType = ChannelType.Invalid;
 
-        public event EventHandler<NetworkMessage> OnChannelMessage = null;
+        public event EventHandler<NetworkMessage> OnChannelRequest = null;
         public event EventHandler<NetworkMessage> OnChannelResponse = null;
         public event EventHandler<NetworkMessage> OnChannelStream = null;
         public NetworkChannelEvent()
@@ -29,8 +29,8 @@ namespace OpenP2P
                     }
                     else
                     {
-                        if (OnChannelMessage != null)
-                            OnChannelMessage.Invoke(packet, message);
+                        if (OnChannelRequest != null)
+                            OnChannelRequest.Invoke(packet, message);
                     }
                     break;
                 case SendType.Response:

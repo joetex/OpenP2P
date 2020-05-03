@@ -26,7 +26,7 @@ namespace OpenP2P
             protocol = p;
             protocol.OnReadHeader += OnReadHeader;
             protocol.OnWriteHeader += OnWriteHeader;
-            protocol.AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
+            protocol.AttachRequestListener(ChannelType.Server, OnRequestConnectToServer);
             protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
             protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
@@ -55,14 +55,16 @@ namespace OpenP2P
 
             //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             MessageServer msg = protocol.Create<MessageServer>();
-            msg.msgUsername = userName;
+            msg.request.method = MessageServer.ServerMethod.CONNECT; 
+            msg.request.connect.username = userName;
+          
             return msg;
         }
 
         
         //Server receives message from client
         //Create the peer and send response
-        public void OnMessageConnectToServer(object sender, NetworkMessage message)
+        public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
 
@@ -86,7 +88,7 @@ namespace OpenP2P
             {
                 hasConnected = true;
                 Console.WriteLine(message.header.source.ToString());
-                Console.WriteLine(incoming.msgUsername + ", " + incoming.msgNumber + ", " + incoming.msgShort + ", " + incoming.msgBool);
+                Console.WriteLine(incoming.request.connect.username);
 
             }
 
@@ -104,7 +106,7 @@ namespace OpenP2P
             MessageServer connectMsg = (MessageServer)message;
 
             if( local.id == 0 )
-                RegisterLocal(connectMsg.responsePeerId, protocol.socket.sendSocket.LocalEndPoint);
+                RegisterLocal(connectMsg.response.connect.peerId, protocol.socket.sendSocket.LocalEndPoint);
         }
 
         public void OnErrorConnectToServer(object sender, NetworkPacket packet)

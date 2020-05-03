@@ -35,9 +35,9 @@ namespace OpenP2P
 
         public Header header = new Header();
 
-        public virtual void WriteMessage(NetworkPacket packet) { }
+        public virtual void WriteRequest(NetworkPacket packet) { }
         public virtual void WriteResponse(NetworkPacket packet) { }
-        public virtual void ReadMessage(NetworkPacket packet) { }
+        public virtual void ReadRequest(NetworkPacket packet) { }
         public virtual void ReadResponse(NetworkPacket packet) { }
 
         public virtual void StreamMessage(NetworkPacket packet) {}

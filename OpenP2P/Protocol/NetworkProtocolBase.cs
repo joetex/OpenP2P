@@ -23,7 +23,7 @@ namespace OpenP2P
         public virtual void OnReceive(object sender, NetworkPacket packet) { }
         public virtual void OnSend(object sender, NetworkPacket packet) { }
         public virtual void OnError(object sender, NetworkPacket packet) { }
-        public virtual void WriteMessage(NetworkPacket packet, NetworkMessage message) { }
+        public virtual void WriteRequest(NetworkPacket packet, NetworkMessage message) { }
         public virtual void WriteResponse(NetworkPacket packet, NetworkMessage message) { }
         public Dictionary<uint, NetworkMessageStream> cachedStreams = new Dictionary<uint, NetworkMessageStream>();
         //public List<byte[]> cachedStreams = new List<byte[]>();
@@ -84,9 +84,9 @@ namespace OpenP2P
             GetChannelEvent((uint)msgType).OnChannelStream += func;
         }
 
-        public virtual void AttachMessageListener(ChannelType msgType, EventHandler<NetworkMessage> func)
+        public virtual void AttachRequestListener(ChannelType msgType, EventHandler<NetworkMessage> func)
         {
-            GetChannelEvent((uint)msgType).OnChannelMessage += func;
+            GetChannelEvent((uint)msgType).OnChannelRequest += func;
         }
 
         public virtual void AttachResponseListener(ChannelType msgType, EventHandler<NetworkMessage> func)

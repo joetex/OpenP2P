@@ -61,7 +61,7 @@ namespace OpenP2P
         }
 
 
-        public override void WriteMessage(NetworkPacket packet)
+        public override void WriteRequest(NetworkPacket packet)
         {
             packet.Write(startPos);
 
@@ -87,7 +87,7 @@ namespace OpenP2P
         }
 
 
-        public override void ReadMessage(NetworkPacket packet)
+        public override void ReadRequest(NetworkPacket packet)
         {
             segmentLen = 0;
             startPos = packet.ReadUInt();

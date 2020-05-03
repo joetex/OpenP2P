@@ -82,7 +82,7 @@ namespace OpenP2P
         }
 
 
-        public MessageServer ConnectToServer(string userName)
+        public virtual MessageServer ConnectToServer(string userName)
         {
             return (MessageServer)ident.ConnectToServer(userName);
         }
@@ -126,7 +126,7 @@ namespace OpenP2P
                 packet.messages.Add(stream);
                 
                 WriteHeader(packet, stream);
-                WriteMessage(packet, stream);
+                WriteRequest(packet, stream);
 
                 socket.Send(packet);
                 Console.WriteLine("Sent " + (stream.segmentLen) + " bytes");
@@ -197,7 +197,7 @@ namespace OpenP2P
             WriteHeader(packet, message);
             switch(message.header.sendType)
             {
-                case SendType.Message: WriteMessage(packet, message); break;
+                case SendType.Message: WriteRequest(packet, message); break;
                 case SendType.Response: WriteResponse(packet, message); break;
             }
             
@@ -262,7 +262,7 @@ namespace OpenP2P
                     cachedStreams.Add(streamID, first);
                 }
 
-                stream.ReadMessage(packet);
+                stream.ReadRequest(packet);
 
                 first.SetBuffer(stream.byteData, stream.startPos);
 
@@ -286,7 +286,7 @@ namespace OpenP2P
         {
             switch (message.header.sendType)
             {
-                case SendType.Message: message.ReadMessage(packet); break;
+                case SendType.Message: message.ReadRequest(packet); break;
                 case SendType.Response: message.ReadResponse(packet); break;
             }
 
@@ -458,9 +458,9 @@ namespace OpenP2P
             return msg;
         }
 
-        public override void WriteMessage(NetworkPacket packet, NetworkMessage message)
+        public override void WriteRequest(NetworkPacket packet, NetworkMessage message)
         {
-            message.WriteMessage(packet);
+            message.WriteRequest(packet);
         }
 
         public override void WriteResponse(NetworkPacket packet, NetworkMessage message)

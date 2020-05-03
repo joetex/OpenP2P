@@ -46,7 +46,7 @@ namespace OpenP2P
             return obj.ToString();
         }
 
-        public override void WriteMessage(NetworkPacket packet)
+        public override void WriteRequest(NetworkPacket packet)
         {
             
             //method id
@@ -89,7 +89,7 @@ namespace OpenP2P
             attributeBytes.Clear();
         }
 
-        public void WriteMessageIntegrity()
+        public void WriteRequestIntegrity()
         {
             integrity = true;
         }

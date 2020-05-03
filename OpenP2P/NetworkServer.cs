@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
-using static OpenP2P.NetworkIdentity;
 
 namespace OpenP2P
 {
@@ -17,26 +14,12 @@ namespace OpenP2P
         public NetworkServer(int localPort, bool _isServer) : base(localPort, true)
         {
             //protocol = new NetworkProtocol(localIP, localPort, true);
-            AttachMessageListener(ChannelType.Server, OnMessageConnectToServer);
+            AttachRequestListener(ChannelType.Server, OnRequestConnectToServer);
             AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
 
             //protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
         }
-
         
-        /*
-        public void OnMessageHeartbeat(object sender, NetworkMessage message)
-        {
-            MessageHeartbeat heartbeat = (MessageHeartbeat)message;
-            MessageHeartbeat response = protocol.CreateMessage<MessageHeartbeat>();
-            response.responseTimestamp = heartbeat.timestamp;
-            protocol.SendResponse(heartbeat, response);
-            Console.WriteLine("Received Heartbeat from ("+ heartbeat.header.peer.id +") :");
-            //Console.WriteLine(heartbeat.timestamp);
-
-           
-        }*/
-
         private void OnResponseConnectToServer(object sender, NetworkMessage e)
         {
             PerformanceTest();
@@ -44,7 +27,7 @@ namespace OpenP2P
             NetworkPacket packet = (NetworkPacket)sender;
         }
 
-        public void OnMessageConnectToServer(object sender, NetworkMessage message)
+        public void OnRequestConnectToServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
 
@@ -63,11 +46,22 @@ namespace OpenP2P
             //Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);
             //SendStream(message.header.source, dataStream);
 
-            MessageServer response = CreateMessage<MessageServer>();
-            response.responseConnected = true;
-            response.responseSendRate = NetworkConfig.ThreadSendSleepPacketSizePerFrame;
-            Console.WriteLine("Setting send rate: {0}", response.responseSendRate);
-            SendResponse(msgConnect, response);
+            MessageServer responseMsg = CreateMessage<MessageServer>();
+           
+            responseMsg.response.method = msgConnect.request.method;
+            switch(msgConnect.request.method)
+            {
+                case MessageServer.ServerMethod.CONNECT:
+                    responseMsg.response.connect.connected = true;
+                    responseMsg.response.connect.sendRate = NetworkConfig.ThreadSendSleepPacketSizePerFrame;
+                    Console.WriteLine("Setting send rate: {0}", responseMsg.response.connect.sendRate);
+                    break;
+                case MessageServer.ServerMethod.HEARTBEAT:
+
+                    break;
+            }
+            
+            SendResponse(msgConnect, responseMsg);
             
         }
 

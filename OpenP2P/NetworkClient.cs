@@ -54,18 +54,7 @@ namespace OpenP2P
             Console.WriteLine("Text: " + result);
         }
 
-        private void OnMessageConnectToServer(object sender, NetworkMessage e)
-        {
-            NetworkPacket packet = (NetworkPacket)sender;
-            //recieveTimer[message.header.ackkey].Stop();
-            //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
-            //Console.WriteLine("Ping took: " + end + " milliseconds");
-            PerformanceTest();
-
-            //mainThread = new Thread(MainThread);
-            //mainThread.Start();
-        }
-
+     
         public void OnErrorReliableFailed(object sender, NetworkPacket packet)
         {
             //Console.WriteLine("[ERROR] " + packet.lastErrorType.ToString() + ": " + packet.lastErrorMessage);
@@ -78,16 +67,13 @@ namespace OpenP2P
             server.AddEndpoint(serverHost);
         }
 
-        public void ConnectToServer(string userName)
+        public override MessageServer ConnectToServer(string userName)
         {
             MessageServer message = base.ConnectToServer(userName);
-            message.msgNumber = 10;
-            message.msgShort = 20;
-            message.msgBool = true;
-
-            SendReliableMessage(server.GetEndpoint(), message);
+           
             //SendMessage(server.GetEndpoint(), message);
             latencyStartTime = NetworkTime.Milliseconds();
+            return message;
         }
 
         public void ConnectToSTUN()
@@ -101,34 +87,46 @@ namespace OpenP2P
         public void OnResponseConnectToServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
-            //recieveTimer[message.header.ackkey].Stop();
-            //long end = recieveTimer[message.header.ackkey].ElapsedMilliseconds;
-            //Console.WriteLine("Ping took: " + end + " milliseconds");
             PerformanceTest();
-            //mainThread = new Thread(MainThread);
-            //mainThread.Start();
+
             MessageServer serverMsg = (MessageServer)message;
-            Console.WriteLine("Server SendRate (BytesPerFrame) = " + serverMsg.responseSendRate);
 
-            latency = NetworkTime.Milliseconds() - latencyStartTime;
-            Console.WriteLine("Ping = " + (latency) + " ms");
+            switch(serverMsg.response.method)
+            {
+                case MessageServer.ServerMethod.CONNECT:
+                    Console.WriteLine("Server SendRate (BytesPerFrame) = " + serverMsg.response.connect.sendRate);
 
-            latencyStartTime = NetworkTime.Milliseconds();
-            //MsgConnectToServer connectMsg = (MsgConnectToServer)message;
+                    for(int i=0; i<NetworkConfig.MAXSEND; i++)
+                    {
+                        SendHeartbeat();
+                    }
+                    
+                    break;
+                case MessageServer.ServerMethod.HEARTBEAT:
+
+                    break;
+            }
+           
+            CalculateLatency();
         }
 
+        public void CalculateLatency()
+        {
+            latency = NetworkTime.Milliseconds() - latencyStartTime;
+            Console.WriteLine("Ping = " + (latency) + " ms");
+            latencyStartTime = NetworkTime.Milliseconds();
+        }
 
         public long latencyStartTime = 0;
         public long latency = 0;
-        /*
+        
         public void SendHeartbeat()
         {
-            MessageHeartbeat msg = protocol.CreateMessage<MessageHeartbeat>();
+            MessageServer msg = CreateMessage<MessageServer>();
             latencyStartTime = NetworkTime.Milliseconds();
-            msg.timestamp = latencyStartTime;
-            protocol.SendReliableMessage(server.GetEndpoint(), msg);
+            SendReliableMessage(server.GetEndpoint(), msg);
         }
-        
+        /*
         public void OnResponseHeartbeat(object sender, NetworkMessage message)
         {
             MessageHeartbeat msg = (MessageHeartbeat)message;

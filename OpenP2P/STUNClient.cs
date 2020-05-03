@@ -236,7 +236,7 @@ namespace OpenP2P
             if (nonce != null)
             {
                 message.WriteBytes(STUNAttribute.Nonce, nonce);
-                message.WriteMessageIntegrity();
+                message.WriteRequestIntegrity();
             }
                 
 
