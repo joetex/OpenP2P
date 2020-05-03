@@ -41,11 +41,11 @@ namespace OpenP2P
 
             InterfaceTrafficWatch.TestNetwork();
 
-            if (isServer)
+            //if (isServer)
             {
                 RunServer();
             }
-            else
+            //else
             {
                 RunClient();
             }
@@ -109,13 +109,13 @@ namespace OpenP2P
 
 
 
-            Thread.Sleep(10000);
+            Thread.Sleep(2000);
             //for(int i=0; i< NetworkConfig.MAXCLIENTS; i++)
             //{
             Console.WriteLine("Client PacketPool Count = " + clients[0].socket.thread.PACKETPOOL.packetCount);
             //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
             Console.WriteLine("Client Send Cnt: " + clients[0].socket.packetSendCount);
-            Console.WriteLine("Client Recv Cnt: " + clients[0].receiveCnt);
+            Console.WriteLine("Client Recv Cnt: " + clients[0].socket.packetRecvCount);
             Console.WriteLine("Client bandwidth sent: " + clients[0].socket.thread.sentBufferSize);
             //}
 

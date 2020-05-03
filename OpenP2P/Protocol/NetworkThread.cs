@@ -27,6 +27,8 @@ namespace OpenP2P
         public int recvId = 0;
         public int failedReliableCount = 0;
         public int sentBufferSize = 0;
+        public int recvCount = 0;
+
 
         public void StartNetworkThreads()
         {
@@ -264,7 +266,11 @@ namespace OpenP2P
                 {
                     queueCount = RECVQUEUE.Count;
                     if( queueCount > 0 )
+                    {
+                        recvCount++;
                         packet = RECVQUEUE.Dequeue();
+                    }
+                        
                 }
 
                 if (queueCount == 0)
@@ -272,7 +278,8 @@ namespace OpenP2P
                     Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
                     continue;
                 }
-               
+
+                
                 packet.socket.InvokeOnRecieve(packet);
 
                 packet.socket.Free(packet);
