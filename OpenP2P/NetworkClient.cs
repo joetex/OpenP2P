@@ -85,8 +85,8 @@ namespace OpenP2P
             message.msgShort = 20;
             message.msgBool = true;
 
-            //SendReliableMessage(server.GetEndpoint(), message);
-            SendMessage(server.GetEndpoint(), message);
+            SendReliableMessage(server.GetEndpoint(), message);
+            //SendMessage(server.GetEndpoint(), message);
             latencyStartTime = NetworkTime.Milliseconds();
         }
 
