@@ -102,7 +102,7 @@ namespace OpenP2P
 
             //for (int i=0; i< NetworkConfig.MAXSEND; i++)
             {
-                clients[0].ConnectToServer("JoeOfTexas" + i);
+                clients[0].ConnectToServer("JoeOfTexas");
             }
 
 
