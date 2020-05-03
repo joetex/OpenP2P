@@ -34,8 +34,8 @@ namespace OpenP2P
             }
 
             long bytesPerSecond = lowestSpeed / 8;
-            long bytesPerPacket = 1000;
-            NetworkConfig.ThreadSendSleepPacketSizePerFrame = (int)(lowestSpeed / bytesPerPacket);
+            long framesPerSecond = 2000;
+            NetworkConfig.ThreadSendSleepPacketSizePerFrame = (int)(lowestSpeed / framesPerSecond);
             Console.WriteLine("[Network] Packet Size Per Frame: {0}", NetworkConfig.ThreadSendSleepPacketSizePerFrame);
 
         }
