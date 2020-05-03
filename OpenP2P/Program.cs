@@ -41,11 +41,11 @@ namespace OpenP2P
 
             InterfaceTrafficWatch.TestNetwork();
 
-            //if (isServer)
+            if (isServer)
             {
                 RunServer();
             }
-           // else
+            else
             {
                 RunClient();
             }
