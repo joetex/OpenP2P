@@ -107,9 +107,11 @@ namespace OpenP2P
             PerformanceTest();
             //mainThread = new Thread(MainThread);
             //mainThread.Start();
+            MessageServer serverMsg = (MessageServer)message;
+            Console.WriteLine("Server SendRate (BytesPerFrame) = " + serverMsg.responseSendRate);
 
             latency = NetworkTime.Milliseconds() - latencyStartTime;
-            //Console.WriteLine("Ping = " + (latency) + " ms");
+            Console.WriteLine("Ping = " + (latency) + " ms");
 
             latencyStartTime = NetworkTime.Milliseconds();
             //MsgConnectToServer connectMsg = (MsgConnectToServer)message;

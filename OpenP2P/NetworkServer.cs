@@ -63,9 +63,9 @@ namespace OpenP2P
             //Console.WriteLine("User Connected, sending ipsum.txt of " + bytes.Length);
             //SendStream(message.header.source, dataStream);
 
-            //MessageServer msgResponse = CreateMessage<MessageServer>();
-            //msgResponse.responseConnected = true;
-           
+            MessageServer msgResponse = CreateMessage<MessageServer>();
+            msgResponse.responseConnected = true;
+            msgResponse.responseSendRate = NetworkConfig.ThreadSendSleepPacketSizePerFrame;
             
         }
 

@@ -100,7 +100,7 @@ namespace OpenP2P
             clients[0].AddServer("104.197.212.5", 9000);
             //clients[0].AddServer("127.0.0.1", 9000);
 
-            for (int i=0; i< NetworkConfig.MAXSEND; i++)
+            //for (int i=0; i< NetworkConfig.MAXSEND; i++)
             {
                 clients[0].ConnectToServer("JoeOfTexas" + i);
             }
