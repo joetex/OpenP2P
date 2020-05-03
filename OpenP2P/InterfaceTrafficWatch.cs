@@ -35,7 +35,7 @@ namespace OpenP2P
             
             long bytesPerSecond = lowestSpeed / 8;
             Console.WriteLine("     Lowest Speed .................................: {0}", bytesPerSecond);
-            long maxBytesPerPacket = 1500;
+            long maxBytesPerPacket = 1000;
             long pps = (bytesPerSecond / maxBytesPerPacket);
             NetworkConfig.ThreadSendSleepPacketSizePerFrame = (int)pps;
             Console.WriteLine("[Network] Packet Size Per Frame: {0}", pps);
