@@ -83,7 +83,7 @@ namespace OpenP2P
 
                 packet.socket.SendFromThread(packet);
 
-                sentBufferSize += packet.byteSent;
+                sentBufferSize += packet.byteSent + 20; //ip+udp headers
                 sentCount += (uint)packet.byteSent;
                 packetsPerFrame++;
                 if( packetsPerFrame > NetworkConfig.ThreadSendSleepPacketsPerFrame / SENDTHREADS.Count )
