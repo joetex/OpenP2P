@@ -38,7 +38,7 @@ namespace OpenP2P
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }
 
-            //InterfaceTrafficWatch.TestNetwork();
+            InterfaceTrafficWatch.TestNetwork();
 
             if (isServer)
             {
