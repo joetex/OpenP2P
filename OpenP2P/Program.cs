@@ -115,6 +115,7 @@ namespace OpenP2P
             Console.WriteLine("Client PacketPool Count = " + clients[0].socket.thread.PACKETPOOL.packetCount);
             //Console.WriteLine("Server PacketPool Count = " + server.protocol.socket.thread.PACKETPOOL.packetCount);
             Console.WriteLine("Client Send Cnt: " + clients[0].socket.packetSendCount);
+            Console.WriteLine("Client Recv Cnt: " + clients[0].receiveCnt);
             Console.WriteLine("Client bandwidth sent: " + clients[0].socket.thread.sentBufferSize);
             //}
 
