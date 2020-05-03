@@ -55,7 +55,7 @@ namespace OpenP2P
 
             //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
             MessageServer msg = protocol.Create<MessageServer>();
-            msg.request.method = MessageServer.ServerMethod.CONNECT; 
+            msg.method = MessageServer.ServerMethod.CONNECT; 
             msg.request.connect.username = userName;
           
             return msg;

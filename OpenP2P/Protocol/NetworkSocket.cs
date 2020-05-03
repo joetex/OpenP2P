@@ -234,10 +234,10 @@ namespace OpenP2P
                 lock(this)
                 {
                     packetSendCount++;
-                    if (packetSendCount % 500 == 0)
-                    {
-                        Console.WriteLine("Sent Packets: " + packetSendCount);
-                    }
+                    //if (packetSendCount % 500 == 0)
+                    //{
+                    //    Console.WriteLine("Sent Packets: " + packetSendCount);
+                    //}
                 }
                 
                 //if (packet.networkIPType == NetworkIPType.IPv4)

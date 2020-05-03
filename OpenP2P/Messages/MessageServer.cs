@@ -49,18 +49,16 @@ namespace OpenP2P
 
         public struct Request
         {
-            public ServerMethod method;
             public RequestConnect connect;
             public RequestHeartbeat hearbeat;
         }
 
         public struct Response
         {
-            public ServerMethod method;
             public ResponseConnect connect;
             public ResponseHearbeat hearbeat;
         }
-
+        public ServerMethod method;
         public Request request;
         public Response response;
 
@@ -68,9 +66,9 @@ namespace OpenP2P
         
         public override void WriteRequest(NetworkPacket packet)
         {
-            packet.Write((byte)request.method);
+            packet.Write((byte)method);
 
-            switch(request.method)
+            switch(method)
             {
                 case ServerMethod.CONNECT:
                     if (request.connect.username.Length > MAX_NAME_LENGTH)
@@ -87,7 +85,7 @@ namespace OpenP2P
 
         public override void ReadRequest(NetworkPacket packet)
         {
-            ServerMethod method = (ServerMethod)packet.ReadByte();
+            method = (ServerMethod)packet.ReadByte();
             switch (method)
             {
                 case ServerMethod.CONNECT:
@@ -102,9 +100,9 @@ namespace OpenP2P
 
         public override void WriteResponse(NetworkPacket packet)
         {
-            packet.Write((byte)response.method);
+            packet.Write((byte)method);
 
-            switch (response.method)
+            switch (method)
             {
                 case ServerMethod.CONNECT:
                     packet.Write((byte)1);
@@ -119,7 +117,7 @@ namespace OpenP2P
         
         public override void ReadResponse(NetworkPacket packet)
         {
-            ServerMethod method = (ServerMethod)packet.ReadByte();
+            method = (ServerMethod)packet.ReadByte();
             switch (method)
             {
                 case ServerMethod.CONNECT:

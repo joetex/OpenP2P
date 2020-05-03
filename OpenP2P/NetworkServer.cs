@@ -14,24 +14,17 @@ namespace OpenP2P
         public NetworkServer(int localPort, bool _isServer) : base(localPort, true)
         {
             //protocol = new NetworkProtocol(localIP, localPort, true);
-            AttachRequestListener(ChannelType.Server, OnRequestConnectToServer);
-            AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
-
-            //protocol.AttachMessageListener(ChannelType.Heartbeat, OnMessageHeartbeat);
+            AttachRequestListener(ChannelType.Server, OnRequestServer);
+           
         }
         
-        private void OnResponseConnectToServer(object sender, NetworkMessage e)
+     
+
+        public void OnRequestServer(object sender, NetworkMessage message)
         {
             PerformanceTest();
 
-            NetworkPacket packet = (NetworkPacket)sender;
-        }
-
-        public void OnRequestConnectToServer(object sender, NetworkMessage message)
-        {
-            PerformanceTest();
-
-            MessageServer msgConnect = (MessageServer)message;
+            MessageServer requestMsg = (MessageServer)message;
             //Console.WriteLine("Int: " + msgConnect.msgNumber);
 
             //NetworkPacket packet = (NetworkPacket)sender;
@@ -48,8 +41,8 @@ namespace OpenP2P
 
             MessageServer responseMsg = CreateMessage<MessageServer>();
            
-            responseMsg.response.method = msgConnect.request.method;
-            switch(msgConnect.request.method)
+            responseMsg.method = requestMsg.method;
+            switch(requestMsg.method)
             {
                 case MessageServer.ServerMethod.CONNECT:
                     responseMsg.response.connect.connected = true;
@@ -61,7 +54,7 @@ namespace OpenP2P
                     break;
             }
             
-            SendResponse(msgConnect, responseMsg);
+            SendResponse(requestMsg, responseMsg);
             
         }
 
@@ -73,7 +66,7 @@ namespace OpenP2P
 
             receiveCnt++;
 
-            if (receiveCnt % 10 == 0 || receiveCnt == NetworkConfig.MAXSEND)
+            if (receiveCnt % 100 == 0 || receiveCnt == NetworkConfig.MAXSEND)
             {
                 //recieveTimer.Stop();
                 Console.WriteLine("SERVER Finished in " + receiveCnt + " packets in " + ((float)recieveTimer.ElapsedMilliseconds / 1000f) + " seconds");

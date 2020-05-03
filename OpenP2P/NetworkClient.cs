@@ -29,7 +29,7 @@ namespace OpenP2P
         public NetworkClient() : base(false)
         {
             //protocol = new NetworkProtocol(localPort, false);
-            AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
+            AttachResponseListener(ChannelType.Server, OnResponseServer);
             //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
             //protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
             AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
@@ -73,6 +73,8 @@ namespace OpenP2P
            
             //SendMessage(server.GetEndpoint(), message);
             latencyStartTime = NetworkTime.Milliseconds();
+
+            SendReliableMessage(server.GetEndpoint(), message);
             return message;
         }
 
@@ -84,17 +86,17 @@ namespace OpenP2P
 
         
 
-        public void OnResponseConnectToServer(object sender, NetworkMessage message)
+        public void OnResponseServer(object sender, NetworkMessage message)
         {
             NetworkPacket packet = (NetworkPacket)sender;
             PerformanceTest();
 
-            MessageServer serverMsg = (MessageServer)message;
+            MessageServer msgServer = (MessageServer)message;
 
-            switch(serverMsg.response.method)
+            switch(msgServer.method)
             {
                 case MessageServer.ServerMethod.CONNECT:
-                    Console.WriteLine("Server SendRate (BytesPerFrame) = " + serverMsg.response.connect.sendRate);
+                    Console.WriteLine("Server SendRate (BytesPerFrame) = " + msgServer.response.connect.sendRate);
 
                     for(int i=0; i<NetworkConfig.MAXSEND; i++)
                     {
@@ -113,7 +115,7 @@ namespace OpenP2P
         public void CalculateLatency()
         {
             latency = NetworkTime.Milliseconds() - latencyStartTime;
-            Console.WriteLine("Ping = " + (latency) + " ms");
+           // Console.WriteLine("Ping = " + (latency) + " ms");
             latencyStartTime = NetworkTime.Milliseconds();
         }
 
@@ -123,8 +125,9 @@ namespace OpenP2P
         public void SendHeartbeat()
         {
             MessageServer msg = CreateMessage<MessageServer>();
+            msg.method = MessageServer.ServerMethod.HEARTBEAT;
             latencyStartTime = NetworkTime.Milliseconds();
-            SendReliableMessage(server.GetEndpoint(), msg);
+            SendMessage(server.GetEndpoint(), msg);
         }
         /*
         public void OnResponseHeartbeat(object sender, NetworkMessage message)
