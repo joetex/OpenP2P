@@ -87,8 +87,8 @@ namespace OpenP2P
 
         public override void ReadRequest(NetworkPacket packet)
         {
-            ServerMethod type = (ServerMethod)packet.ReadByte();
-            switch (type)
+            ServerMethod method = (ServerMethod)packet.ReadByte();
+            switch (method)
             {
                 case ServerMethod.CONNECT:
                     request.connect.username = packet.ReadString();
@@ -102,6 +102,8 @@ namespace OpenP2P
 
         public override void WriteResponse(NetworkPacket packet)
         {
+            packet.Write((byte)response.method);
+
             switch (response.method)
             {
                 case ServerMethod.CONNECT:
@@ -117,7 +119,8 @@ namespace OpenP2P
         
         public override void ReadResponse(NetworkPacket packet)
         {
-            switch (response.method)
+            ServerMethod method = (ServerMethod)packet.ReadByte();
+            switch (method)
             {
                 case ServerMethod.CONNECT:
                     response.connect.connected = packet.ReadByte() != 0;
