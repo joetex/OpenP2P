@@ -29,6 +29,19 @@ namespace OpenP2P
         public struct RequestConnect
         {
             public string username;
+
+            public void Write(NetworkPacket packet)
+            {
+                if (username.Length > MAX_NAME_LENGTH)
+                    username = username.Substring(0, MAX_NAME_LENGTH);
+
+                packet.Write(username);
+            }
+
+            public void Read(NetworkPacket packet)
+            {
+                username = packet.ReadString();
+            }
         }
         
         public struct RequestHeartbeat
@@ -41,6 +54,20 @@ namespace OpenP2P
             public int sendRate;
             public ushort peerId;
 
+            public void Write(NetworkPacket packet)
+            {
+                packet.Write((byte)1);
+                packet.Write(sendRate);
+                packet.Write(peerId);
+            }
+
+            public void Read(NetworkPacket packet)
+            {
+                connected = packet.ReadByte() != 0;
+                sendRate = packet.ReadInt();
+                peerId = packet.ReadUShort();
+                Console.WriteLine("Setting server send rate: {0}", sendRate);
+            }
         }
         public struct ResponseHearbeat
         {
@@ -71,10 +98,7 @@ namespace OpenP2P
             switch(method)
             {
                 case ServerMethod.CONNECT:
-                    if (request.connect.username.Length > MAX_NAME_LENGTH)
-                        request.connect.username = request.connect.username.Substring(0, MAX_NAME_LENGTH);
-
-                    packet.Write(request.connect.username);
+                    request.connect.Write(packet);
                     break;
                 case ServerMethod.HEARTBEAT:
 
@@ -89,7 +113,7 @@ namespace OpenP2P
             switch (method)
             {
                 case ServerMethod.CONNECT:
-                    request.connect.username = packet.ReadString();
+                    request.connect.Read(packet);
                     break;
                 case ServerMethod.HEARTBEAT:
 
@@ -105,9 +129,7 @@ namespace OpenP2P
             switch (method)
             {
                 case ServerMethod.CONNECT:
-                    packet.Write((byte)1);
-                    packet.Write(response.connect.sendRate);
-                    packet.Write(response.connect.peerId);
+                    response.connect.Write(packet);
                     break;
                 case ServerMethod.HEARTBEAT:
 
@@ -121,11 +143,7 @@ namespace OpenP2P
             switch (method)
             {
                 case ServerMethod.CONNECT:
-                    response.connect.connected = packet.ReadByte() != 0;
-                    response.connect.sendRate = packet.ReadInt();
-                    response.connect.peerId = packet.ReadUShort();
-                    Console.WriteLine("Setting server send rate: {0}", response.connect.sendRate);
-                    NetworkConfig.ThreadSendSleepPacketSizePerFrame = response.connect.sendRate;
+                    response.connect.Read(packet);
                     break;
                 case ServerMethod.HEARTBEAT:
 
