@@ -25,7 +25,7 @@ namespace OpenP2P
         public void SendIpsum(EndPoint ep)
         {
             string path = Directory.GetCurrentDirectory();
-            path = Path.Combine(path + "/../../ipsum.txt");
+            path = Path.Combine(path + "/ipsum.txt");
             string text = File.ReadAllText(path);
             byte[] bytes = Encoding.ASCII.GetBytes(text);
 
