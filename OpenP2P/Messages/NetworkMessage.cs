@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 namespace OpenP2P
 {
     public interface INetworkMessage { }
+    public interface IMessageHeader { }
 
     public class NetworkMessage : INetworkMessage
     {
-        public class Header
+        public class Header : IMessageHeader
         {
             //encoded into packet
             public bool isReliable = false;
