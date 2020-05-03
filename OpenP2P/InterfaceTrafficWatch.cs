@@ -32,7 +32,7 @@ namespace OpenP2P
                 Console.WriteLine("     Output queue length....................: {0}", stats.OutputQueueLength);
                 Console.WriteLine("     Multicast Support......................: {0}", adapter.SupportsMulticast);
             }
-
+            Console.WriteLine("     Lowest Speed .................................: {0}", (float)lowestSpeed / 8.0f / 1000.0f / 1000.0f);
             long bytesPerSecond = lowestSpeed / 8;
             long maxBytesPerPacket = 1500;
             long framesPerSecond = 2;

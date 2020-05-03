@@ -32,7 +32,7 @@ namespace OpenP2P
 
         //important to sleep more, since they are on infinite loops
         public static int ThreadSendSleepPacketSizePerFrame = 500;
-        public static int ThreadSendSleepPacketsPerFrame = 10000;
+        public static int ThreadSendSleepPacketsPerFrame = 333;
         public const int ThreadWaitingSleepTime = 1;
         public const int ThreadSendRateSleepTime = 1;
         public const int ThreadReliableSleepTime = 1;
