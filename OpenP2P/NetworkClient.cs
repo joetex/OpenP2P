@@ -97,8 +97,8 @@ namespace OpenP2P
             {
                 case MessageServer.ServerMethod.CONNECT:
                     Console.WriteLine("Server SendRate (BytesPerFrame) = " + msgServer.response.connect.sendRate);
-
-                    for(int i=0; i<NetworkConfig.MAXSEND; i++)
+                    NetworkConfig.ThreadSendSleepPacketSizePerFrame = msgServer.response.connect.sendRate;
+                    for (int i=0; i<NetworkConfig.MAXSEND; i++)
                     {
                         SendHeartbeat();
                     }
