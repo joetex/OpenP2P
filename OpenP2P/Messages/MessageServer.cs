@@ -81,7 +81,7 @@ namespace OpenP2P
         public override void ReadResponse(NetworkPacket packet)
         {
             responseConnected = packet.ReadByte() != 0;
-            responseSendRate = packet.ReadUShort();
+            responseSendRate = packet.ReadInt();
             NetworkConfig.ThreadSendSleepPacketSizePerFrame = responseSendRate;
 
 
