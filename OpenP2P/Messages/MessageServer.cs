@@ -43,9 +43,9 @@ namespace OpenP2P
 
             //Console.WriteLine("Sending double: " + test);
             //Console.WriteLine("Sending float: " + test2);
-            packet.Write(string1000Bytes + string400Bytes);
-            packet.Write(test);
-            packet.Write(test2);
+            //packet.Write(string1000Bytes + string400Bytes);
+            //packet.Write(test);
+            //packet.Write(test2);
 
             packet.Write(msgUsername);
             packet.Write(msgNumber);
@@ -56,9 +56,9 @@ namespace OpenP2P
 
         public override void ReadMessage(NetworkPacket packet)
         {
-            string bytes1000 = packet.ReadString();
-            double test = packet.ReadDouble();
-            double test2 = packet.ReadFloat();
+            //string bytes1000 = packet.ReadString();
+            //double test = packet.ReadDouble();
+            //double test2 = packet.ReadFloat();
 
             //Console.WriteLine("Recv double: " + test);
             //Console.WriteLine("Recv float: " + test2);
