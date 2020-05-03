@@ -13,7 +13,7 @@ namespace OpenP2P
     public class NetworkConfig
     {
         public const int MAXCLIENTS = 1;
-        public const int MAXSEND = 200000;
+        public const int MAXSEND = 1500;
 
         public const int MAX_SEND_THREADS = 3;
         public const int MAX_RECV_THREADS = 1;
