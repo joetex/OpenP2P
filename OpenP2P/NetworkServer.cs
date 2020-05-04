@@ -7,7 +7,7 @@ using System.Text;
 
 namespace OpenP2P
 {
-    public class NetworkServer : NetworkProtocol
+    public class NetworkServer : NetworkManager
     {
         //public NetworkProtocol protocol = null;
         public Dictionary<string, string> connections = new Dictionary<string, string>();
@@ -17,7 +17,7 @@ namespace OpenP2P
         public NetworkServer(int localPort, bool _isServer) : base(localPort, true)
         {
             //protocol = new NetworkProtocol(localIP, localPort, true);
-            AttachRequestListener(ChannelType.Server, OnRequestServer);
+            AttachRequestListener(MessageType.Server, OnRequestServer);
            
         }
         

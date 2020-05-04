@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public partial class NetworkClient : NetworkProtocol
+    public partial class NetworkClient : NetworkManager
     {
         //public NetworkProtocol protocol = null;
 
@@ -29,10 +29,10 @@ namespace OpenP2P
         public NetworkClient() : base(false)
         {
             //protocol = new NetworkProtocol(localPort, false);
-            AttachResponseListener(ChannelType.Server, OnResponseServer);
+            AttachResponseListener(MessageType.Server, OnResponseServer);
             //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
             //protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
-            AttachStreamListener(ChannelType.Stream, OnStreamDataContent);
+            AttachStreamListener(MessageType.Stream, OnStreamDataContent);
            // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
             AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
 
@@ -45,7 +45,7 @@ namespace OpenP2P
 
         private void OnStreamDataContent(object sender, NetworkMessage e)
         {
-            NetworkMessageStream stream = (NetworkMessageStream)e;
+            MessageStream stream = (MessageStream)e;
 
             Console.WriteLine("Command: " + stream.command);
             string result = Encoding.UTF8.GetString(stream.byteData);
@@ -62,7 +62,7 @@ namespace OpenP2P
 
         public void AddServer(string remoteHost, int remotePort)
         {
-            IPEndPoint serverHost = GetEndPoint(remoteHost, remotePort);
+            IPEndPoint serverHost = socket.GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(this);
             server.AddEndpoint(serverHost);
         }

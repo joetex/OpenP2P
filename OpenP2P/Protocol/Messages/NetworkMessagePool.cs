@@ -10,27 +10,27 @@ namespace OpenP2P
 {
     public class NetworkMessagePool
     {
-        NetworkChannel channel = null;
+        NetworkMessageFactory channel = null;
         List<Queue<NetworkMessage>> available = new List<Queue<NetworkMessage>>();
         //Queue<NetworkMessage> available = new Queue<NetworkMessage>();
         //ConcurrentBag<NetworkPacket> available = new ConcurrentBag<NetworkPacket>();
         int initialPoolCount = 0;
         public int messageCount = 0;
 
-        public NetworkMessagePool(NetworkChannel _channel, int initPoolCount)
+        public NetworkMessagePool(NetworkMessageFactory _channel, int initPoolCount)
         {
             channel = _channel;
             initialPoolCount = initPoolCount;
             Queue<NetworkMessage> queue = null;
 
-            for(int i=0; i<(int)ChannelType.LAST; i++)
+            for(int i=0; i<(int)MessageType.LAST; i++)
             {
                 queue = new Queue<NetworkMessage>(initPoolCount);
                 available.Add(queue);
 
                 for (int j = 0; j < initPoolCount; j++)
                 {
-                    New((ChannelType)i, queue);
+                    New((MessageType)i, queue);
                 }
             }
         }
@@ -38,7 +38,7 @@ namespace OpenP2P
         /**
          * Add another NetworkBuffer to the Pool
          */
-        public void New(ChannelType channelType, Queue<NetworkMessage> queue)
+        public void New(MessageType channelType, Queue<NetworkMessage> queue)
         {
             messageCount++;
             NetworkMessage message = channel.InstantiateMessage(channelType);
@@ -47,14 +47,14 @@ namespace OpenP2P
 
         public T Reserve<T>() where T : INetworkMessage
         {
-            T msg = (T)Reserve(channel.messageToChannelType[typeof(T)]);
+            T msg = (T)Reserve(channel.messageToMessageType[typeof(T)]);
             return msg;
         }
 
         /**
          * Reserve a NetworkBuffer from this pool.
          */
-        public INetworkMessage Reserve(ChannelType channelType)
+        public INetworkMessage Reserve(MessageType channelType)
         {
             NetworkMessage message = null;
             Queue<NetworkMessage> queue = available[(int)channelType];
@@ -91,7 +91,7 @@ namespace OpenP2P
             NetworkMessage message = null;
             Queue<NetworkMessage> queue;
 
-            for(int i=0; i<(int)ChannelType.LAST; i++)
+            for(int i=0; i<(int)MessageType.LAST; i++)
             {
                 queue = available[i];
                 while (queue.Count > 0)

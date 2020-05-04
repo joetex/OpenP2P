@@ -10,7 +10,7 @@ namespace OpenP2P
         public Dictionary<ushort, NetworkPeer> peersById = new Dictionary<ushort, NetworkPeer>();
         public NetworkPeer local = null;
         public NetworkPeer server = null;
-        public NetworkProtocol protocol = null;
+        public NetworkManager protocol = null;
         public Random random = new Random();
         public const int MAX_IDENTITIES = 65534;
 
@@ -19,16 +19,16 @@ namespace OpenP2P
         public NetworkIdentity() { }
     
        
-        public void AttachToProtocol(NetworkProtocol p)
+        public void AttachToProtocol(NetworkManager p)
         {
             local = new NetworkPeer(p);
 
             protocol = p;
-            protocol.OnReadHeader += OnReadHeader;
-            protocol.OnWriteHeader += OnWriteHeader;
-            protocol.AttachRequestListener(ChannelType.Server, OnRequestConnectToServer);
-            protocol.AttachResponseListener(ChannelType.Server, OnResponseConnectToServer);
-            protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
+            //protocol.OnReadHeader += OnReadHeader;
+            //protocol.OnWriteHeader += OnWriteHeader;
+            //protocol.AttachRequestListener(MessageType.Server, OnRequestConnectToServer);
+            //protocol.AttachResponseListener(MessageType.Server, OnResponseConnectToServer);
+            //protocol.AttachErrorListener(NetworkErrorType.ErrorConnectToServer, OnErrorConnectToServer);
 
             //local.id = 0;// ServerGeneratePeerId(protocol.socket.sendSocket.LocalEndPoint);
         }

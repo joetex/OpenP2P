@@ -163,7 +163,7 @@ namespace OpenP2P
         public int turnPort = 0;
         public const int turnDefaultPort = 3478;
 
-        private NetworkProtocol protocol = null;
+        private NetworkManager protocol = null;
 
         public byte[] transactionID = null;
         public uint magicCookie = 0x2112A442;
@@ -181,10 +181,10 @@ namespace OpenP2P
 
         public STUNNat nat = STUNNat.Unspecified;
 
-        public STUNClient(NetworkProtocol p)
+        public STUNClient(NetworkManager p)
         {
             protocol = p;
-            protocol.AttachResponseListener(ChannelType.STUN, OnResponse);
+            protocol.AttachResponseListener(MessageType.STUN, OnResponse);
             protocol.AttachErrorListener(NetworkErrorType.ErrorNoResponseSTUN, OnError);
 
             transactionID = GenerateTransactionID();

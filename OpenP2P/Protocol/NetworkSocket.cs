@@ -302,10 +302,54 @@ namespace OpenP2P
         }
 
 
-        public NetworkChannel channel = null;
-        public void SetChannel(NetworkChannel _channel)
+        public NetworkMessageFactory channel = null;
+        public void SetChannel(NetworkMessageFactory _channel)
         {
             channel = _channel;
+        }
+
+
+        public virtual IPEndPoint GetIPv6(EndPoint ep)
+        {
+            IPEndPoint ip = (IPEndPoint)ep;
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                return ip;
+            //ip = new IPEndPoint(ip.Address.MapToIPv6(), ip.Port);
+            return ip;
+        }
+
+        public virtual IPEndPoint GetEndPoint(string ip, int port)
+        {
+            IPAddress address = null;
+            if (IPAddress.TryParse(ip, out address))
+                return new IPEndPoint(address, port);
+            IPAddress[] ips = Dns.GetHostAddresses(ip);
+            for (int i = 0; i < ips.Length; i++)
+            {
+                if (ips[i].AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+                    continue;
+                address = ips[i];
+                return new IPEndPoint(address, port);
+            }
+
+            return null;
+        }
+
+        public virtual IPEndPoint GenerateHostAddressAndPort(string address, int defaultPort)
+        {
+            int port = 0;
+            int colonPos = address.IndexOf(':');
+            if (colonPos > -1)
+            {
+                port = int.Parse(address.Substring(colonPos + 1));
+                address = address.Substring(0, colonPos);
+            }
+            else
+            {
+                port = defaultPort;
+            }
+
+            return GetEndPoint(address, port);
         }
 
         /**

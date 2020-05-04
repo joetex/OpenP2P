@@ -19,7 +19,7 @@ namespace OpenP2P
             public bool isStream = false;
             public bool isSTUN = false;
             public SendType sendType = 0;
-            public ChannelType channelType = ChannelType.Invalid;
+            public MessageType channelType = MessageType.Invalid;
             public ushort sequence = 0;
             public ushort id = 0;
 

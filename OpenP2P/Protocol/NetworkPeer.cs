@@ -13,18 +13,20 @@ namespace OpenP2P
         public string userName = "";
 
         //public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
+        public INetworkProtocol protocol;
+
         public EndPoint endpoint = null;
-        public List<ushort> messageSequence = new List<ushort>((int)ChannelType.LAST);
+        public List<ushort> messageSequence = new List<ushort>((int)MessageType.LAST);
 
         public Queue<NetworkMessage> outgoing = new Queue<NetworkMessage>();
         public Queue<NetworkMessage> incoming = new Queue<NetworkMessage>();
 
-        public NetworkProtocol protocol;
+        //public NetworkManager protocol;
 
-        public NetworkPeer(NetworkProtocol p)
+        public NetworkPeer(NetworkManager p)
         {
-            protocol = p;
-            for (int i = 0; i < (int)ChannelType.LAST; i++)
+            //protocol = p;
+            for (int i = 0; i < (int)MessageType.LAST; i++)
             {
                 messageSequence.Add(0);
             }

@@ -11,7 +11,7 @@ namespace OpenP2P
 {
     public class NetworkThread
     {
-        public NetworkProtocol protocol = null;
+        public NetworkManager protocol = null;
 
         public NetworkPacketPool PACKETPOOL = new NetworkPacketPool(NetworkConfig.PacketPoolBufferInitialCount, NetworkConfig.PacketPoolBufferMaxLength);
         public Queue<NetworkPacket> SENDQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
@@ -210,11 +210,11 @@ namespace OpenP2P
                     {
                         if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
                         {
-                            if (message.header.channelType == ChannelType.Server)
+                            if (message.header.channelType == MessageType.Server)
                             {
                                 packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
                             }
-                            else if (message.header.channelType == ChannelType.STUN)
+                            else if (message.header.channelType == MessageType.STUN)
                             {
                                 packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
                             }
