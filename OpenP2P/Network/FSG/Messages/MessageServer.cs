@@ -18,7 +18,7 @@ namespace OpenP2P
     /// |------------------------------------------------------------|
     ///
     /// </summary>
-    public class MessageServer : NetworkMessage
+    public class MessageServer : MessageFSG
     {
         public enum ServerMethod
         {

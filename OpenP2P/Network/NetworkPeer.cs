@@ -7,13 +7,22 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class NetworkPeer
+    public enum PeerType
+    {
+        Peer = 0,
+        Server,
+        Other
+    }
+
+    public partial class NetworkPeer
     {
         public ushort id = 0;
         public string userName = "";
 
-        //public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
-        public INetworkProtocol protocol;
+        public Dictionary<string, EndPoint> endpoints = new Dictionary<string, EndPoint>();
+        public NetworkProtocol protocol;
+
+        public PeerType peerType = PeerType.Peer;
 
         public EndPoint endpoint = null;
         public List<ushort> messageSequence = new List<ushort>((int)MessageType.LAST);
@@ -21,11 +30,11 @@ namespace OpenP2P
         public Queue<NetworkMessage> outgoing = new Queue<NetworkMessage>();
         public Queue<NetworkMessage> incoming = new Queue<NetworkMessage>();
 
-        //public NetworkManager protocol;
+        public NetworkManager net;
 
-        public NetworkPeer(NetworkManager p)
+        public NetworkPeer(NetworkManager manager)
         {
-            //protocol = p;
+            net = manager;
             for (int i = 0; i < (int)MessageType.LAST; i++)
             {
                 messageSequence.Add(0);
@@ -55,10 +64,15 @@ namespace OpenP2P
 
         }
 
+        public void SetProtocol(string protocolName)
+        {
+            protocol = net.GetProtocol(protocolName);
+        }
+
         public void AddEndpoint(EndPoint ep)
         {
             endpoint = ep;
-            //endpoints.Add(endpoint, ep);
+            endpoints.Add(endpoint.ToString(), ep);
         }
 
         public EndPoint GetEndpoint()

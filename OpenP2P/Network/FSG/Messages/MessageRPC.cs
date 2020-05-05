@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    public class MessageRPC : NetworkMessage
+    public class MessageRPC : MessageFSG
     {
         public long timestamp = 0;
 

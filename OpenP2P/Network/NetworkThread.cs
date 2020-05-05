@@ -169,8 +169,6 @@ namespace OpenP2P
             NetworkMessage message;
             while (true)
             {
-
-
                 lock (RELIABLEQUEUE)
                 {
                     queueCount = RELIABLEQUEUE.Count;

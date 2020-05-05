@@ -26,7 +26,7 @@ namespace OpenP2P
         }
         
         public event EventHandler<NetworkPacket> OnReceive;
-        //public event EventHandler<NetworkPacket> OnSend;
+        public event EventHandler<NetworkPacket> OnSend;
         public event EventHandler<NetworkPacket> OnError;
 
         public static bool supportsIpv6 = false;
@@ -221,7 +221,7 @@ namespace OpenP2P
 
         public int packetSendCount = 0;
         public int packetRecvCount = 0;
-        NetworkMessage tempSendMessage = null;
+        
         /**
          * Send Internal
          * Thread triggers send to remote point
@@ -251,33 +251,8 @@ namespace OpenP2P
             }
 
             
-            bool hasReliable = false;
-            for(int i=0; i<packet.messages.Count; i++)
-            {
-                tempSendMessage = packet.messages[i];
-                if (tempSendMessage.header.sendType == SendType.Message 
-                    && tempSendMessage.header.isReliable)
-                {
-                    tempSendMessage.header.sentTime = NetworkTime.Milliseconds();
-                    tempSendMessage.header.retryCount++;
-                    
-                    lock(thread.RELIABLEQUEUE)
-                    {
-                        thread.RELIABLEQUEUE.Enqueue(packet);
-                    }
-                    
-                    hasReliable = true;
-                }
-            }
-            
-            if( !hasReliable )
-            {
-                channel.FreeMessage(packet.messages[0]);
-                Free(packet);
-            }
-            
-            //if (OnSend != null) //notify any event listeners
-            //    OnSend.Invoke(this, packet);
+            if (OnSend != null) //notify any event listeners
+                OnSend.Invoke(this, packet);
         }
 
         /**
@@ -309,7 +284,7 @@ namespace OpenP2P
         }
 
 
-        public virtual IPEndPoint GetIPv6(EndPoint ep)
+        public static IPEndPoint GetIPv6(EndPoint ep)
         {
             IPEndPoint ip = (IPEndPoint)ep;
             if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
@@ -318,7 +293,7 @@ namespace OpenP2P
             return ip;
         }
 
-        public virtual IPEndPoint GetEndPoint(string ip, int port)
+        public static IPEndPoint GetEndPoint(string ip, int port)
         {
             IPAddress address = null;
             if (IPAddress.TryParse(ip, out address))
@@ -335,7 +310,7 @@ namespace OpenP2P
             return null;
         }
 
-        public virtual IPEndPoint GenerateHostAddressAndPort(string address, int defaultPort)
+        public static IPEndPoint GenerateHostAddressAndPort(string address, int defaultPort)
         {
             int port = 0;
             int colonPos = address.IndexOf(':');

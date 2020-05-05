@@ -62,21 +62,26 @@ namespace OpenP2P
 
         public void AddServer(string remoteHost, int remotePort)
         {
-            IPEndPoint serverHost = socket.GetEndPoint(remoteHost, remotePort);
+            IPEndPoint serverHost = NetworkSocket.GetEndPoint(remoteHost, remotePort);
             server = new NetworkPeer(this);
             server.AddEndpoint(serverHost);
+            server.SetProtocol("FSG");
         }
 
-        public override MessageServer ConnectToServer(string userName)
+        public MessageServer ConnectToServer(string userName)
         {
-            MessageServer message = base.ConnectToServer(userName);
-           
-            //SendMessage(server.GetEndpoint(), message);
+            ident.local.userName = userName;
+
+            MessageServer msg = server.protocol.Create<MessageServer>();
+            msg.method = MessageServer.ServerMethod.CONNECT;
+            msg.request.connect.username = userName;
+
             latencyStartTime = NetworkTime.Milliseconds();
 
-            SendReliableMessage(server.GetEndpoint(), message);
-            return message;
+            server.protocol.SendReliableMessage(server.GetEndpoint(), message);
+            return msg;
         }
+        
 
         public void ConnectToSTUN()
         {

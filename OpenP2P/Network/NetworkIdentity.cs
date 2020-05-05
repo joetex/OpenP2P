@@ -6,11 +6,11 @@ namespace OpenP2P
 {
     public class NetworkIdentity
     {
-        public Dictionary<string, NetworkPeer> peersByEndpoint = new Dictionary<string, NetworkPeer>();
+        public Dictionary<EndPoint, NetworkPeer> peersByEndpoint = new Dictionary<EndPoint, NetworkPeer>();
         public Dictionary<ushort, NetworkPeer> peersById = new Dictionary<ushort, NetworkPeer>();
         public NetworkPeer local = null;
         public NetworkPeer server = null;
-        public NetworkManager protocol = null;
+        public NetworkManager netManager = null;
         public Random random = new Random();
         public const int MAX_IDENTITIES = 65534;
 
@@ -23,7 +23,7 @@ namespace OpenP2P
         {
             local = new NetworkPeer(p);
 
-            protocol = p;
+            netManager = p;
             //protocol.OnReadHeader += OnReadHeader;
             //protocol.OnWriteHeader += OnWriteHeader;
             //protocol.AttachRequestListener(MessageType.Server, OnRequestConnectToServer);
@@ -34,85 +34,85 @@ namespace OpenP2P
         }
 
        
-        public void OnWriteHeader(object sender, NetworkMessage message)
-        {
-            NetworkPacket packet = (NetworkPacket)sender;
-            packet.Write(message.header.id);
-        }
+        //public void OnWriteHeader(object sender, NetworkMessage message)
+        //{
+        //    NetworkPacket packet = (NetworkPacket)sender;
+        //    packet.Write(message.header.id);
+        //}
     
-        public void OnReadHeader(object sender, NetworkMessage message)
-        {
-            NetworkPacket packet = (NetworkPacket)sender;
-            message.header.id = packet.ReadUShort();
-            message.header.peer = FindPeer(message.header.id);
-        }
+        //public void OnReadHeader(object sender, NetworkMessage message)
+        //{
+        //    NetworkPacket packet = (NetworkPacket)sender;
+        //    message.header.id = packet.ReadUShort();
+        //    message.header.peer = FindPeer(message.header.id);
+        //}
 
         
 
-        public NetworkMessage ConnectToServer(string userName)
-        {
-            local.userName = userName;
+        //public NetworkMessage ConnectToServer(string userName)
+        //{
+        //    local.userName = userName;
 
-            //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
-            MessageServer msg = protocol.Create<MessageServer>();
-            msg.method = MessageServer.ServerMethod.CONNECT; 
-            msg.request.connect.username = userName;
+        //    //MsgConnectToServer msg = protocol.Create<MsgConnectToServer>();
+        //    MessageServer msg = netManager.Create<MessageServer>();
+        //    msg.method = MessageServer.ServerMethod.CONNECT; 
+        //    msg.request.connect.username = userName;
           
-            return msg;
-        }
+        //    return msg;
+        //}
 
         
         //Server receives message from client
         //Create the peer and send response
-        public void OnRequestConnectToServer(object sender, NetworkMessage message)
-        {
-            NetworkPacket packet = (NetworkPacket)sender;
+        //public void OnRequestConnectToServer(object sender, NetworkMessage message)
+        //{
+        //    NetworkPacket packet = (NetworkPacket)sender;
 
-            NetworkPeer peer;
-            if( message.header.id == 0 )
-            {
-                peer = RegisterPeer(message.header.source);
-            }
-            else
-            {
-                peer = FindPeer(message.header.id);
-            }
+        //    NetworkPeer peer;
+        //    if( message.header.id == 0 )
+        //    {
+        //        peer = RegisterPeer(message.header.source);
+        //    }
+        //    else
+        //    {
+        //        peer = FindPeer(message.header.id);
+        //    }
             
-            if( peer == null )
-            {
-                protocol.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
-                return;
-            }
-            MessageServer incoming = (MessageServer)message;
-            if( !hasConnected )
-            {
-                hasConnected = true;
-                Console.WriteLine(message.header.source.ToString());
-                Console.WriteLine(incoming.request.connect.username);
+        //    if( peer == null )
+        //    {
+        //        netManager.socket.Failed(NetworkErrorType.ErrorMaxIdentitiesReached, "Peer identity unable to be created.", packet);
+        //        return;
+        //    }
+        //    MessageServer incoming = (MessageServer)message;
+        //    if( !hasConnected )
+        //    {
+        //        hasConnected = true;
+        //        Console.WriteLine(message.header.source.ToString());
+        //        Console.WriteLine(incoming.request.connect.username);
 
-            }
+        //    }
 
-            //MessageServer response = protocol.Create<MessageServer>();// message;
-            //response.responseConnected = true;
-            //response.responsePeerId = peer.id;
+        //    //MessageServer response = protocol.Create<MessageServer>();// message;
+        //    //response.responseConnected = true;
+        //    //response.responsePeerId = peer.id;
             
-            //protocol.SendResponse(message, response);
-        }
+        //    //protocol.SendResponse(message, response);
+        //}
 
-        //Client receives response from server
-        public void OnResponseConnectToServer(object sender, NetworkMessage message)
-        {
-            NetworkPacket packet = (NetworkPacket)sender;
-            MessageServer connectMsg = (MessageServer)message;
+        ////Client receives response from server
+        //public void OnResponseConnectToServer(object sender, NetworkMessage message)
+        //{
+        //    NetworkPacket packet = (NetworkPacket)sender;
+        //    MessageServer connectMsg = (MessageServer)message;
 
-            if( local.id == 0 )
-                RegisterLocal(connectMsg.response.connect.peerId, protocol.socket.sendSocket.LocalEndPoint);
-        }
+        //    if( local.id == 0 )
+        //        RegisterLocal(connectMsg.response.connect.peerId, netManager.socket.sendSocket.LocalEndPoint);
+        //}
 
-        public void OnErrorConnectToServer(object sender, NetworkPacket packet)
-        {
+        //public void OnErrorConnectToServer(object sender, NetworkPacket packet)
+        //{
 
-        }
+        //}
 
         public NetworkPeer FindPeer(ushort id)
         {
@@ -158,16 +158,16 @@ namespace OpenP2P
                 return identity;
             }
 
-            string endpoint = ep.ToString();
-            if (peersByEndpoint.ContainsKey(endpoint))
-                return peersByEndpoint[endpoint];
+            //string endpoint = ep.ToString();
+            if (peersByEndpoint.ContainsKey(ep))
+                return peersByEndpoint[ep];
 
-            identity = new NetworkPeer(protocol);
+            identity = new NetworkPeer(netManager);
             identity.id = id;
             identity.AddEndpoint(ep);
             
             peersById.Add(id, identity);
-            peersByEndpoint.Add(endpoint, identity);
+            peersByEndpoint.Add(ep, identity);
 
             return identity;
         }

@@ -12,6 +12,13 @@ namespace OpenP2P
 {
     public class MessageSTUN : NetworkMessage
     {
+        public class STUNHeader : MessageHeader
+        {
+
+        }
+
+        public STUNHeader header = new STUNHeader();
+
         public static Random random = new Random();
         public STUNMethod method = STUNMethod.None;
         public ushort methodLength = 0;

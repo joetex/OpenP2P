@@ -29,7 +29,7 @@ namespace OpenP2P
     ///     2) Ends when summation of Segment Length = Full Length
     /// 
     /// </summary>
-    public class MessageStream : NetworkMessage
+    public class MessageStream : MessageFSG
     {
         public MessageStream() : base()
         {

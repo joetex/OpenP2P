@@ -204,7 +204,7 @@ namespace OpenP2P
 
         public void ConnectSTUN(string address, bool changeIP, bool changePort)
         {
-            stunHost = protocol.GenerateHostAddressAndPort(address, stunDefaultPort);
+            stunHost = NetworkSocket.GenerateHostAddressAndPort(address, stunDefaultPort);
 
             MessageSTUN message = protocol.Create<MessageSTUN>();
             message.method = STUNMethod.BindingRequest;
@@ -220,7 +220,7 @@ namespace OpenP2P
             if (address == null || address.Length == 0)
                 address = turnDefaultAddress;
 
-            turnHost = protocol.GenerateHostAddressAndPort(address, turnDefaultPort);
+            turnHost = NetworkSocket.GenerateHostAddressAndPort(address, turnDefaultPort);
 
             MessageSTUN message = protocol.Create<MessageSTUN>();
             message.method = STUNMethod.AllocateRequest;

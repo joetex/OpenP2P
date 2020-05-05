@@ -6,20 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
-    /// <summary>
-    /// MessagePeer Packet format:
-    /// |------------------------------------------------------------|
-    /// |  Static Input (X bytes)                                    |
-    /// |------------------------------------------------------------|
-    /// |  Static State (Y bytes)                                    |
-    /// |------------------------------------------------------------|
-    /// |  Static Animation (Z bytes)                                |
-    /// |------------------------------------------------------------|
-    /// |  Dynamic Extras (W bytes)                                  |
-    /// |------------------------------------------------------------|
-    ///
-    /// </summary>
-    public class MessagePeer : NetworkMessage
+    public class MessageEvent : MessageFSG
     {
         public long timestamp = 0;
 
@@ -28,12 +15,12 @@ namespace OpenP2P
         public override void WriteRequest(NetworkPacket packet)
         {
             packet.Write(timestamp);
-
+            
         }
         public override void ReadRequest(NetworkPacket packet)
         {
             timestamp = packet.ReadLong();
-
+            
         }
 
 

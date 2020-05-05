@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenP2P.Messages
+namespace OpenP2P
 {
-    class NetworkMessageSTUN
+    public class MessageInvalid : MessageFSG
     {
+        
     }
 }

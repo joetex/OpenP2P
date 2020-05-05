@@ -51,39 +51,42 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InterfaceTrafficWatch.cs" />
-    <Compile Include="Protocol\Messages\FSG\ProtocolFSG.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessageRPC.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessagePeer.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessageTypes.cs" />
-    <Compile Include="Protocol\Messages\STUN\MessageSTUN.cs" />
-    <Compile Include="Protocol\Messages\STUN\ProtocolSTUN.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessageStream.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessageStream.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessageFactory.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessageEvent.cs" />
-    <Compile Include="Protocol\NetworkClientThread.cs" />
+    <Compile Include="Network\FSG\MessageFSG.cs" />
+    <Compile Include="Network\FSG\PeerFSG.cs" />
+    <Compile Include="Network\FSG\ProtocolFSGExtra.cs" />
+    <Compile Include="Network\FSG\ProtocolFSG.cs" />
+    <Compile Include="Network\FSG\Messages\MessageRPC.cs" />
+    <Compile Include="Network\FSG\Messages\MessagePeer.cs" />
+    <Compile Include="Network\NetworkMessageTypes.cs" />
+    <Compile Include="Network\STUN\MessageSTUN.cs" />
+    <Compile Include="Network\STUN\ProtocolSTUN.cs" />
+    <Compile Include="Network\Messages\NetworkMessageStream.cs" />
+    <Compile Include="Network\FSG\Messages\MessageStream.cs" />
+    <Compile Include="Network\Messages\NetworkMessageFactory.cs" />
+    <Compile Include="Network\Messages\NetworkMessageEvent.cs" />
+    <Compile Include="Network\NetworkClientThread.cs" />
     <Compile Include="NetworkConfig.cs" />
-    <Compile Include="Protocol\NetworkIdentity.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessage.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessageInvalid.cs" />
+    <Compile Include="Network\NetworkIdentity.cs" />
+    <Compile Include="Network\Messages\NetworkMessage.cs" />
+    <Compile Include="Network\FSG\Messages\MessageInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
-    <Compile Include="Protocol\Messages\NetworkMessagePool.cs" />
-    <Compile Include="Protocol\NetworkPeer.cs" />
-    <Compile Include="Protocol\NetworkManager.cs" />
-    <Compile Include="Protocol\NetworkProtocolBase.cs" />
-    <Compile Include="Protocol\NetworkProtocolTypes.cs" />
-    <Compile Include="Protocol\NetworkRSAEncryption.cs" />
+    <Compile Include="Network\Messages\NetworkMessagePool.cs" />
+    <Compile Include="Network\NetworkPeer.cs" />
+    <Compile Include="Network\NetworkManager.cs" />
+    <Compile Include="Network\NetworkProtocol.cs" />
+    <Compile Include="Network\NetworkProtocolTypes.cs" />
+    <Compile Include="Network\NetworkRSAEncryption.cs" />
     <Compile Include="NetworkServer.cs" />
-    <Compile Include="Protocol\NetworkSocket.cs" />
-    <Compile Include="Protocol\NetworkPacket.cs" />
-    <Compile Include="Protocol\NetworkPacketPool.cs" />
-    <Compile Include="Protocol\NetworkSerializer.cs" />
-    <Compile Include="Protocol\NetworkThread.cs" />
-    <Compile Include="Protocol\NetworkTime.cs" />
+    <Compile Include="Network\NetworkSocket.cs" />
+    <Compile Include="Network\NetworkPacket.cs" />
+    <Compile Include="Network\NetworkPacketPool.cs" />
+    <Compile Include="Network\NetworkSerializer.cs" />
+    <Compile Include="Network\NetworkThread.cs" />
+    <Compile Include="Network\NetworkTime.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessageServer.cs" />
-    <Compile Include="Protocol\Messages\FSG\MessageEvent.cs" />
+    <Compile Include="Network\FSG\Messages\MessageServer.cs" />
+    <Compile Include="Network\FSG\Messages\MessageEvent.cs" />
     <Compile Include="Utilities\StringPrep\Nameprep.cs" />
     <Compile Include="Utilities\StringPrep\Plain.cs" />
     <Compile Include="Utilities\StringPrep\Profile.cs" />
@@ -109,7 +112,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Network\Messages\FSG\" />
+    <Folder Include="Network\Messages\STUN\" />
+    <Folder Include="Network\STUN\Messages\" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="ipsum.txt" />
   </ItemGroup>
