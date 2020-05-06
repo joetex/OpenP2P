@@ -22,7 +22,7 @@ namespace OpenP2P
         public const int MessagePoolInitialCount = 1500;
         public const int PacketPoolBufferInitialCount = 1500;
 
-        public const int PacketPoolBufferMaxLength = 1500;
+        public const int PacketPoolBufferMaxLength = 1200;
 
         
         public const int BufferMaxLength = 1500;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,15 +15,65 @@ namespace OpenP2P
         public int bytePos = 0; //current read position
         public int byteSent = 0;
 
+        public Dictionary<Type, Action<object>> writeDictionary = new Dictionary<Type, Action<object>>();
+        public Dictionary<Type, Func<object>> readDictionary = new Dictionary<Type, Func<object>>();
+
         public NetworkSerializer(int initBufferSize)
         {
             buffer = new byte[initBufferSize];
+
+            writeDictionary[typeof(int)] = (object val) => { Write((int)val); };
+            writeDictionary[typeof(uint)] = (object val) => { Write((uint)val); };
+            writeDictionary[typeof(long)] = (object val) => { Write((long)val); };
+            writeDictionary[typeof(ulong)] = (object val) => { Write((ulong)val); };
+            writeDictionary[typeof(byte)] = (object val) => { Write((byte)val); };
+            writeDictionary[typeof(byte[])] = (object val) => { Write((byte[])val); };
+            writeDictionary[typeof(string)] = (object val) => { Write((string)val); };
+            writeDictionary[typeof(short)] = (object val) => { Write((short)val); };
+            writeDictionary[typeof(ushort)] = (object val) => { Write((ushort)val); };
+            writeDictionary[typeof(float)] = (object val) => { Write((float)val); };
+            writeDictionary[typeof(double)] = (object val) => { Write((double)val); };
+
+
+            readDictionary[typeof(int)] = () => { return ReadInt(); };
+            readDictionary[typeof(uint)] = () => { return ReadUInt(); };
+            readDictionary[typeof(long)] = () => { return ReadLong(); };
+            readDictionary[typeof(ulong)] = () => { return ReadULong(); };
+            readDictionary[typeof(byte)] = () => { return ReadByte(); };
+            readDictionary[typeof(byte[])] = () => { return ReadBytes(); };
+            readDictionary[typeof(string)] = () => { return ReadString(); };
+            readDictionary[typeof(short)] = () => { return ReadShort(); };
+            readDictionary[typeof(ushort)] = () => { return ReadUShort(); };
+            readDictionary[typeof(float)] = () => { return ReadFloat(); };
+            readDictionary[typeof(double)] = () => { return ReadDouble(); };
         }
 
         public void SetBufferLength(int length)
         {
             byteLength = length;
             bytePos = 0;
+        }
+
+        public void SerializeStruct<T>(T item)
+        {
+            FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (FieldInfo field in fields)
+            {
+                object value = field.GetValue(item);
+                writeDictionary[field.GetType()](value);
+            }
+        }
+
+        public void DeserializeStruct<T>(T item)
+        {
+            FieldInfo[] fields = item.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (FieldInfo field in fields)
+            {
+                object value = field.GetValue(item);
+                field.SetValue(item, readDictionary[field.GetType()]());
+            }
         }
 
         public byte[] ToArray()

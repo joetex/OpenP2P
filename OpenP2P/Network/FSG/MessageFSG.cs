@@ -7,9 +7,16 @@ using System.Threading.Tasks;
 
 namespace OpenP2P
 {
+    public enum MessagePolicy
+    {
+        Unreliable,
+        Reliable,
+        Stream
+    }
+
     public class MessageFSG : NetworkMessage
     {
-        public class FSGHeader : MessageHeader
+        public class HeaderFSG : NetworkMessageHeader
         {
             //encoded into packet
             public bool isReliable = false;
@@ -26,6 +33,7 @@ namespace OpenP2P
             public int retryCount = 0;
         }
 
-        public FSGHeader header = new FSGHeader();
+        public HeaderFSG header = new HeaderFSG();
+
     }
 }

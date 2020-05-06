@@ -27,30 +27,11 @@ namespace OpenP2P
         const uint StreamFlag = (1 << 6); //bit 7
         const uint ReliableFlag = (1 << 5);  //bit 6
         const uint SendTypeFlag = (1 << 4); //bit 5
-        
-        public class Header : IMessageHeader
-        {
-            //encoded into packet
-            public bool isReliable = false;
-            public bool isStream = false;
-            public bool isSTUN = false;
-            public SendType sendType = 0;
-            public MessageType channelType = MessageType.Invalid;
-            public ushort sequence = 0;
-            public ushort id = 0;
 
-            //packet status
-            public uint ackkey = 0;
-            public long sentTime = 0;
-            public int retryCount = 0;
+        public Dictionary<uint, NetworkPacket> ACKNOWLEDGED = new Dictionary<uint, NetworkPacket>();
+        bool isAcknowledged;
+        public int failedReliableCount = 0;
 
-            //packet endpoints
-            public EndPoint source = null;
-            public EndPoint destination = null;
-            public NetworkPeer peer = null;
-        }
-
-        public Header header = new Header();
         public Dictionary<uint, MessageStream> cachedStreams = new Dictionary<uint, MessageStream>();
         MessageFSG tempSendMessage = null;
 
@@ -95,10 +76,119 @@ namespace OpenP2P
             }
         }
 
+        public override void OnSocketSend(NetworkPacket packet)
+        {
+            //check for reliable messages
+            bool hasReliable = false;
+            for (int i = 0; i < packet.messages.Count; i++)
+            {
+                tempSendMessage = (MessageFSG)packet.messages[i];
+                if (tempSendMessage.header.sendType == SendType.Message
+                    && tempSendMessage.header.isReliable)
+                {
+                    tempSendMessage.header.sentTime = NetworkTime.Milliseconds();
+                    tempSendMessage.header.retryCount++;
 
-        
+                    lock (socket.thread.RELIABLEQUEUE)
+                    {
+                        socket.thread.RELIABLEQUEUE.Enqueue(packet);
+                    }
 
-        public void HandleReceiveStream(MessageFSG message, NetworkPacket packet)
+                    hasReliable = true;
+                }
+            }
+
+            if (!hasReliable)
+            {
+                messageFactory.FreeMessage(packet.messages[0]);
+                socket.Free(packet);
+            }
+        }
+        public override void OnSocketReliable(NetworkPacket packet)
+        {
+            long difftime;
+            long curtime;
+            bool hasFailed = false;
+            bool shouldResend = false;
+
+            for (int i = 0; i < packet.messages.Count; i++)
+            {
+                curtime = NetworkTime.Milliseconds();
+                hasFailed = false;
+                shouldResend = false;
+
+                
+                MessageFSG message = (MessageFSG)packet.messages[i];
+
+                lock (ACKNOWLEDGED)
+                {
+                    isAcknowledged = ACKNOWLEDGED.Remove(message.header.ackkey);
+                }
+
+                if (isAcknowledged)
+                {
+                    packet.socket.Free(packet);
+                    continue;
+                }
+
+                difftime = curtime - message.header.sentTime;
+                if (difftime > packet.retryDelay)
+                {
+                    if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
+                    {
+                        if (message.header.channelType == MessageType.Server)
+                        {
+                            packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
+                        }
+                        else if (message.header.channelType == MessageType.STUN)
+                        {
+                            packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
+                        }
+
+                        failedReliableCount++;
+                        packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
+
+                        hasFailed = true;
+                        packet.socket.Free(packet);
+                        continue;
+                    }
+
+                    shouldResend = true;
+                    Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
+                    packet.socket.Send(packet);
+                    continue;
+                }
+
+                if (hasFailed)
+                {
+
+                }
+                else if (shouldResend)
+                {
+
+                }
+            }
+        }
+
+        public override void OnSocketReceive(NetworkPacket packet)
+        {
+            MessageFSG message = ReadHeader(packet);
+            packet.messages.Add(message);
+
+            message.header.source = packet.remoteEndPoint;
+
+            if (message.header.isStream)
+            {
+
+                OnReceiveStream(message, packet);
+            }
+            else
+            {
+                OnReceiveMessage(message, packet);
+            }
+        }
+
+        public void OnReceiveStream(MessageFSG message, NetworkPacket packet)
         {
             MessageStream stream = (MessageStream)message;
             uint streamID = ((uint)stream.header.id << 8) | (uint)stream.header.sequence;
@@ -109,10 +199,10 @@ namespace OpenP2P
             {
                 if (message.header.isReliable)
                 {
-                    lock (socket.thread.ACKNOWLEDGED)
+                    lock (ACKNOWLEDGED)
                     {
-                        if (!socket.thread.ACKNOWLEDGED.ContainsKey(message.header.ackkey))
-                            socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
+                        if (!ACKNOWLEDGED.ContainsKey(message.header.ackkey))
+                            ACKNOWLEDGED.Add(message.header.ackkey, packet);
                     }
                 }
 
@@ -154,7 +244,7 @@ namespace OpenP2P
             }
         }
 
-        public void HandleReceiveMessage(MessageFSG message, NetworkPacket packet)
+        public void OnReceiveMessage(MessageFSG message, NetworkPacket packet)
         {
             switch (message.header.sendType)
             {
@@ -165,10 +255,10 @@ namespace OpenP2P
             if ((message.header.sendType == SendType.Response)
                 && message.header.isReliable)
             {
-                lock (socket.thread.ACKNOWLEDGED)
+                lock (ACKNOWLEDGED)
                 {
-                    if (!socket.thread.ACKNOWLEDGED.ContainsKey(message.header.ackkey))
-                        socket.thread.ACKNOWLEDGED.Add(message.header.ackkey, packet);
+                    if (!ACKNOWLEDGED.ContainsKey(message.header.ackkey))
+                        ACKNOWLEDGED.Add(message.header.ackkey, packet);
                 }
             }
 
@@ -261,52 +351,7 @@ namespace OpenP2P
         }
 
    
-        public void OnSocketSend(object sender, NetworkPacket packet)
-        {
-            //check for reliable messages
-            bool hasReliable = false;
-            for (int i = 0; i < packet.messages.Count; i++)
-            {
-                tempSendMessage = (MessageFSG)packet.messages[i];
-                if (tempSendMessage.header.sendType == SendType.Message
-                    && tempSendMessage.header.isReliable)
-                {
-                    tempSendMessage.header.sentTime = NetworkTime.Milliseconds();
-                    tempSendMessage.header.retryCount++;
-
-                    lock (socket.thread.RELIABLEQUEUE)
-                    {
-                        socket.thread.RELIABLEQUEUE.Enqueue(packet);
-                    }
-
-                    hasReliable = true;
-                }
-            }
-
-            if (!hasReliable)
-            {
-                messageFactory.FreeMessage(packet.messages[0]);
-                socket.Free(packet);
-            }
-        }
-
-        public void OnSocketReceive(object sender, NetworkPacket packet)
-        {
-            MessageFSG message = ReadHeader(packet);
-            packet.messages.Add(message);
-
-            message.header.source = packet.remoteEndPoint;
-
-            if (message.header.isStream)
-            {
-
-                HandleReceiveStream(message, packet);
-            }
-            else
-            {
-                HandleReceiveMessage(message, packet);
-            }
-        }
+        
 
 
         public void WriteIdentity(NetworkPacket packet, MessageFSG message)

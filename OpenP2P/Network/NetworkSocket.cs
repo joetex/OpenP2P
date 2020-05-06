@@ -27,6 +27,7 @@ namespace OpenP2P
         
         public event EventHandler<NetworkPacket> OnReceive;
         public event EventHandler<NetworkPacket> OnSend;
+        public event EventHandler<NetworkPacket> OnReliable;
         public event EventHandler<NetworkPacket> OnError;
 
         public static bool supportsIpv6 = false;
@@ -191,6 +192,11 @@ namespace OpenP2P
                 OnReceive.Invoke(this, packet);
         }
 
+        public void InvokeOnReliable(NetworkPacket packet)
+        {
+            if (OnReliable != null)
+                OnReliable.Invoke(this, packet);
+        }
         
         /**
          * Begin Send

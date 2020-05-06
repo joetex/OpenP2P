@@ -80,6 +80,7 @@ namespace OpenP2P
         {
             socket = _socket;
             socket.OnReceive += OnReceive;
+            socket.OnReliable += OnReliable;
             socket.OnSend += OnSend;
             socket.OnError += OnError;
         }
@@ -104,11 +105,17 @@ namespace OpenP2P
             return protocols[name];
         }
 
+        public void OnReliable(object sender, NetworkPacket packet)
+        {
+            EndPoint ep = packet.RemoteEndPoint;
+            NetworkPeer peer = ident.peersByEndpoint[ep];
+            peer.protocol.OnSocketReliable(packet);
+        }
+
         public void OnReceive(object sender, NetworkPacket packet)
         {
             EndPoint ep = packet.RemoteEndPoint;
             NetworkPeer peer = ident.peersByEndpoint[ep];
-
             peer.protocol.OnSocketReceive(packet);
 
             //NetworkMessage message = ReadHeader(packet);

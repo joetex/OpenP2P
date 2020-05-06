@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,6 +31,8 @@ namespace OpenP2P
             }
         }
 
+    
+
         public NetworkSocket.NetworkIPType networkIPType = NetworkSocket.NetworkIPType.IPv4;
         public List<NetworkMessage> messages = new List<NetworkMessage>();
 
@@ -37,10 +40,13 @@ namespace OpenP2P
 
         public NetworkErrorType lastErrorType = NetworkErrorType.None;
         public string lastErrorMessage = "";
+        
 
         public NetworkPacket(int initBufferSize) : base(initBufferSize)
         {
+            
         }
+
 
         public void Complete()
         {
@@ -51,8 +57,10 @@ namespace OpenP2P
         {
             SetBufferLength(bytesTransferred);
         }
-        
 
+
+        
+     
         public void Dispose()
         {
 

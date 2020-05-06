@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace OpenP2P
     public interface IMessageHeader { }
 
 
-    public class MessageHeader
+    public class NetworkMessageHeader
     {
         //unique identifier for a particular peer, controlled by custom protocols
         public ushort id = 0;
@@ -36,5 +37,15 @@ namespace OpenP2P
 
         public virtual void StreamMessage(NetworkPacket packet) {}
 
+        public virtual void Write<T>(NetworkPacket packet, T messageData)
+        {
+            packet.SerializeStruct<T>(messageData);  
+        }
+
+        public virtual void Read<T>(NetworkPacket packet, T messageData)
+        {
+            packet.DeserializeStruct<T>(messageData);
+        }
     }
+
 }

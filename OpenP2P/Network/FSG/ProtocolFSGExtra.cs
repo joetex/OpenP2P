@@ -75,21 +75,21 @@ namespace OpenP2P
         }
 
 
-        public NetworkPacket SendResponse(MessageFSG requestMessage, MessageFSG response)
+        public NetworkPacket SendResponse(MessageFSG request, MessageFSG response)
         {
-            NetworkPacket packet = socket.Prepare(requestMessage.header.source);
+            NetworkPacket packet = socket.Prepare(request.header.source);
 
-            if (requestMessage.header.source.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            if (request.header.source.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 packet.networkIPType = NetworkSocket.NetworkIPType.IPv4;
             else
                 packet.networkIPType = NetworkSocket.NetworkIPType.IPv6;
 
-            response.header.channelType = requestMessage.header.channelType;
-            response.header.isReliable = requestMessage.header.isReliable;
+            response.header.channelType = request.header.channelType;
+            response.header.isReliable = request.header.isReliable;
             response.header.sendType = SendType.Response;
-            response.header.sequence = requestMessage.header.sequence;
-            response.header.id = requestMessage.header.id;
-            response.header.ackkey = requestMessage.header.ackkey;
+            response.header.sequence = request.header.sequence;
+            response.header.id = request.header.id;
+            response.header.ackkey = request.header.ackkey;
 
             Send(packet, response);
 
@@ -107,7 +107,7 @@ namespace OpenP2P
                 case SendType.Response: message.WriteResponse(packet); break; 
             }
 
-            net.SendPacket(packet);
+            Send(packet);
         }
 
         public uint GenerateAckKey(NetworkPacket packet, MessageFSG message)

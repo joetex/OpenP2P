@@ -17,7 +17,7 @@ namespace OpenP2P
         public Queue<NetworkPacket> SENDQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
         public Queue<NetworkPacket> RECVQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
         public Queue<NetworkPacket> RELIABLEQUEUE = new Queue<NetworkPacket>(NetworkConfig.PacketPoolBufferInitialCount);
-        public Dictionary<uint, NetworkPacket> ACKNOWLEDGED = new Dictionary<uint, NetworkPacket>();
+        
         
         public List<Thread> SENDTHREADS = new List<Thread>();
         public List<Thread> RECVTHREADS = new List<Thread>();
@@ -25,7 +25,7 @@ namespace OpenP2P
         
         public NetworkPacket recvPacket = null;
         public int recvId = 0;
-        public int failedReliableCount = 0;
+        
         public int sentBufferSize = 0;
         public int recvCount = 0;
 
@@ -56,7 +56,6 @@ namespace OpenP2P
         }
 
        
-
         public void SendThread(object id)
         {
             NetworkPacket packet = null;
@@ -107,16 +106,12 @@ namespace OpenP2P
 
         public void UpdatePriority()
         {
-
             Process p = Process.GetCurrentProcess();
             foreach (ProcessThread pt in p.Threads)
             {
                 for(int i=0; i<SENDTHREADS.Count; i++)
                 {
                     Thread sendThread = SENDTHREADS[i];
-                
-
-                    
                 }
 
                 pt.IdealProcessor = 0;
@@ -161,12 +156,7 @@ namespace OpenP2P
         {
             NetworkPacket packet = null;
             int queueCount = 0;
-            long difftime;
-            bool isAcknowledged;
-            long curtime = NetworkTime.Milliseconds();
-            bool hasFailed = false;
-            bool shouldResend = false;
-            NetworkMessage message;
+            
             while (true)
             {
                 lock (RELIABLEQUEUE)
@@ -182,72 +172,14 @@ namespace OpenP2P
                     Thread.Sleep(NetworkConfig.ThreadReliableSleepTime);
                     continue;
                 }
-                    
 
-                curtime = NetworkTime.Milliseconds();
-                hasFailed = false;
-                shouldResend = false;
-
-                //for (int i = 0; i < packet.messages.Count; i++)
-                {
-                    message = packet.messages[0];
-
-                    lock (ACKNOWLEDGED)
-                    {
-                        isAcknowledged = ACKNOWLEDGED.Remove(message.header.ackkey);
-                    }
-
-                    if (isAcknowledged)
-                    {
-                        packet.socket.Free(packet);
-                        continue;
-                    }
-
-                    difftime = curtime - message.header.sentTime;
-                    if (difftime > packet.retryDelay)
-                    {
-                        if (message.header.retryCount > NetworkConfig.SocketReliableRetryAttempts)
-                        {
-                            if (message.header.channelType == MessageType.Server)
-                            {
-                                packet.socket.Failed(NetworkErrorType.ErrorConnectToServer, "Unable to connect to server.", packet);
-                            }
-                            else if (message.header.channelType == MessageType.STUN)
-                            {
-                                packet.socket.Failed(NetworkErrorType.ErrorNoResponseSTUN, "Unable to connect to server.", packet);
-                            }
-
-                            failedReliableCount++;
-                            packet.socket.Failed(NetworkErrorType.ErrorReliableFailed, "Failed to deliver " + message.header.retryCount + " packets (" + failedReliableCount + ") times.", packet);
-
-                            hasFailed = true;
-                            packet.socket.Free(packet);
-                            continue;
-                        }
-
-                        shouldResend = true;
-                        Console.WriteLine("Resending " + message.header.sequence + ", attempt #" + message.header.retryCount);
-                        packet.socket.Send(packet);
-                        continue;
-                    }
-                }
-
-
-                if (hasFailed)
-                {
-
-                }
-                else if (shouldResend)
-                {
-
-                }
-
+                packet.socket.InvokeOnReliable(packet);
+                
                 lock (RELIABLEQUEUE)
                 {
                     RELIABLEQUEUE.Enqueue(packet);
                 }
-
-
+                
                 //Thread.Sleep(MIN_RELIABLE_SLEEP_TIME);
             }
         }
@@ -276,10 +208,8 @@ namespace OpenP2P
                     Thread.Sleep(NetworkConfig.ThreadRecvProcessSleepTime);
                     continue;
                 }
-
                 
                 packet.socket.InvokeOnRecieve(packet);
-
                 packet.socket.Free(packet);
             }
         }

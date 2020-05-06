@@ -60,17 +60,16 @@
     <Compile Include="Network\NetworkMessageTypes.cs" />
     <Compile Include="Network\STUN\MessageSTUN.cs" />
     <Compile Include="Network\STUN\ProtocolSTUN.cs" />
-    <Compile Include="Network\Messages\NetworkMessageStream.cs" />
     <Compile Include="Network\FSG\Messages\MessageStream.cs" />
-    <Compile Include="Network\Messages\NetworkMessageFactory.cs" />
-    <Compile Include="Network\Messages\NetworkMessageEvent.cs" />
+    <Compile Include="Network\NetworkMessageFactory.cs" />
+    <Compile Include="Network\NetworkMessageEvent.cs" />
     <Compile Include="Network\NetworkClientThread.cs" />
     <Compile Include="NetworkConfig.cs" />
     <Compile Include="Network\NetworkIdentity.cs" />
-    <Compile Include="Network\Messages\NetworkMessage.cs" />
+    <Compile Include="Network\NetworkMessage.cs" />
     <Compile Include="Network\FSG\Messages\MessageInvalid.cs" />
     <Compile Include="NetworkClient.cs" />
-    <Compile Include="Network\Messages\NetworkMessagePool.cs" />
+    <Compile Include="Network\NetworkMessagePool.cs" />
     <Compile Include="Network\NetworkPeer.cs" />
     <Compile Include="Network\NetworkManager.cs" />
     <Compile Include="Network\NetworkProtocol.cs" />
@@ -113,8 +112,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Network\Messages\FSG\" />
-    <Folder Include="Network\Messages\STUN\" />
     <Folder Include="Network\STUN\Messages\" />
   </ItemGroup>
   <ItemGroup>

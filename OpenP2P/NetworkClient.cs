@@ -28,15 +28,11 @@ namespace OpenP2P
         Dictionary<uint, Stopwatch> recieveTimer = new Dictionary<uint, Stopwatch>();
         public NetworkClient() : base(false)
         {
-            //protocol = new NetworkProtocol(localPort, false);
-            AttachResponseListener(MessageType.Server, OnResponseServer);
-            //protocol.AttachMessageListener(ChannelType.DataContent, OnStreamDataContent);
-            //protocol.AttachResponseListener(ChannelType.Heartbeat, OnResponseHeartbeat);
-            AttachStreamListener(MessageType.Stream, OnStreamDataContent);
-           // protocol.AttachResponseListener(ChannelType.DataContent, OnResponseDataContent);
-            AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
+     
+            //AttachResponseListener(MessageType.Server, OnResponseServer);
+            //AttachStreamListener(MessageType.Stream, OnStreamDataContent);
+            //AttachErrorListener(NetworkErrorType.ErrorReliableFailed, OnErrorReliableFailed);
 
-            
             stun = new STUNClient(this);
             //turn = new TURNClient(protocol);
 

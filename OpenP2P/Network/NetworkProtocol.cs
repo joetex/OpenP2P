@@ -63,7 +63,28 @@ namespace OpenP2P
             return messageFactory.messageEvents[id];
         }
 
+
+        public virtual void Send(NetworkPacket packet)
+        {
+            net.SendPacket(packet);
+        }
+
+        public virtual void Send(NetworkPacket packet, string policy)
+        {
+
+        }
+
         public virtual void OnSocketSend(NetworkPacket packet)
+        {
+
+        }
+
+        public virtual void OnSocketReliable(NetworkPacket packet)
+        {
+
+        }
+
+        public virtual void OnSocketError(NetworkPacket packet)
         {
 
         }

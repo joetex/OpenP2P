@@ -12,7 +12,7 @@ namespace OpenP2P
 {
     public class MessageSTUN : NetworkMessage
     {
-        public class STUNHeader : MessageHeader
+        public class STUNHeader : NetworkMessageHeader
         {
 
         }
